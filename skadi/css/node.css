@@ -1,0 +1,55 @@
+/*   Skadi - A visual modelling tool for constructing and executing directed graphs.
+
+     Copyright (C) 2022-2023 Visual Topology Ltd
+
+     Licensed under the Open Software License version 3.0
+*/
+
+.node > text { font-size:14px; font-weight: bold; font-family: sans-serif;}
+.node path { stroke:grey;stroke-linejoin:round; }
+
+.node .inner { stroke:grey; stroke-width:4px; }
+.node .inner { fill:white; }
+
+.node .nodeicon { pointer-events:none;}
+.node .inner {pointer-events:none;}
+.node .outer { fill:none; pointer-events:visible; stroke-width:0px; stroke:none; opacity:0.0; }
+
+.node .pending { fill:blue; opacity:0.5 }
+.node .executing { fill:purple; opacity:0.5; }
+.node .executed { fill:green; opacity:0.5;  }
+.node .failed { fill:red; opacity:0.5; }
+
+.node .outer:hover { fill:yellow; stroke:yellow; opacity:1.0;}
+.node .selected { stroke-width:10px; stroke:blue; opacity:1.0; }
+
+.tooltip rect { fill:white; }
+.tooltip text { stroke: black; dominant-baseline: hanging; }
+
+.status_area_background {
+    fill:white;
+    stroke:blue;
+    stroke-width:2px;
+    opacity:0.6;
+}
+
+.status_area_background_running {
+    fill:white;
+    stroke:green;
+    stroke-width:2px;
+    opacity:0.6;
+}
+
+.status_text {
+    font-size: 14px;
+    text-anchor: start;
+}
+
+.status_image {
+
+}
+
+.node_label {
+    text-anchor: middle;
+    dominant-baseline: middle;
+}

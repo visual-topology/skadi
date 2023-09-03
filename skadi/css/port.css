@@ -1,0 +1,21 @@
+/*   Skadi - A visual modelling tool for constructing and executing directed graphs.
+
+     Copyright (C) 2022-2023 Visual Topology Ltd
+
+     Licensed under the Open Software License version 3.0
+*/
+
+.port_inner { stroke:lightgray; stroke-width:4px; }
+.port_inner:hover { stroke:yellow;  }
+
+.port.port_in.highlight > circle { stroke:yellow; }
+
+.port_zone { stroke:lightgray; stroke-width:4px; fill:none; }
+
+.port_zone_arrow {
+    fill: lightgray;
+    stroke: darkgray;
+}
+
+.inport_text { stroke:black; text-anchor:end; dominant-baseline:central; }
+.outport_text { stroke:black; dominant-baseline:central; }

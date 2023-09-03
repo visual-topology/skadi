@@ -1,0 +1,211 @@
+{
+    "id": "dataviz",
+    "metadata": {
+        "name": "Data Viz Example App",
+        "version": "0.0.1",
+        "description": "package for building data viz",
+        "link": "about.html"
+    },
+    "display": {
+        "style": "fill:lightgrey;"
+    },
+    "executor": "javascript",
+    "dependencies": [ "nodes/aq_utils.js" ],
+    "node_types": {
+        "csv_import": {
+            "metadata": {
+                "name": "CSV Import",
+                "description": "Select a CSV file and load it into a dataset"
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/csv_import.svg"
+            },
+            "page": {
+                "url": "nodes/csv_import.html"
+            },
+            "classname": "DataVizExample.CsvImportNode",
+            "dependencies": ["nodes/csv_import.js"]
+        },
+        "sample_rows": {
+            "enabled": false,
+            "metadata": {
+                "name": "Sample",
+                "description": "Select a sample from the input dataset"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/filter_random.svg"
+            },
+            "page": {
+                "url": "nodes/sample_rows.html"
+            },
+            "classname": "DataVizExample.SampleRowsNode",
+            "dependencies": ["nodes/sample_rows.js"]
+        },
+        "select_rows": {
+            "enabled": false,
+            "metadata": {
+                "name": "Select Rows",
+                "description": "Select Rows by Category or Numeric Range"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/filter_criteria.svg"
+            },
+            "page": {
+                "url": "nodes/select_rows.html"
+            },
+            "classname": "DataVizExample.SelectRowsNode",
+            "dependencies": ["nodes/select_rows.js"]
+        },
+        "create_column": {
+            "enabled": false,
+            "metadata": {
+                "name": "Create Column",
+                "description": "Create a new column"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/create_column.svg"
+            },
+            "page": {
+                "url": "nodes/create_column.html"
+            },
+            "classname": "DataVizExample.CreateColumnNode",
+            "dependencies": ["nodes/create_column.js"]
+        },
+        "table_display": {
+            "metadata": {
+                "name": "Table Display",
+                "description": "Display a dataset in a table"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/table.svg"
+            },
+            "page": {
+                "url": "nodes/table_display.html"
+            },
+            "classname": "DataVizExample.TableDisplayNode",
+            "dependencies": ["nodes/table_display.js"]
+        },
+        "scatter_plot": {
+            "metadata": {
+                "name": "Scatter Plot",
+                "description": "Draw a Scatter Plot"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 5,
+                "icon": "icons/scatter.svg"
+            },
+            "page": {
+                "window_width": 600,
+                "window_height": 600,
+                "url": "nodes/scatter_plot.html"
+            },
+            "classname": "DataVizExample.ScatterPlotNode",
+            "dependencies": ["nodes/scatter_plot.js"]
+        },
+        "2d_histogram_plot": {
+            "metadata": {
+                "name": "2D Histogram Plot",
+                "description": "Draw a 2D Histogram Plot"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 5,
+                "icon": "icons/2d_histogram.svg"
+            },
+            "page": {
+                "window_width": 600,
+                "window_height": 600,
+                "url": "nodes/2d_histogram_plot.html"
+            },
+            "classname": "DataVizExample.Histogram2DPlotNode",
+            "dependencies": ["nodes/2d_histogram_plot.js"]
+        },
+        "histogram_plot": {
+            "metadata": {
+                "name": "Histogram Plot",
+                "description": "Draw a Histogram"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 5,
+                "icon": "icons/histogram.svg"
+            },
+            "page": {
+                "window_width": 600,
+                "window_height": 600,
+                "url": "nodes/histogram_plot.html"
+            },
+            "classname": "DataVizExample.HistogramPlotNode",
+            "dependencies": ["nodes/histogram_plot.js"]
+        }
+    },
+    "link_types": {
+        "dataset": {
+            "metadata": {
+                "name": "Dataset",
+                "description": "Dataset holding tabular (rows and columns) data"
+            },
+            "display": {
+                "colour": "green"
+            }
+        }
+    }
+}

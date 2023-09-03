@@ -1,0 +1,45 @@
+<html>
+
+<!-- the head allows this page to be loaded standalone to test the layout, but is ignored by skadi -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link href="https://visualtopology.github.io/exo/versions/latest/exo-icons.css" rel="stylesheet" type="text/css">
+    <script src="https://visualtopology.github.io/exo/versions/latest/exo.js" type="text/javascript"></script>
+</head>
+
+<!-- only the body content is loaded by skadi -->
+<body>
+<link href="https://visualtopology.github.io/exo/versions/latest/exo.css" rel="stylesheet" type="text/css">
+
+<div class="exo-row">
+    <div class="exo-2-cell">
+        <exo-select id="column_name" label="Column Name">
+        </exo-select>
+    </div>
+</div>
+<div class="exo-row" id="value_selector">
+     <div class="exo-2-cell">
+        <exo-select id="column_values" size="10" label="Column Value(s)">
+        </exo-select>
+    </div>
+</div>
+<div class="exo-row" id="range_selector">
+    <div class="exo-2-cell">
+        <exo-number id="min_value" step="any" label="Minimum Value(s)">
+        </exo-number>
+    </div>
+    <div class="exo-2-cell">
+        <exo-number id="max_value" step="any" label="Maximum Value(s)">
+        </exo-number>
+    </div>
+    <div class="exo-2-cell">
+        <exo-button id="reset" step="any" label="Reset Min/Max" text="Reset">
+        </exo-button>
+    </div>
+</div>
+</body>
+</html>

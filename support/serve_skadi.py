@@ -11,7 +11,7 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 import os.path
 import argparse
 
-webroot = os.path.join(os.path.split(__file__)[0],"..","docs","versions","latest")
+webroot = os.path.join(os.path.split(__file__)[0],"..","docs")
 
 class CORSRequestHandler(SimpleHTTPRequestHandler):
 

@@ -80,6 +80,33 @@ class ResourceLoader {
 
 
 
+/* skadi/js/utils/icon_utils.js */
+
+function skadi_create_icon_for_status_state(status_state) {
+    let status_icon_url = null;
+
+    switch(status_state) {
+        case SkadiStatusStates.info:
+            status_icon_url = icon_status_info;
+            break;
+        case SkadiStatusStates.warning:
+            status_icon_url = icon_status_warning;
+            break;
+        case SkadiStatusStates.error:
+            status_icon_url = icon_status_error;
+            break;
+    }
+
+    if (status_icon_url) {
+        let status_icon = document.createElement( "img");
+        status_icon.setAttribute("width",32);
+        status_icon.setAttribute("height",32);
+        status_icon.setAttribute("style","vertical-align:middle;margin-right:10px;");
+        status_icon.setAttribute("src",status_icon_url);
+        return status_icon;
+    }
+}
+
 /* skadi/js/services/status_states.js */
 
 class SkadiStatusStates {
@@ -112,133 +139,26 @@ class TopologyStore {
     }
 }
 
-/* skadi/js/core/design.js */
+/* skadi/js/core/core.js */
 
-let GRID_SNAP = 20;
+class SkadiCore {
 
-class SkadiDesign {
-
-    constructor(element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
-        this.width = width;
-        this.height = height;
-        this.is_acyclic = is_acyclic;
+    constructor(element_id, topology_store, node_factory, configuration_factory) {
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
         this.id = "design";
         this.schema = null;
-        this.windows = {};
+
         this.graph_executor = null;
         this.node_event_handlers = {};
         this.link_event_handlers = {};
         this.design_event_handlers = {};
-        this.paused = false;
+
 
         this.network = new SkadiNetwork({});
 
-        this.transform = [1, 0, 0, 1, 0, 0];
-
-        let that = this;
-
         this.div = Skadi.x3.select("#" + element_id);
-
-        this.svg = this.div.append("svg")
-            .attr("width","100%")
-            .attr("height", "100%");
-
-        this.group = this.svg.append("g").attr("id", "viewport");
-        this.group.append("rect").attr("class", "background").attr("width", width + "px")
-            .attr("height", height + "px").attr("x", "0").attr("y", "0");
-        this.node_connector_group = this.group.append("g");
-        this.btn_group = this.svg.append("g");
-
-        this.fixed_div = Skadi.x3.select("#" + element_id).append("div").attr("width", "100%").attr("height", "100%").attr("class",
-            "design_fixed").style("position", "fixed").style("top", 0).style("left", 0);
-
-        this.fixed_svg = this.fixed_div.append("svg").attr("class", "fixed_svg")
-            .attr("width", this.width)
-            .attr("height", this.height);
-
-        this.div.node().addEventListener("wheel", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            that.wheel(event);
-        }, {"passive": false, "capture": true});
-
-        this.svg_dialogue_group = this.fixed_svg.append("g").attr("class", "fixed_dialogue_group");
-
-        this.svg_tooltip_group = this.fixed_svg.append("g").attr("class", "fixed_tooltip_group");
-
-
-        this.button_size = 64;
-        this.button_margin = 10;
-        let button_x = this.button_margin + this.button_size/2;
-        let button_y = this.button_margin + this.button_size/2;
-
-        this.palette_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_palette_purple, function() { that.open_palette(); }, "Open Palette");
-        this.palette_btn.set_fill("white");
-        this.palette_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.home_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_home_purple, function() { that.go_home(); }, "Reset View Pan/Zoom");
-        this.home_btn.set_fill("white");
-        this.home_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.pause_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size, icon_pause,
-            function() { that.toggle_pause(); }, "Pause/Restart Execution");
-        this.pause_btn.set_fill("white");
-        this.pause_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.file_upload_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_file_upload_purple, function() { that.open_load(); }, "Upload Design");
-        this.file_upload_btn.set_fill("white");
-        this.file_upload_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.file_download_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_file_download_purple, function() {
-            that.open_save();
-        }, "Download Design");
-
-        this.file_download_btn.set_fill("white");
-        this.file_download_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.help_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_help_purple, function() { that.open_about(); }, "Help/About");
-        this.help_btn.set_fill("white");
-        this.help_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.clear_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_delete, function() { that.open_clear(); }, "Clear Design");
-        this.clear_btn.set_fill("white");
-        this.clear_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_edit_purple, function() { that.open_edit_design_metadata(); }, "Edit Design Metadata");
-        this.edit_btn.set_fill("white");
-        this.edit_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.configuration_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_configuration_purple, function() { that.open_edit_design_configuration(); }, "Edit Configurations");
-        this.configuration_btn.set_fill("white");
-        this.configuration_btn.draw(this.btn_group);
-        button_x += this.button_size + this.button_margin;
-
-        this.drag_div = this.fixed_svg.append("rect").attr("x", "0").attr("y", "0")
-            .attr("width", 0).attr("height", 0).attr("opacity", 0.1)
-            .attr("id", "drag_overlay").attr("fill", "#FFF");
-
-        this.ports = {};
-
-        this.transition = 500;
 
         this.metadata = {
             "name": "New Topology",
@@ -248,55 +168,6 @@ class SkadiDesign {
             "version": "0.1"
         };
 
-        this.node_group = this.group.append("g");
-
-        let pos = Skadi.x3.get_node_pos(this.div.node());
-        this.offset_x = pos.x;
-        this.offset_y = pos.y;
-
-        this.drag = Skadi.x3.drag();
-
-        this.drag
-            .on("start", function (x, y) {
-                that.drag.start_dragging = true;
-            })
-            .on("drag", function (x, y) {
-                if (that.drag.start_dragging) {
-                    that.drag.start_x = x;
-                    that.drag.start_y = y;
-                    that.drag.start_dragging = false;
-                } else {
-                    let dx = x - that.drag.start_x;
-                    let dy = y - that.drag.start_y;
-                    that.drag.start_x = x;
-                    that.drag.start_y = y;
-                    that.panzoom(dx, dy, 1);
-                }
-            })
-            .on("end", function (x, y) {
-                let dx = x - that.drag.start_x;
-                let dy = y - that.drag.start_y;
-                that.panzoom(dx, dy, 1);
-            });
-        this.div.call(this.drag);
-
-        this.design_metadata_dialogue = null;
-        this.design_configuration_dialogue = null;
-        this.about_dialogue = null;
-        this.clear_dialogue = null;
-        this.palette_dialogue = null;
-        this.load_dialogue = null;
-        this.save_dialogue = null;
-    }
-
-    toggle_pause() {
-        this.paused = !this.paused;
-        if (this.paused) {
-            this.pause_btn.set_url(icon_play);
-        } else {
-            this.pause_btn.set_url(icon_pause);
-        }
-        this.fire_design_event("pause", this.paused);
     }
 
     get_id() {
@@ -331,26 +202,8 @@ class SkadiDesign {
         return this.configuration_factory;
     }
 
-    /* Get various SVG group selections */
-
-     get_group() {
-        return this.group;
-    }
-
-    get_skadi_svg_dialogue_group() {
-        return this.svg_dialogue_group;
-    }
-
-    get_svg_tooltip_group() {
-        return this.svg_tooltip_group;
-    }
-
-    get_node_group() {
-        return this.node_group;
-    }
-
-    get_node_connector_group() {
-        return this.node_connector_group;
+    get_network() {
+        return this.network;
     }
 
     create_node_service(node) {
@@ -404,6 +257,12 @@ class SkadiDesign {
         listeners[event_type] = listeners[event_type].filter(c => c != callback);
     }
 
+    request_execution(node_id) {
+        if (this.graph_executor) {
+            this.graph_executor.request_execution(node_id);
+        }
+    }
+
     /* event firing */
 
     fire_node_event(node_event_type, node) {
@@ -427,9 +286,9 @@ class SkadiDesign {
         let link_id = link.get_id();
         let link_type = link.get_link_type().get_id();
         let from_node_id = link.get_from_port().get_node().get_id();
-        let from_port_name = link.get_from_port().get_portName();
+        let from_port_name = link.get_from_port().get_port_name();
         let to_node_id = link.get_to_port().get_node().get_id();
-        let to_port_name = link.get_to_port().get_portName();
+        let to_port_name = link.get_to_port().get_port_name();
         if (link_event_type in this.link_event_handlers) {
             let callbacks = this.link_event_handlers[link_event_type];
             for (let idx = 0; idx < callbacks.length; idx++) {
@@ -447,259 +306,7 @@ class SkadiDesign {
         }
     }
 
-    /* canvas zoom support */
-
-    to_canvas_coords(x, y) {
-        let cnv_x = (x - this.transform[4]) / this.transform[0];
-        let cnv_y = (y - this.transform[5]) / this.transform[3];
-        return {"x": cnv_x, "y": cnv_y};
-    }
-
-    wheel(evt) {
-        if (evt.deltaY < 0) {
-            this.panzoom(0, 0, 0.9);
-        } else {
-            this.panzoom(0, 0, 1.1);
-        }
-    }
-
-    panzoom(dx, dy, zoom_by) {
-        let n = this.group;
-
-        this.transform[4] += dx;
-        this.transform[5] += dy;
-
-        let cs = this.div.node().getBoundingClientRect();
-        let w = cs["width"];
-        let h = cs["height"];
-
-        let cx = w * 0.5;
-        let cy = h * 0.5;
-
-        if (zoom_by != 1) {
-            for (let i = 0; i < 6; i++) {
-                this.transform[i] *= zoom_by;
-            }
-            this.transform[4] += (1 - zoom_by) * cx;
-            this.transform[5] += (1 - zoom_by) * cy;
-        }
-
-        let t = "matrix(" + this.transform.join(' ') + ")";
-        n.attr("transform", t);
-
-        this.fire_design_event("panzoom", null);
-    }
-
-    go_home() {
-        this.transform = [1, 0, 0, 1, 0, 0];
-        let t = "matrix(" + this.transform.join(' ') + ")";
-        this.group.attr("transform", t);
-        this.fire_design_event("panzoom", null);
-    }
-
-    get_transition() {
-        return this.transition;
-    }
-
-    /* window management */
-
-    open_node_window(node_id, command_id, open_callback, close_callback, x, y, width, height, resize_callback) {
-        let key = node_id + "_" + command_id;
-        if (key in this.windows) {
-            let oldw = this.windows[key];
-            if (!(oldw instanceof SkadiFrameDialogue)) {
-                oldw.close();
-            } else {
-                return;
-            }
-        }
-        let node = this.network.get_node(node_id);
-        let title = node.get_type().get_label();
-        let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
-                delete this.windows[key];
-                if (close_callback) {
-                    close_callback();
-                }
-            }, true, null, open_callback, resize_callback);
-        ifd.set_parent_node(node);
-        this.windows[key] = ifd;
-    }
-
-    close_windows_for_node(node_id) {
-        let window_keys_to_remove = [];
-        for(let key in this.windows) {
-            if (key.startsWith(node_id)) {
-                window_keys_to_remove.push(key);
-            }
-        }
-
-        window_keys_to_remove.forEach(key => {
-            this.windows[key].close();
-            delete this.windows[key];
-        });
-    }
-
-    open_node_window_url(node_id, command_id, open_url, x, y, width, height) {
-        let key = node_id + "_" + command_id;
-        if (key in this.windows) {
-            return; // already open
-        }
-        let node = this.network.get_node(node_id);
-        let title = node.get_type().get_label();
-        let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
-                delete this.windows[key];
-            }, true, open_url, null);
-        this.windows[key] = ifd;
-    }
-
-    open_node_windowTab(node_id, command_id, open_url, open_callback, close_callback, resize_callback) {
-        let key = node_id + "_open";
-        if (key in this.windows) {
-            let oldw = this.windows[key];
-            if (oldw instanceof SkadiFrameDialogue) {
-                oldw.close();
-            } else {
-                return;
-            }
-        }
-        let w = window.open(open_url);
-        if (w) {
-            this.windows[key] = w;
-            if (open_callback) {
-                w.addEventListener("load", (event) => {
-                    open_callback(w);
-                    if (resize_callback) {
-                        w.addEventListener("resize", (event) => {
-                            if (resize_callback) {
-                                resize_callback(w.innerWidth, w.innerHeight);
-                            }
-                        });
-                    }
-
-                    w.addEventListener("unload", (event) => {
-                        if (this.windows[key] == w) {
-                            delete this.windows[key];
-                        }
-                        if (close_callback) {
-                            close_callback();
-                        }
-                    });
-                });
-
-            }
-
-        }
-    }
-
-    open_palette() {
-        let that = this;
-        if (!this.palette_dialogue) {
-            this.palette_dialogue = new SkadiPalette(this, "car0", function () {
-                that.palette_dialogue = null;
-            });
-            this.palette_dialogue.open();
-        }
-    }
-
-    open_about() {
-        let that = this;
-        if (!this.about_dialogue) {
-           this.about_dialogue = new SkadiFrameDialogue("about0", this, "About", 100, 100, 600, 400, function () {
-                that.about_dialogue = null;
-            }, true, null, function(elt) {
-               skadi_populate_about(that, elt);
-               }, null);
-        }
-    }
-
-    open_save() {
-        let that = this;
-        if (!this.save_dialogue) {
-           this.save_dialogue = new SkadiFrameDialogue("save0", this, "Save", 100, 100, 600, 300, function () {
-                that.save_dialogue = null;
-            }, true, null, function(elt) {
-               skadi_populate_save(that, elt);
-               }, null);
-        }
-    }
-
-    open_load() {
-        let that = this;
-        if (!this.load_dialogue) {
-           this.load_dialogue = new SkadiFrameDialogue("load0", this, "Load", 100, 100, 600, 300, function () {
-                that.load_dialogue = null;
-            }, true, null, function(elt) {
-               skadi_populate_load(that, elt);
-               }, null);
-        }
-    }
-
-    open_clear() {
-        let that = this;
-        if (!this.clear_dialogue) {
-           this.clear_dialogue = new SkadiFrameDialogue("clear0", this, "Clear Design", 100, 100, 600, 400, function () {
-                that.clear_dialogue = null;
-            }, true, null, function(elt) {
-               skadi_populate_clear(that, elt, function() {
-                        that.clear_dialogue.close();
-                    });
-               }, null);
-        }
-    }
-
-    open_edit_design_metadata() {
-        if (!this.design_metadata_dialogue) {
-           this.design_metadata_dialogue = new SkadiFrameDialogue("design_meta0", this, "Design Metadata", 100, 100, 600, 600,
-                () => {
-                    this.design_metadata_dialogue = null;
-                }, true, null,
-               (elt) => {
-                    skadi_populate_design_metadata(this, elt, function() {
-                        this.design_metadata_dialogue.close();
-               });
-           }, null);
-        }
-    }
-
-    open_edit_design_configuration() {
-        if (!this.design_configuration_dialogue) {
-           this.design_configuration_dialogue = new SkadiFrameDialogue("design_configuration0", this, "Design Configuration", 100, 100, 600, 600,
-                () => {
-                    this.design_configuration_dialogue = null;
-                }, true, null,
-               (elt) => {
-                    skadi_populate_design_configuration(this, elt, function() {
-                        this.design_configuration_dialogue.close();
-               });
-           }, null);
-        }
-    }
-
-    /* node related */
-
-    create_node(node_id, node_type, x, y, metadata, suppress_event) {
-        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
-        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
-        let id = node_id || this.next_id("nl");
-
-        let node = new SkadiNode(this, node_type, id, x, y, true, metadata, {});
-        node.create_instance();
-        this.add_node(node, suppress_event);
-        node.set_display_tooltips(false);
-        return id;
-    }
-
-    add_node(node, suppress_event) {
-        this.network.add_node(node);
-        node.draw();
-        if (!suppress_event) {
-            this.fire_node_event("add", node);
-        }
-    }
-
-    get_node(node_id) {
-        return this.network.get_node(node_id);
-    }
+    /* configuration related */
 
     get_configuration(package_id) {
         return this.network.get_configuration(package_id);
@@ -709,19 +316,45 @@ class SkadiDesign {
         this.network.add_configuration(configuration);
     }
 
-    start_node_drag(node_id, startx, starty) {
-        this.nodedrag = {
-            "target": {
-                "id": node_id,
-                "ox": startx,
-                "oy": starty
+    update_configuration_status(package_id, state, status_message) {
+        // TODO
+    }
+
+    create_configurations() {
+        // load up configurations for any packages that specify them
+        for(let package_id in this.schema.package_types) {
+            let package_type = this.schema.package_types[package_id];
+            if (package_type.get_configuration_classname()) {
+                let conf = new SkadiConfiguration(this,package_type,{});
+                conf.create_instance();
+                this.add_configuration(conf);
             }
         }
     }
 
-    stop_node_drag(node_id) {
-        this.nodedrag = null;
+    /* node related */
+
+    create_node(node_id, node_type, x, y, metadata, suppress_event) {
+        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
+        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
+        let id = node_id || this.next_id("nl");
+        let node = new SkadiCoreNode(this, node_type, id, x, y, true, metadata, {});
+        node.create_instance();
+        this.add_node(node, suppress_event);
+        return id;
     }
+
+    add_node(node, suppress_event) {
+        this.network.add_node(node);
+        if (!suppress_event) {
+            this.fire_node_event("add", node);
+        }
+    }
+
+    get_node(node_id) {
+        return this.network.get_node(node_id);
+    }
+
 
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
@@ -745,13 +378,6 @@ class SkadiDesign {
         }
     }
 
-    update_node_position(id, x, y, suppress_event) {
-        let node = this.network.get_node(id);
-        node.update_position(x, y);
-        if (!suppress_event) {
-            this.fire_node_event("update_position", node);
-        }
-    }
 
     update_metadata(node_id, metadata, suppress_event) {
         let node = this.network.get_node(node_id);
@@ -787,13 +413,6 @@ class SkadiDesign {
         }
     }
 
-    update_configuration_status(id, state, status_message) {
-        let configuration = this.get_configuration(id);
-        if (configuration) {
-            configuration.update_status(status_message, state);
-        }
-    }
-
     update_node_execution_state(id, state) {
         this.update_execution_state(id, state);
     }
@@ -803,14 +422,13 @@ class SkadiDesign {
     create_link(fromPort, toPort, link_type_id, link_id) {
         let id = link_id || this.next_id("ch");
         let link_type = this.schema.get_link_type(link_type_id);
-        let link = new SkadiLink(this, id, fromPort, link_type, toPort);
+        let link = new SkadiCoreLink(this, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort.get_node(), toPort.get_port_name());
         this.add_link(link, link_id != undefined);
         return id;
     }
 
     add_link(link, suppress_event) {
         this.network.add_link(link);
-        link.draw();
         if (!suppress_event) {
             this.fire_link_event("add", link);
         }
@@ -818,51 +436,6 @@ class SkadiDesign {
 
     get_link(id) {
         return this.network.get_link(id);
-    }
-
-    find_port(x, y, link_type_id) {
-        for (let k in this.ports) {
-            let port = this.ports[k];
-            let coords = port.get_position();
-            let dx = x - coords.x;
-            let dy = y - coords.y;
-            let dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist <= port.r && port.link_type_id == link_type_id) {
-                return port;
-            }
-        }
-        return null;
-    }
-
-    register_port(port) {
-        this.ports[port.id] = port;
-    }
-
-    unregister_port(port) {
-        delete this.ports[port.id];
-    }
-
-    get_port(port_id) {
-        return this.ports[port_id];
-    }
-
-    already_connected(fromPort, toPort) {
-        for (let link_id in this.network.links) {
-            let link = this.network.get_link(link_id);
-            if (link.fromPort == fromPort && link.toPort == toPort) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    check_allowed_to_connect(from_node_id, to_node_id) {
-        if (this.is_acyclic) {
-            // check that connecting would not introduce a cycle
-            return !(this.network.get_downstream_nodes(to_node_id).includes(from_node_id));
-        } else {
-            return true;
-        }
     }
 
     /* design metadata */
@@ -900,7 +473,6 @@ class SkadiDesign {
     /* clear or remove from the network */
 
     clear(suppress_event) {
-        this.network.get_node_list().forEach(node_id => { this.close_windows_for_node(node_id); });
         this.network.clear();
         if (!suppress_event) {
             this.fire_design_event("clear", null);
@@ -922,7 +494,6 @@ class SkadiDesign {
                 this.remove(removed_links[idx],suppress_event);
             }
             this.network.remove(id);
-            this.close_windows_for_node(id);
             if (!suppress_event) {
                 this.fire_node_event("remove", node);
             }
@@ -935,6 +506,7 @@ class SkadiDesign {
             }
         }
     }
+
 
     /* load/save */
 
@@ -958,21 +530,20 @@ class SkadiDesign {
     }
 
     deserialise(from_obj, suppress_events) {
-
         if (this.graph_executor) {
             this.graph_executor.pause();
         }
         for (let node_id in from_obj.nodes) {
-            let node = SkadiNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            let node = SkadiCoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
             this.add_node(node, suppress_events);
         }
         for (let link_id in from_obj.links) {
-            let link = SkadiLink.deserialise(this, link_id, from_obj.links[link_id]);
+            let link = SkadiCoreLink.deserialise(this, link_id, from_obj.links[link_id]);
             this.add_link(link, suppress_events);
         }
         let package_properties = from_obj.package_properties || {};
         for (let package_id in package_properties) {
-            let configuration = SkadiConfiguration.deserialise(this, package_id, package_properties[package_id]);
+            let configuration = SkadiCoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
         if ("metadata" in from_obj) {
@@ -985,6 +556,429 @@ class SkadiDesign {
 }
 
 
+
+
+/* skadi/js/core/core_node.js */
+
+class SkadiCoreNode {
+
+    constructor(core, node_type, id, x, y, metadata, properties) {
+        this.core = core;
+
+        this.node_type = node_type;
+        this.metadata = metadata;
+        this.node_service = null;
+        this.wrapper = null;
+        this.properties = properties;
+
+        this.id = id;
+
+        // coordinates on canvas
+        this.x = x;
+        this.y = y;
+
+        this.status_message = "";
+        this.status_state = "";
+        this.status_content = null;
+        this.status_content_rect = null;
+
+        this.execution_state = SkadiApi.EXECUTION_STATE_EXECUTED;
+
+        this.input_ports = [];
+        this.output_ports = [];
+    }
+
+
+    create_instance() {
+
+
+        // unfortunately looks like eval is needed to construct ES6 class instances from the classname
+        try {
+            this.node_service = this.core.create_node_service(this);
+            this.wrapper = this.node_service.wrapper;
+            let node_factory = this.core.get_node_factory();
+            if (node_factory) {
+                let o = node_factory(this.node_service);
+                this.wrapper.set_instance(o);
+            } else {
+                let classname = this.node_type.get_classname();
+                let cls = eval(classname);
+                let o = new cls(this.node_service);
+                this.wrapper.set_instance(o);
+            }
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+
+
+        return true;
+    }
+
+    get_wrapper() {
+        return this.wrapper;
+    }
+
+    get_label() {
+        let label = this.metadata.name;
+        if (!label) {
+            label = "";
+        }
+        return label;
+    }
+
+    get_position() {
+        return {
+            "x": this.x,
+            "y": this.y
+        };
+    }
+
+    get_id() {
+        return this.id;
+    }
+
+
+    update_metadata(new_metadata) {
+        for (let key in new_metadata) {
+            this.metadata[key] = new_metadata[key];
+        }
+    }
+
+    get_metadata() {
+        return this.metadata;
+    }
+
+    update_status(status_message, status_state) {
+        this.status_message = status_message;
+        this.status_state = status_state;
+    }
+
+    update_execution_state(new_execution_state) {
+        this.execution_state = new_execution_state;
+    }
+
+    remove() {
+    }
+
+    serialise() {
+        return {
+            "x": this.x,
+            "y": this.y,
+            "node_type": this.node_type.get_id(),
+            "metadata": this.metadata,
+            "properties": this.properties
+        };
+    }
+
+    get_type() {
+        return this.node_type;
+    }
+}
+
+SkadiCoreNode.deserialise = function (core, id, obj) {
+    let node_type = core.get_schema().get_node_type(obj.node_type);
+    let node = new SkadiCoreNode(core, node_type, id, obj.x, obj.y, obj.metadata, obj.properties);
+    node.create_instance();
+    return node;
+}
+
+
+/* skadi/js/core/core_link.js */
+
+class SkadiCoreLink {
+
+  constructor(core, id, from_node, from_port_name, link_type, to_node, to_port_name) {
+    this.core = core;
+    this.id = id;
+
+    this.from_node = from_node;
+    this.to_node = to_node;
+
+    this.from_port_name = from_port_name;
+    this.to_port_name = to_port_name;
+
+    this.link_type = link_type;
+
+  }
+
+  get_id() {
+    return this.id;
+  }
+
+  get_link_type() {
+    return this.link_type;
+  }
+
+  get_from_node() {
+    return this.from_node;
+  }
+
+  get_from_port_name() {
+    return this.from_port_name;
+  }
+
+  get_to_node() {
+    return this.to_node;
+  }
+
+  get_to_port_name() {
+    return this.to_port_name;
+  }
+}
+
+SkadiCoreLink.deserialise = function(core, id,obj) {
+
+    let from_port = core.get_network().extract_address(obj.from_port);
+    let to_port = core.get_network().extract_address(obj.to_port);
+    let from_node = core.get_network().get_node(from_port.node);
+    let to_node = core.get_network().get_node(to_port.node);
+
+    let linkType = core.get_schema().get_link_type(obj.link_type);
+    return new SkadiCoreLink(core, id, from_node, from_port.port, linkType, to_node, to_port.port);
+}
+
+
+
+
+
+
+
+/* skadi/js/core/core_configuration.js */
+
+class SkadiCoreConfiguration {
+
+  constructor(core, package_type, properties) {
+    this.core = core;
+    this.package_type = package_type;
+    this.configuration_service = null;
+    this.wrapper = null;
+    this.properties = properties;
+    this.id = package_type.get_id();
+    this.page = this.package_type.get_configuration().page;
+  }
+
+  get_id() {
+      return this.id;
+  }
+
+  get_package_type() {
+      return this.package_type;
+  }
+
+  create_instance() {
+      try {
+          this.configuration_service = new SkadiConfigurationService(this);
+          this.wrapper = new SkadiWrapper(this,this.configuration_service);
+          this.configuration_service.set_wrapper(this.wrapper);
+          let configuration_factory = this.core.get_configuration_factory();
+          let o = null;
+          if (configuration_factory) {
+              o = configuration_factory(this.configuration_service);
+          } else {
+              let classname = this.package_type.get_configuration_classname();
+              let cls = eval(classname);
+              o = new cls(this.configuration_service);
+          }
+          this.wrapper.set_instance(o);
+      } catch (e) {
+          console.error(e);
+          return false;
+      }
+      return true;
+  }
+
+  get_wrapper() {
+    return this.wrapper;
+  }
+
+  get_instance() {
+      return this.wrapper.get_instance();
+  }
+
+  get_url() {
+      if (this.page && this.page.url) {
+          return this.page.url;
+      }
+      return null;
+  }
+
+  get_page() {
+      return this.page || {};
+  }
+}
+
+SkadiCoreConfiguration.deserialise = function(core,package_id,obj) {
+  let package_type = core.get_schema().get_package_type(package_id);
+  let configuration = new SkadiCoreConfiguration(core,package_type,obj.properties);
+  configuration.create_instance();
+  return configuration;
+}
+
+
+
+
+/* skadi/js/core/network.js */
+
+class SkadiNetwork {
+
+    constructor() {
+        this.nodes = {};
+        this.links = {};
+        this.configurations = {};
+        this.metadata = { "name":"", "description":"" };
+    }
+
+    clear() {
+        for(let id in this.links) {
+            this.links[id].remove();
+        }
+        this.links = {};
+
+        for(let id in this.nodes) {
+            this.nodes[id].remove();
+        }
+        this.nodes = {};
+    }
+
+    get_metadata() {
+        return this.metadata;
+    }
+
+    get_downstream_nodes(from_node_id) {
+        let nodes = [];
+        let start_nodes = [from_node_id];
+        do {
+            let next_gen = [];
+            for(let id in this.links) {
+                let link = this.links[id];
+                let from_node_id = link.get_from_node().get_id();
+                let to_node_id = link.get_to_node().get_id();
+                if (start_nodes.includes(from_node_id)) {
+                    if (!nodes.includes(to_node_id)) {
+                        nodes.push(to_node_id);
+                        next_gen.push(to_node_id);
+                    }
+                }
+            }
+            start_nodes = next_gen;
+        } while(start_nodes.length > 0);
+        return nodes;
+    }
+
+    get_upstream_nodes(from_node_id) {
+        let nodes = [];
+        let start_nodes = [from_node_id];
+        do {
+            let next_gen = [];
+            for(let id in this.links) {
+                let link = this.links[id];
+                let from_node_id = link.get_from_node().get_id();
+                let to_node_id = link.get_to_node().get_id();
+                if (start_nodes.includes(to_node_id)) {
+                    if (!nodes.includes(from_node_id)) {
+                        nodes.push(from_node_id);
+                        next_gen.push(from_node_id);
+                    }
+                }
+            }
+            start_nodes = next_gen;
+        } while(start_nodes.length > 0);
+        return nodes;
+    }
+
+    set_metadata(metadata) {
+        this.metadata = metadata;
+    }
+
+    /* configurations */
+
+    add_configuration(configuration) {
+        this.configurations[configuration.get_id()] = configuration;
+    }
+
+    get_configuration(id) {
+        return this.configurations[id];
+    }
+
+    get_configuration_list() {
+        let list = [];
+        for(let id in this.configurations) {
+            list.push(id);
+        }
+        return list;
+    }
+
+    /* nodes */
+
+    add_node(node) {
+        this.nodes[node.get_id()] = node;
+    }
+
+    get_node(id) {
+        return this.nodes[id];
+    }
+
+    get_node_list() {
+        let list = [];
+        for(let id in this.nodes) {
+            list.push(id);
+        }
+        return list;
+    }
+
+    remove_node(id) {
+        // links to/from this node should have already been removed in Design.remove
+        let node = this.nodes[id];
+        delete this.nodes[id];
+        node.remove();
+    }
+
+    /* links */
+
+    get_link(id) {
+        return this.links[id];
+    }
+
+    add_link(link) {
+        this.links[link.get_id()] = link;
+    }
+
+    remove_link(id) {
+        let link = this.links[id];
+        delete this.links[id];
+        link.remove();
+    }
+
+    get_link_list() {
+        let linklist = [];
+        for(let link_id in this.links) {
+            linklist.push(link_id);
+        }
+        return linklist;
+    }
+
+    extract_address(s) {
+        let obj = {};
+        let split = s.split(":");
+        obj["node"] = split[0];
+        obj["port"] = split[1];
+        return obj;
+    }
+
+    contains_id(id) {
+        return (id in this.nodes || id in this.links);
+    }
+
+    remove(id) {
+        if (id in this.nodes) {
+            this.remove_node(id);
+        }
+        if (id in this.links) {
+            this.remove_link(id);
+        }
+    }
+  }
 
 
 /* skadi/js/dialogs/about.js */
@@ -1138,16 +1132,6 @@ function skadi_populate_clear(design, elt, close_window) {
     });
 }
 
-/* skadi/js/dialogs/configuration.js */
-
-let skadi_design_configuration_html = `
-<h1>Configuration</h1>
-`
-
-function skadi_populate_design_configuration(design, elt, close_window) {
-    elt.innerHTML = skadi_design_configuration_html;
-}
-
 /* skadi/js/dialogs/design_metadata.js */
 
 let skadi_design_metadata_html = `
@@ -1238,6 +1222,98 @@ function skadi_populate_design_metadata(design, elt, close_window) {
        design_metadata["version"] = evt.target.value;
        design.update_design_metadata(design_metadata);
     });
+}
+
+/* skadi/js/dialogs/configuration.js */
+
+let skadi_configuration_header_html = `
+<h1>Package Configurations</h1>
+`
+
+let skadi_status_divs = {};
+
+let skadi_configuration_status = {};
+
+function skadi_update_configuration_status_div(package_id) {
+    let message = "";
+    let status_state = SkadiStatusStates.clear;
+    if (package_id in skadi_configuration_status) {
+        status_state = skadi_configuration_status[package_id].state;
+        message = skadi_configuration_status[package_id].message;
+    }
+    if (package_id in skadi_status_divs) {
+        let status_div = skadi_status_divs[package_id];
+        status_div.innerHTML = "";
+        let status_icon = skadi_create_icon_for_status_state(status_state);
+        if (status_icon) {
+            status_div.appendChild(status_icon);
+        }
+        if (message) {
+            let text = document.createElement("span");
+            text.appendChild(document.createTextNode(message));
+            text.setAttribute("style","vertical-align:middle;");
+            status_div.appendChild(text);
+        }
+    }
+}
+
+function skadi_close_configuration() {
+    this.skadi_status_divs = {};
+}
+
+function skadi_update_configuration_status(package_id, state, message) {
+    skadi_configuration_status[package_id] = {
+        "state": state,
+        "message": message
+    }
+    skadi_update_configuration_status_div(package_id);
+}
+
+function skadi_populate_configuration(design, elt, close_window) {
+    let header_div = document.createElement("div");
+    header_div.innerHTML = skadi_configuration_header_html;
+    elt.appendChild(header_div);
+    for(let package_id in design.network.configurations) {
+        let configuration = design.network.configurations[package_id];
+        let package_type = configuration.get_package_type();
+        let name = package_type.get_metadata().name;
+        if (configuration.get_url()) {
+            let btn = document.createElement("input");
+            btn.setAttribute("type","button");
+            btn.setAttribute("value", "Open Configuration");
+            btn.addEventListener("click", (ev) => {
+                design.open_configuration(package_id);
+            });
+            let row = document.createElement("div");
+            row.setAttribute("class","exo-row");
+
+            let name_cell = document.createElement("div");
+            name_cell.setAttribute("class","exo-2-cell");
+            name_cell.appendChild(document.createTextNode(name));
+            row.appendChild(name_cell);
+
+            let btn_cell = document.createElement("div");
+            btn_cell.setAttribute("class","exo-2-cell");
+            btn_cell.appendChild(btn);
+            row.appendChild(btn_cell);
+
+            elt.appendChild(row);
+
+            let status_row = document.createElement("div");
+            status_row.setAttribute("class","exo-row skadi_status");
+            let status_cell = document.createElement("div");
+            status_cell.setAttribute("class","exo-4-cell");
+            status_cell.setAttribute("style","display:inline-block;");
+
+            status_row.appendChild(status_cell);
+
+            skadi_status_divs[package_id] = status_cell;
+            skadi_update_configuration_status_div(package_id);
+
+            elt.appendChild(status_row);
+            elt.append(document.createElement("hr"));
+        }
+    }
 }
 
 /* skadi/js/common/icons.js */
@@ -1724,9 +1800,6 @@ class SkadiSvgDialogue {
 
     this.width = content_width + 2*this.padding;
     this.height = content_height + 2*this.padding + this.header_sz;
-    if (this.resizebtn) {
-      this.height += this.footer_sz;
-    }
 
     this.startx = 0;
     this.starty = 0;
@@ -2290,8 +2363,8 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
 
 class SkadiTextMenuDialogue extends SkadiSvgDialogue {
 
-    constructor(design, items, closeHandler, owner, x, y) {
-        super(owner.get_id() + "text_menu", design, "Menu", x, y, 100, 500, closeHandler, null, false, true, false,
+    constructor(design, items, closeHandler, owner, x, y, title) {
+        super(owner.get_id() + "text_menu", design, title, x, y, 100, 500, closeHandler, null, false, true, false,
             function (grp) {
                 this.draw(grp);
             });
@@ -2893,9 +2966,9 @@ class SkadiButton {
       .attr("y",this.y-this.height/2)
       .attr("href",this.icon_url);
     let that = this;
-    let onclick = function() {
+    let onclick = function(ev) {
       if (that.enabled && that.onclick) {
-        that.onclick();
+        that.onclick(ev);
       }
     }
     this.button.on("click", onclick);
@@ -3037,23 +3110,621 @@ class SkadiTextButton {
 
 
 
+/* skadi/js/graph/designer.js */
+
+let GRID_SNAP = 20;
+
+class SkadiDesigner extends SkadiCore {
+
+    constructor(element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
+        super(element_id, topology_store, node_factory, configuration_factory);
+        this.width = width;
+        this.height = height;
+        this.is_acyclic = is_acyclic;
+
+        this.id = "design";
+        this.paused = false;
+        this.windows = {};
+
+        this.network = new SkadiNetwork({});
+
+        this.transform = [1, 0, 0, 1, 0, 0];
+
+        this.svg = this.div.append("svg")
+            .attr("width","100%")
+            .attr("height", "100%");
+
+        this.group = this.svg.append("g").attr("id", "viewport");
+        this.group.append("rect").attr("class", "background").attr("width", width + "px")
+            .attr("height", height + "px").attr("x", "0").attr("y", "0");
+        this.node_connector_group = this.group.append("g");
+        this.btn_group = this.svg.append("g");
+
+        this.fixed_div = Skadi.x3.select("#" + element_id).append("div").attr("width", "100%").attr("height", "100%").attr("class",
+            "design_fixed").style("position", "fixed").style("top", 0).style("left", 0);
+
+        this.fixed_svg = this.fixed_div.append("svg").attr("class", "fixed_svg")
+            .attr("width", this.width)
+            .attr("height", this.height);
+
+        this.div.node().addEventListener("wheel", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.wheel(event);
+        }, {"passive": false, "capture": true});
+
+        this.svg_dialogue_group = this.fixed_svg.append("g").attr("class", "fixed_dialogue_group");
+
+        this.svg_tooltip_group = this.fixed_svg.append("g").attr("class", "fixed_tooltip_group");
+
+
+        this.button_size = 64;
+        this.button_margin = 10;
+        let button_x = this.button_margin + this.button_size/2;
+        let button_y = this.button_margin + this.button_size/2;
+
+        this.palette_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_palette_purple, () => { this.open_palette(); }, "Open Palette");
+        this.palette_btn.set_fill("white");
+        this.palette_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.home_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_home_purple, () => { this.go_home(); }, "Reset View Pan/Zoom");
+        this.home_btn.set_fill("white");
+        this.home_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.pause_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size, icon_pause,
+            () => { this.toggle_pause(); }, "Pause/Restart Execution");
+        this.pause_btn.set_fill("white");
+        this.pause_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.file_upload_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_file_upload_purple, () => { this.open_load(); }, "Upload Design");
+        this.file_upload_btn.set_fill("white");
+        this.file_upload_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.file_download_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_file_download_purple, () => {
+            this.open_save();
+        }, "Download Design");
+
+        this.file_download_btn.set_fill("white");
+        this.file_download_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.help_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_help_purple, () => { this.open_about(); }, "Help/About");
+        this.help_btn.set_fill("white");
+        this.help_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.clear_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_delete, () => { this.open_clear(); }, "Clear Design");
+        this.clear_btn.set_fill("white");
+        this.clear_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_edit_purple, () => { this.open_edit_design_metadata(); }, "Edit Design Metadata");
+        this.edit_btn.set_fill("white");
+        this.edit_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.configuration_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "Edit Configurations");
+        this.configuration_btn.set_fill("white");
+        this.configuration_btn.draw(this.btn_group);
+        button_x += this.button_size + this.button_margin;
+
+        this.drag_div = this.fixed_svg.append("rect").attr("x", "0").attr("y", "0")
+            .attr("width", 0).attr("height", 0).attr("opacity", 0.1)
+            .attr("id", "drag_overlay").attr("fill", "#FFF");
+
+        this.ports = {};
+
+        this.transition = 500;
+
+        this.node_group = this.group.append("g");
+
+        let pos = Skadi.x3.get_node_pos(this.div.node());
+        this.offset_x = pos.x;
+        this.offset_y = pos.y;
+
+        this.drag = Skadi.x3.drag();
+
+        this.drag
+            .on("start", (x, y) => {
+                this.drag.start_dragging = true;
+            })
+            .on("drag", (x, y) => {
+                if (this.drag.start_dragging) {
+                    this.drag.start_x = x;
+                    this.drag.start_y = y;
+                    this.drag.start_dragging = false;
+                } else {
+                    let dx = x - this.drag.start_x;
+                    let dy = y - this.drag.start_y;
+                    this.drag.start_x = x;
+                    this.drag.start_y = y;
+                    this.panzoom(dx, dy, 1);
+                }
+            })
+            .on("end", (x, y) => {
+                let dx = x - this.drag.start_x;
+                let dy = y - this.drag.start_y;
+                this.panzoom(dx, dy, 1);
+            });
+        this.div.call(this.drag);
+
+        this.design_metadata_dialogue = null;
+        this.about_dialogue = null;
+        this.clear_dialogue = null;
+        this.palette_dialogue = null;
+        this.load_dialogue = null;
+        this.save_dialogue = null;
+        this.configuration_dialogue = null;
+    }
+
+    toggle_pause() {
+        this.paused = !this.paused;
+        if (this.paused) {
+            this.pause_btn.set_url(icon_play);
+        } else {
+            this.pause_btn.set_url(icon_pause);
+        }
+        this.fire_design_event("pause", this.paused);
+    }
+
+    /* Get various SVG group selections */
+
+    get_group() {
+        return this.group;
+    }
+
+    get_skadi_svg_dialogue_group() {
+        return this.svg_dialogue_group;
+    }
+
+    get_svg_tooltip_group() {
+        return this.svg_tooltip_group;
+    }
+
+    get_node_group() {
+        return this.node_group;
+    }
+
+    get_node_connector_group() {
+        return this.node_connector_group;
+    }
+
+
+    /* canvas zoom support */
+
+    to_canvas_coords(x, y) {
+        let cnv_x = (x - this.transform[4]) / this.transform[0];
+        let cnv_y = (y - this.transform[5]) / this.transform[3];
+        return {"x": cnv_x, "y": cnv_y};
+    }
+
+    wheel(evt) {
+        if (evt.deltaY < 0) {
+            this.panzoom(0, 0, 0.9);
+        } else {
+            this.panzoom(0, 0, 1.1);
+        }
+    }
+
+    panzoom(dx, dy, zoom_by) {
+        let n = this.group;
+
+        this.transform[4] += dx;
+        this.transform[5] += dy;
+
+        let cs = this.div.node().getBoundingClientRect();
+        let w = cs["width"];
+        let h = cs["height"];
+
+        let cx = w * 0.5;
+        let cy = h * 0.5;
+
+        if (zoom_by != 1) {
+            for (let i = 0; i < 6; i++) {
+                this.transform[i] *= zoom_by;
+            }
+            this.transform[4] += (1 - zoom_by) * cx;
+            this.transform[5] += (1 - zoom_by) * cy;
+        }
+
+        let t = "matrix(" + this.transform.join(' ') + ")";
+        n.attr("transform", t);
+
+        this.fire_design_event("panzoom", null);
+    }
+
+    go_home() {
+        this.transform = [1, 0, 0, 1, 0, 0];
+        let t = "matrix(" + this.transform.join(' ') + ")";
+        this.group.attr("transform", t);
+        this.fire_design_event("panzoom", null);
+    }
+
+    get_transition() {
+        return this.transition;
+    }
+
+    /* window management */
+
+    open_node_window(node_id, command_id, open_callback, close_callback, x, y, width, height, resize_callback) {
+        let key = node_id + "_" + command_id;
+        if (key in this.windows) {
+            let oldw = this.windows[key];
+            if (!(oldw instanceof SkadiFrameDialogue)) {
+                oldw.close();
+            } else {
+                return;
+            }
+        }
+        let node = this.network.get_node(node_id);
+        let title = node.get_type().get_label();
+        let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
+                delete this.windows[key];
+                if (close_callback) {
+                    close_callback();
+                }
+            }, true, null, open_callback, resize_callback);
+        ifd.set_parent_node(node);
+        this.windows[key] = ifd;
+    }
+
+    close_windows_for_node(node_id) {
+        let window_keys_to_remove = [];
+        for(let key in this.windows) {
+            if (key.startsWith(node_id)) {
+                window_keys_to_remove.push(key);
+            }
+        }
+
+        window_keys_to_remove.forEach(key => {
+            this.windows[key].close();
+            delete this.windows[key];
+        });
+    }
+
+    open_node_window_tab(node_id, command_id, open_url, open_callback, close_callback, resize_callback) {
+        let key = node_id + "_open";
+        if (key in this.windows) {
+            let oldw = this.windows[key];
+            if (oldw instanceof SkadiFrameDialogue) {
+                oldw.close();
+            } else {
+                return;
+            }
+        }
+        let w = window.open(open_url);
+        if (w) {
+            this.windows[key] = w;
+            if (open_callback) {
+                w.addEventListener("load", (event) => {
+                    open_callback(w);
+                    if (resize_callback) {
+                        w.addEventListener("resize", (event) => {
+                            if (resize_callback) {
+                                resize_callback(w.innerWidth, w.innerHeight);
+                            }
+                        });
+                    }
+
+                    w.addEventListener("unload", (event) => {
+                        if (this.windows[key] == w) {
+                            delete this.windows[key];
+                        }
+                        if (close_callback) {
+                            close_callback();
+                        }
+                    });
+                });
+
+            }
+
+        }
+    }
+
+    open_palette() {
+        if (!this.palette_dialogue) {
+            this.palette_dialogue = new SkadiPalette(this, "car0", () => {
+                this.palette_dialogue = null;
+            });
+            this.palette_dialogue.open();
+        }
+    }
+
+    open_about() {
+        if (!this.about_dialogue) {
+           this.about_dialogue = new SkadiFrameDialogue("about0", this, "About", 100, 100, 600, 400, () => {
+                this.about_dialogue = null;
+            }, true, null, (elt) => {
+               skadi_populate_about(this, elt);
+               }, null);
+        }
+    }
+
+    open_save() {
+        if (!this.save_dialogue) {
+           this.save_dialogue = new SkadiFrameDialogue("save0", this, "Save", 100, 100, 600, 300, () => {
+                this.save_dialogue = null;
+            }, true, null, (elt) => {
+               skadi_populate_save(this, elt);
+               }, null);
+        }
+    }
+
+    open_load() {
+        if (!this.load_dialogue) {
+           this.load_dialogue = new SkadiFrameDialogue("load0", this, "Load", 100, 100, 600, 300, () => {
+                this.load_dialogue = null;
+            }, true, null, (elt) => {
+               skadi_populate_load(this, elt, () => {
+                        this.load_dialogue.close();
+                    });
+               }, null);
+        }
+    }
+
+    open_clear() {
+        if (!this.clear_dialogue) {
+           this.clear_dialogue = new SkadiFrameDialogue("clear0", this, "Clear Design", 100, 100, 600, 400, () => {
+                this.clear_dialogue = null;
+            }, true, null, (elt) => {
+               skadi_populate_clear(this, elt, () => {
+                        this.clear_dialogue.close();
+                    });
+               }, null);
+        }
+    }
+
+    open_edit_design_metadata() {
+        if (!this.design_metadata_dialogue) {
+           this.design_metadata_dialogue = new SkadiFrameDialogue("design_meta0", this, "Design Metadata", 100, 100, 600, 600,
+                () => {
+                    this.design_metadata_dialogue = null;
+                }, true, null,
+               (elt) => {
+                    skadi_populate_design_metadata(this, elt, () => {
+                        this.design_metadata_dialogue.close();
+               });
+           }, null);
+        }
+    }
+
+    open_configuration_dialogue() {
+        if (!this.configuration_dialogue) {
+           this.configuration_dialogue = new SkadiFrameDialogue("configuration0", this, "Package Configurations", 100, 100, 600, 600,
+                () => {
+                    this.configuration_dialogue = null;
+                }, true, null,
+               (elt) => {
+                    skadi_populate_configuration(this, elt, () => {
+                        this.configuration_dialogue.close();
+               });
+           }, null);
+        }
+    }
+
+    /* configuration related */
+
+    open_configuration(package_id) {
+        let configuration = this.network.configurations[package_id];
+        let package_type = configuration.get_package_type();
+        let name = package_type.get_metadata().name;
+        let url = configuration.get_url();
+        if (url) {
+            let id = package_id + "_config";
+            if (!(id in this.windows)) {
+                let title = "Configuration: " + name;
+                let window_height = configuration.get_page().window_height || 400;
+                let window_width = configuration.get_page().window_width || 400;
+                let resolved_url = package_type.get_resource_url(url);
+                let open_callback = (elt) => {
+                    let iframe = document.createElement("iframe");
+                    iframe.setAttribute("src", resolved_url);
+                    iframe.setAttribute("width", "" + window_width - 20);
+                    iframe.setAttribute("height", "" + window_height - 20);
+                    iframe.addEventListener("load", (evt) => {
+                        configuration.open(iframe, window_width, window_width);
+                    });
+                    elt.appendChild(iframe);
+                }
+                let close_callback = () => {
+                    delete this.windows[id];
+                    configuration.close();
+                    skadi_close_configuration();
+                }
+                let resize_callback = (w, h) => {
+                    configuration.resize(w, h);
+                }
+
+                this.windows[id] = new SkadiFrameDialogue(id, this, title, 100, 100, window_width, window_height,
+                    close_callback, true, null, open_callback, resize_callback);
+            }
+        }
+    }
+
+    update_configuration_status(package_id, state, status_message) {
+        super.update_configuration_status(package_id, state, status_message);
+        skadi_update_configuration_status(package_id, state, status_message);
+    }
+
+
+    /* node related */
+
+    create_node(node_id, node_type, x, y, metadata, suppress_event) {
+        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
+        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
+        let id = node_id || this.next_id("nl");
+
+        let node = new SkadiNode(this, node_type, id, x, y, true, metadata, {});
+        node.create_instance();
+        this.add_node(node, suppress_event);
+
+        node.set_display_tooltips(false);
+        return id;
+    }
+
+     add_node(node, suppress_event) {
+        this.network.add_node(node);
+        node.draw();
+        if (!suppress_event) {
+            this.fire_node_event("add", node);
+        }
+    }
+
+    start_node_drag(node_id, startx, starty) {
+        this.nodedrag = {
+            "target": {
+                "id": node_id,
+                "ox": startx,
+                "oy": starty
+            }
+        }
+    }
+
+    stop_node_drag(node_id) {
+        this.nodedrag = null;
+    }
+
+
+    update_node_position(id, x, y, suppress_event) {
+        let node = this.network.get_node(id);
+        node.update_position(x, y);
+        if (!suppress_event) {
+            this.fire_node_event("update_position", node);
+        }
+    }
+
+    /* link/port related */
+
+    create_link(fromPort, toPort, link_type_id, link_id) {
+        let id = link_id || this.next_id("ch");
+        let link_type = this.schema.get_link_type(link_type_id);
+        let link = new SkadiLink(this, id, fromPort, link_type, toPort);
+        this.add_link(link, link_id != undefined);
+        return id;
+    }
+
+    add_link(link, suppress_event) {
+        this.network.add_link(link);
+        link.draw();
+        if (!suppress_event) {
+            this.fire_link_event("add", link);
+        }
+    }
+
+    find_port(x, y, link_type_id) {
+        for (let k in this.ports) {
+            let port = this.ports[k];
+            let coords = port.get_position();
+            let dx = x - coords.x;
+            let dy = y - coords.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= port.r && port.link_type_id == link_type_id) {
+                return port;
+            }
+        }
+        return null;
+    }
+
+    register_port(port) {
+        this.ports[port.id] = port;
+    }
+
+    unregister_port(port) {
+        delete this.ports[port.id];
+    }
+
+    get_port(port_id) {
+        return this.ports[port_id];
+    }
+
+    already_connected(fromPort, toPort) {
+        for (let link_id in this.network.links) {
+            let link = this.network.get_link(link_id);
+            if (link.fromPort == fromPort && link.toPort == toPort) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    check_allowed_to_connect(from_node_id, to_node_id) {
+        if (this.is_acyclic) {
+            // check that connecting would not introduce a cycle
+            return !(this.network.get_downstream_nodes(to_node_id).includes(from_node_id));
+        } else {
+            return true;
+        }
+    }
+
+
+    /* clear or remove from the network */
+
+    clear(suppress_event) {
+        this.network.get_node_list().forEach(node_id => { this.close_windows_for_node(node_id); });
+        super.clear();
+    }
+
+    remove(id, suppress_event) {
+        let node = this.network.get_node(id);
+        if (node) {
+            // cascade to any links connected to the node to remove
+            this.close_windows_for_node(id);
+
+        }
+        super.remove(id, suppress_event);
+    }
+
+    /* load/save */
+
+    deserialise(from_obj, suppress_events) {
+        if (this.graph_executor) {
+            this.graph_executor.pause();
+        }
+        for (let node_id in from_obj.nodes) {
+            let node = SkadiNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            this.add_node(node, suppress_events);
+        }
+        for (let link_id in from_obj.links) {
+            let link = SkadiLink.deserialise(this, link_id, from_obj.links[link_id]);
+            this.add_link(link, suppress_events);
+        }
+        let package_properties = from_obj.package_properties || {};
+        for (let package_id in package_properties) {
+            let configuration = SkadiConfiguration.deserialise(this, package_id, package_properties[package_id]);
+            this.add_configuration(configuration);
+        }
+        if ("metadata" in from_obj) {
+            this.metadata = from_obj["metadata"];
+        }
+        if (this.graph_executor) {
+            this.graph_executor.resume();
+        }
+    }
+}
+
+
+
+
 /* skadi/js/graph/node.js */
 
-class SkadiNode {
+class SkadiNode extends SkadiCoreNode {
 
   constructor(design, node_type, id, x, y, active, metadata, properties) {
+    super(design, node_type, id, x, y, metadata, properties);
     this.design = design;
-    this.node_type = node_type;
-    this.metadata = metadata;
-    this.node_service = null;
-    this.wrapper = null;
-    this.properties = properties;
 
-    this.id = id;
-
-    // coordinates on canvas
-    this.x = x;
-    this.y = y;
 
     this.r = 45; // radius of node
 
@@ -3140,24 +3811,9 @@ class SkadiNode {
   }
 
   create_instance() {
-    // unfortunately looks like eval is needed to construct ES6 class instances from the classname
-    try {
-      this.node_service = this.design.create_node_service(this);
-      this.wrapper = this.node_service.wrapper;
-      let node_factory = this.design.get_node_factory();
-      if (node_factory) {
-        let o = node_factory(this.node_service);
-        this.wrapper.set_instance(o);
-      } else {
-        let classname = this.node_type.get_classname();
-        let cls = eval(classname);
-        let o = new cls(this.node_service);
-        this.wrapper.set_instance(o);
-      }
-    } catch(e) {
-      console.error(e);
-      return false;
-    }
+
+    super.create_instance();
+
     let window_height = this.node_type.get_page().window_height || 400;
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
@@ -3209,12 +3865,6 @@ class SkadiNode {
   register_command_window(command_name, command_label, open_callback, close_callback, window_width, window_height, resize_callback) {
     this.commands.push({"command_type":"open_window", "command_name":command_name, "command_label":command_label,
         "open_callback":open_callback, "close_callback": close_callback, "resize_callback": resize_callback,
-        "window_width":window_width, "window_height":window_height});
-  }
-
-  register_command_window_url(command_name, command_label, command_url, window_width, window_height) {
-    this.commands.push({"command_type":"open_window_url", "command_name":command_name, "command_label":command_label,
-        "command_url": command_url,
         "window_width":window_width, "window_height":window_height});
   }
 
@@ -3293,24 +3943,10 @@ class SkadiNode {
     return this.grp;
   }
 
-  get_label() {
-    let label = this.metadata.name;
-    if (!label) {
-      label = "";
-    }
-    return label;
-  }
 
-  get_position() {
-    return {
-      "x": this.x,
-      "y": this.y
-    };
-  }
 
   draw(parent) {
     let container = parent ? parent : this.design.get_node_group();
-    let that = this;
 
     this.grp = container.append("g")
       .attr("class", "node")
@@ -3375,40 +4011,40 @@ class SkadiNode {
     if (this.active) {
       this.drag = Skadi.x3.drag();
       this.drag
-        .on("start_abs", function() {
-          if (that.tooltip) {
-            that.tooltip.hide();
+        .on("start_abs", () => {
+          if (this.tooltip) {
+            this.tooltip.hide();
           }
-          that.dragged = false;
+          this.dragged = false;
         })
-        .on("drag_abs", function(x,y) {
-          x = x-that.design.offset_x;
-          y = y-that.design.offset_y;
-          let cc = that.design.to_canvas_coords(x,y);
-          if (!that.dragged) {
-            that.design.start_node_drag(that.id, cc.x,cc.y);
+        .on("drag_abs", (x,y) => {
+          x = x-this.design.offset_x;
+          y = y-this.design.offset_y;
+          let cc = this.design.to_canvas_coords(x,y);
+          if (!this.dragged) {
+            this.design.start_node_drag(this.id, cc.x,cc.y);
           }
-          that.dragged = true;
-          that.update_position(cc.x,cc.y);
-          that.design.update_node_position(that.id, cc.x,cc.y, true);
+          this.dragged = true;
+          this.update_position(cc.x,cc.y);
+          this.design.update_node_position(this.id, cc.x,cc.y, true);
         })
-        .on("end_abs", function(x,y) {
-          x = x-that.design.offset_x;
-          y = y-that.design.offset_y;
-          let cc = that.design.to_canvas_coords(x,y);
+        .on("end_abs", (x,y) => {
+          x = x-this.design.offset_x;
+          y = y-this.design.offset_y;
+          let cc = this.design.to_canvas_coords(x,y);
           x = Math.round(cc.x/GRID_SNAP)*GRID_SNAP;
           y = Math.round(cc.y/GRID_SNAP)*GRID_SNAP;
-          that.design.update_node_position(that.id, x,y, false);
-          that.design.stop_node_drag(that.id);
+          this.design.update_node_position(this.id, x,y, false);
+          this.design.stop_node_drag(this.id);
         });
       this.grp2.call(this.drag);
 
-      let chandler = function(e) {
-        if (that.menu_dial) {
+      let chandler = (e) => {
+        if (this.menu_dial) {
           return;
         }
-        if (that.dragged) {
-          that.dragged = false;
+        if (this.dragged) {
+          this.dragged = false;
           return;
         }
         let mitems = [];
@@ -3416,14 +4052,14 @@ class SkadiNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem(that.REMOVE_ACTION, function() {
-          that.design.remove(that.get_id());
+        mitems.push(new SkadiTextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
+          this.design.remove(this.get_id());
         }));
 
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(that.design, mitems, function() { that.menu_dial = null; }, that, mx, my);
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "Edit Node");
         tm.open();
       };
 
@@ -3448,14 +4084,9 @@ class SkadiNode {
         this.design.open_node_window(this.get_id(), command["command_name"], command["open_callback"], command["close_callback"],
             e.clientX,e.clientY, command["window_width"], command["window_height"], command["resize_callback"]);
       });
-    } else if (command["command_type"] == "open_window_url") {
-      return new SkadiTextMenuDialogue.MenuItem(command["command_label"], (e) => {
-        this.design.open_node_window_url(this.get_id(), command["command_name"], null, command["command_url"],
-            e.clientX,e.clientY, command["window_width"], command["window_height"]);
-      });
     } else if (command["command_type"] == "open_window_tab") {
       return new SkadiTextMenuDialogue.MenuItem(command["command_label"], (e) => {
-        this.design.open_node_windowTab(this.get_id(), command["command_name"], command["command_url"],
+        this.design.open_node_window_tab(this.get_id(), command["command_name"], command["command_url"],
             command["open_callback"], command["close_callback"], command["resize_callback"]);
       });
     } else if (command["command_type"] == "notify") {
@@ -3466,16 +4097,16 @@ class SkadiNode {
   }
 
   set_drag_handlers(start_drag_cb, drag_cb, end_drag_cb) {
-    let that = this;
+
     let drag = Skadi.x3.drag();
     drag
-      .on("start", function() {
-        that.tooltip.hide();
-        that.dragged = false;
+      .on("start", () => {
+        this.tooltip.hide();
+        this.dragged = false;
       })
-      .on("drag", function(x,y) {
+      .on("drag", (x,y) => {
         let evloc = {"x":x,"y":y};
-        if (!that.dragged) {
+        if (!this.dragged) {
           if (start_drag_cb) {
             start_drag_cb(evloc);
           }
@@ -3484,9 +4115,9 @@ class SkadiNode {
             drag_cb(evloc);
           }
         }
-        that.dragged = true;
+        this.dragged = true;
       })
-      .on("end", function() {
+      .on("end", () => {
         if (end_drag_cb) {
           end_drag_cb();
         }
@@ -3502,25 +4133,19 @@ class SkadiNode {
     this.outer.attr("class", cls)
   }
 
-  get_id() {
-    return this.id;
-  }
 
   set_click_handler(handler) {
     this.clickHandler = handler;
-    let that = this;
     if (this.clickHandler && this.grp) {
-      let ch = function(evt) {
-        that.call_click_handler(evt);
+      let ch = (evt) => {
+        this.call_click_handler(evt);
       }
       this.grp2.on("click", ch);
     }
   }
 
   update_metadata(new_metadata) {
-    for(let key in new_metadata) {
-      this.metadata[key] = new_metadata[key];
-    }
+    super.update_metadata(new_metadata);
     let label = "";
     if (this.metadata["name"]) {
       label = this.metadata["name"];
@@ -3607,11 +4232,7 @@ class SkadiNode {
      }
   }
 
-  get_metadata() {
-    return this.metadata;
-  }
-
-  get_portPosition(portKey, inNotOut) {
+  get_port_position(portKey, inNotOut) {
     let port_count = (inNotOut ? this.inPortKeys.length : this.outPortKeys.length);
     let index = this.get_portIndex(portKey, inNotOut);
 
@@ -3630,9 +4251,9 @@ class SkadiNode {
     };
   }
 
-  get_portLinkPosition(portKey, len, inNotOut) {
+  get_port_link_position(portKey, len, inNotOut) {
 
-    let pos = this.get_portPosition(portKey, inNotOut);
+    let pos = this.get_port_position(portKey, inNotOut);
 
     let angle = pos.theta;
 
@@ -3699,8 +4320,7 @@ class SkadiNode {
   }
 
   update_status(status_message,status_state) {
-    this.status_message = status_message;
-    this.status_state = status_state
+    super.update_status(status_message, status_state);
     this.clear_status_area();
     if (this.status_message || this.status_state) {
       let status_icon_url = null;
@@ -3897,7 +4517,7 @@ class SkadiNode {
   }
 
   update_execution_state(new_execution_state) {
-    this.execution_state = new_execution_state;
+    super.update_execution_state(new_execution_state);
     if (new_execution_state === SkadiApi.EXECUTION_STATE_CLEAR) {
        window.setTimeout(ev => {
           this.outer.attr("class", "outer " + this.execution_state);
@@ -3907,11 +4527,8 @@ class SkadiNode {
     }
   }
 
-  get_port(id) {
-    return this.ports[id];
-  }
-
   remove() {
+    super.remove();
     for (let portid in this.ports) {
       let port = this.ports[portid];
       port.remove();
@@ -3924,19 +4541,6 @@ class SkadiNode {
     }
   }
 
-  serialise() {
-    return {
-      "x":this.x,
-      "y":this.y,
-      "node_type":this.node_type.get_id(),
-      "metadata":this.metadata,
-      "properties": this.properties
-    };
-  }
-
-  get_type() {
-    return this.node_type;
-  }
 }
 
 SkadiNode.deserialise = function(design,id,obj) {
@@ -3951,11 +4555,11 @@ SkadiNode.deserialise = function(design,id,obj) {
 
 /* skadi/js/graph/link.js */
 
-class SkadiLink {
+class SkadiLink extends SkadiCoreLink {
 
   constructor(design, id, fromPort, link_type, toPort) {
+    super(design, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort ? toPort.get_node(): null, toPort ? toPort.get_port_name(): null);
     this.design = design;
-    this.id = id;
 
     this.fromPort = fromPort;
     this.toPort = toPort;
@@ -3966,16 +4570,7 @@ class SkadiLink {
     }
     this.REMOVE_ACTION = "Remove";
 
-    this.link_type = link_type;
     this.menu_dial = null;
-  }
-
-  get_id() {
-    return this.id;
-  }
-
-  get_link_type() {
-    return this.link_type;
   }
 
   get_from_port() {
@@ -3986,13 +4581,6 @@ class SkadiLink {
     return this.toPort;
   }
 
-  get_from_node() {
-    return this.fromPort.get_node();
-  }
-
-  get_to_node() {
-    return this.toPort.get_node();
-  }
 
   remove() {
     this.fromPort.remove_link(this);
@@ -4023,7 +4611,7 @@ class SkadiLink {
         this.design.remove(this.get_id());
       }));
       let evloc = Skadi.x3.get_event_xy(evt);
-      let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, evloc.x - 50, evloc.y - 50);
+      let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, evloc.x - 50, evloc.y - 50, "Edit Link");
       tm.open();
     };
 
@@ -4173,7 +4761,7 @@ class SkadiPort {
     return this.node;
   }
 
-  get_portName() {
+  get_port_name() {
     return this.port_name;
   }
 
@@ -4213,7 +4801,7 @@ class SkadiPort {
 
   draw(parent) {
     let container = parent ? parent : this.design.getCellGroup();
-    let coords = this.node.get_portPosition(this.port_name, this.inNotOut);
+    let coords = this.node.get_port_position(this.port_name, this.inNotOut);
     this.r = coords.r;
 
     this.grp = container.append("g").attr("id", this.id.replace(":", "_"));
@@ -4302,7 +4890,7 @@ class SkadiPort {
   }
 
   update_position(refocus) {
-    let coords = this.node.get_portPosition(this.port_name, this.inNotOut);
+    let coords = this.node.get_port_position(this.port_name, this.inNotOut);
     this.r = coords.r;
     let sel = this.shape;
     if (refocus) {
@@ -4320,7 +4908,7 @@ class SkadiPort {
   }
 
   get_position() {
-    let coords = this.node.get_portPosition(this.port_name, this.inNotOut);
+    let coords = this.node.get_port_position(this.port_name, this.inNotOut);
     return {
       "x": coords.cx,
       "y": coords.cy
@@ -4328,11 +4916,11 @@ class SkadiPort {
   }
 
   get_port_angle() {
-    return this.node.get_portPosition(this.port_name,this.inNotOut).theta;
+    return this.node.get_port_position(this.port_name,this.inNotOut).theta;
   }
 
   get_linkPosition(len) {
-    return this.node.get_portLinkPosition(this.port_name, len, this.inNotOut);
+    return this.node.get_port_link_position(this.port_name, len, this.inNotOut);
   }
 
   add_link(link, inNotOut) {
@@ -4394,202 +4982,30 @@ class SkadiPort {
 
 
 
-/* skadi/js/graph/network.js */
-
-class SkadiNetwork {
-
-    constructor() {
-        this.nodes = {};
-        this.links = {};
-        this.configurations = {};
-        this.metadata = { "name":"", "description":"" };
-    }
-
-    clear() {
-        for(let id in this.links) {
-            this.links[id].remove();
-        }
-        this.links = {};
-
-        for(let id in this.nodes) {
-            this.nodes[id].remove();
-        }
-        this.nodes = {};
-    }
-
-    get_metadata() {
-        return this.metadata;
-    }
-
-    get_downstream_nodes(from_node_id) {
-        let nodes = [];
-        let start_nodes = [from_node_id];
-        do {
-            let next_gen = [];
-            for(let id in this.links) {
-                let link = this.links[id];
-                let from_node_id = link.get_from_node().get_id();
-                let to_node_id = link.get_to_node().get_id();
-                if (start_nodes.includes(from_node_id)) {
-                    if (!nodes.includes(to_node_id)) {
-                        nodes.push(to_node_id);
-                        next_gen.push(to_node_id);
-                    }
-                }
-            }
-            start_nodes = next_gen;
-        } while(start_nodes.length > 0);
-        return nodes;
-    }
-
-    get_upstream_nodes(from_node_id) {
-        let nodes = [];
-        let start_nodes = [from_node_id];
-        do {
-            let next_gen = [];
-            for(let id in this.links) {
-                let link = this.links[id];
-                let from_node_id = link.get_from_node().get_id();
-                let to_node_id = link.get_to_node().get_id();
-                if (start_nodes.includes(to_node_id)) {
-                    if (!nodes.includes(from_node_id)) {
-                        nodes.push(from_node_id);
-                        next_gen.push(from_node_id);
-                    }
-                }
-            }
-            start_nodes = next_gen;
-        } while(start_nodes.length > 0);
-        return nodes;
-    }
-
-    set_metadata(metadata) {
-        this.metadata = metadata;
-    }
-
-    /* configurations */
-
-    add_configuration(configuration) {
-        this.configurations[configuration.get_id()] = configuration;
-    }
-
-    get_configuration(id) {
-        return this.configurations[id];
-    }
-
-    /* nodes */
-
-    add_node(node) {
-        this.nodes[node.get_id()] = node;
-    }
-
-    get_node(id) {
-        return this.nodes[id];
-    }
-
-    get_node_list() {
-        let list = [];
-        for(let id in this.nodes) {
-            list.push(id);
-        }
-        return list;
-    }
-
-    remove_node(id) {
-        // links to/from this node should have already been removed in Design.remove
-        let node = this.nodes[id];
-        delete this.nodes[id];
-        node.remove();
-    }
-
-    /* links */
-
-    get_link(id) {
-        return this.links[id];
-    }
-
-    add_link(link) {
-        this.links[link.get_id()] = link;
-    }
-
-    remove_link(id) {
-        let link = this.links[id];
-        delete this.links[id];
-        link.remove();
-    }
-
-    get_link_list() {
-        let linklist = [];
-        for(let link_id in this.links) {
-            linklist.push(link_id);
-        }
-        return linklist;
-    }
-
-    extract_address(s) {
-        let obj = {};
-        let split = s.split(":");
-        obj["node"] = split[0];
-        obj["port"] = split[1];
-        return obj;
-    }
-
-    contains_id(id) {
-        return (id in this.nodes || id in this.links);
-    }
-
-    remove(id) {
-        if (id in this.nodes) {
-            this.remove_node(id);
-        }
-        if (id in this.links) {
-            this.remove_link(id);
-        }
-    }
-  }
-
-
 /* skadi/js/graph/configuration.js */
 
-class SkadiConfiguration {
+class SkadiConfiguration extends SkadiCoreConfiguration {
 
   constructor(design, package_type, properties) {
-    this.design = design;
-    this.package_type = package_type;
-    this.configuration_service = null;
-    this.wrapper = null;
-    this.properties = properties;
-    this.id = package_type.get_id();
+      super(design, package_type, properties);
   }
 
-  get_id() {
-      return this.id;
+  open(iframe, w, h) {
+      this.iframe = iframe;
+      this.iframe.setAttribute("width",""+w-20);
+      this.iframe.setAttribute("height",""+h-20);
+      this.wrapper.open(iframe.contentWindow, w, h);
   }
 
-  create_instance() {
-      try {
-          this.configuration_service = new SkadiConfigurationService(this);
-          this.wrapper = new SkadiWrapper(this,this.configuration_service);
-          this.configuration_service.set_wrapper(this.wrapper);
-          let configuration_factory = this.design.get_configuration_factory();
-          let o = null;
-          if (configuration_factory) {
-              o = configuration_factory(this.configuration_service);
-          } else {
-              let classname = this.package_type.get_classname();
-              let cls = eval(classname);
-              o = new cls(this.configuration_service);
-          }
-          this.wrapper.set_instance(o);
-      } catch (e) {
-          console.error(e);
-          return false;
-      }
-      return true;
+  resize(w,h) {
+      this.iframe.setAttribute("width",""+w-20);
+      this.iframe.setAttribute("height",""+h-20);
+      this.wrapper.resize(w,h);
   }
 
-  get_wrapper() {
-    return this.wrapper;
+  close() {
+      this.iframe = null;
+      this.wrapper.close();
   }
 }
 
@@ -4666,7 +5082,7 @@ class SkadiNodeBase {
 class SkadiNodeService {
 
     constructor(node) {
-        this.design = node.design;
+        this.core = node.core;
         this.node_id = node.id;
         this.node_type = node.node_type;
         this.wrapper = null;
@@ -4705,19 +5121,19 @@ class SkadiNodeService {
     }
 
     set_status_info(status_msg) {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
+        this.core.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
     }
 
     set_status_warning(status_msg) {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
+        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
     }
 
     set_status_error(status_msg) {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
+        this.core.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
     }
 
     clear_status() {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.clear, "");
+        this.core.update_node_status(this.node_id, SkadiStatusStates.clear, "");
     }
 
     resolve_url(url) {
@@ -4729,7 +5145,11 @@ class SkadiNodeService {
     }
 
     get_configuration() {
-        return this.design.get_configuration(this.node_type.get_package_type().get_id())
+        return this.core.get_configuration(this.node_type.get_package_type().get_id()).get_instance();
+    }
+
+    request_execution() {
+        this.core.request_execution(this.node_id);
     }
 
 }
@@ -4752,6 +5172,10 @@ class SkadiWrapper {
 
     set_instance(instance) {
         this.instance = instance;
+    }
+
+    get_instance() {
+        return this.instance;
     }
 
     get_property(property_name, default_value) {
@@ -4898,6 +5322,24 @@ class SkadiWrapper {
         }
         this.pending_messages = [];
     }
+
+    reset_execution() {
+        if (this.instance.reset_execution) {
+            try {
+                this.instance.reset_execution();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    }
+
+    async execute(inputs) {
+        if (this.instance.execute) {
+            return await this.instance.execute(inputs);
+        } else {
+            return {};
+        }
+    }
 }
 
 /* skadi/js/services/configuration_service.js */
@@ -4905,7 +5347,7 @@ class SkadiWrapper {
 class SkadiConfigurationService {
 
     constructor(configuration) {
-        this.design = configuration.design;
+        this.core = configuration.core;
         this.package_type = configuration.package_type;
         this.package_id = this.package_type.get_id();
         this.wrapper = null;
@@ -4939,30 +5381,24 @@ class SkadiConfigurationService {
         this.wrapper.set_message_handler(handler);
     }
 
-    /*
     get_package_id() {
         return this.package_id;
     }
 
-    get_package_type() {
-        return this.package_type;
-    }
-    */
-
     set_status_info(status_msg) {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.info, status_msg);
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.info, status_msg);
     }
 
     set_status_warning(status_msg) {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.warning, status_msg);
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.warning, status_msg);
     }
 
     set_status_error(status_msg) {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.error, status_msg);
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.error, status_msg);
     }
 
     clear_status() {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.clear, "");
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.clear, "");
     }
 
     resolve_url(url) {
@@ -5156,6 +5592,13 @@ class SkadiPackageType {
     return this.display;
   }
 
+  get_configuration_classname() {
+    if (this.configuration && this.configuration.classname) {
+      return this.configuration.classname;
+    }
+    return "";
+  }
+
   get_url() {
     return this.metadata["url"];
   }
@@ -5309,6 +5752,7 @@ class SkadiSchema {
             let linkType = new SkadiLinkType(link_id, packageType, lt);
             this.link_types[linkType.get_id()] = linkType;
         }
+
         return packageType;
     }
 
@@ -5363,27 +5807,80 @@ class SkadiSchema {
 
 
 
+/* skadi/js/view/application.js */
+
+skadi_application_statuses = {};
+skadi_application_status_areas = {};
+
+class SkadiApplication extends SkadiCore {
+
+    constructor(element_id, node_factory, configuration_factory) {
+        super(element_id, null, node_factory, configuration_factory);
+    }
+
+    open_display() {
+        let configuration_list = this.network.get_configuration_list();
+        configuration_list.map(package_id => {
+            let e = document.createElement("p");
+            e.appendChild(document.createTextNode("Package:"+package_id));
+            this.div.node().appendChild(e);
+        });
+        let node_list = this.get_network().get_node_list();
+        node_list.map(node_id => {
+            let node = this.get_network().get_node(node_id);
+            let url = node.get_type().get_html_url();
+            let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
+                    .append("ul").append("li").attr("role","treeitem");
+            let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
+            let label = li.append("label").text(node.get_metadata().name);
+
+            skadi_application_status_areas[node_id] = label.append("span");
+            skadi_application_status_areas[node_id].attr("class","status_label");
+            let div = li.append("div");
+            let iframe = div.append("iframe").attr("class", "skadi_iframe")
+                .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
+            iframe.addEventListener("load", (ev) => {
+               node.get_wrapper().open(iframe.contentWindow,null,null);
+            });
+            this.div.append("hr");
+            if (node_id in skadi_application_statuses) {
+                let status = skadi_application_statuses[node_id];
+                this.update_status_area(node_id, status.state, status.status_message);
+            }
+        });
+    }
+
+    update_node_status(id, state, status_message) {
+        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
+        this.update_status_area(id, state, status_message);
+    }
+
+    update_status_area(id, state, status_message) {
+        if (id in skadi_application_status_areas) {
+            let area = skadi_application_status_areas[id];
+            area.node().innerHTML = "";
+            area.text(status_message);
+            let status_icon = skadi_create_icon_for_status_state(state);
+            if (status_icon) {
+                area.node().appendChild(status_icon);
+            }
+        }
+    }
+
+}
+
 /* skadi/js/skadi-api.js */
 
 class SkadiApi {
 
-    /**
-     * Create a skadi graphical editor
-     *
-     * @param {string} element_id - the name of the document element into which skadi will be loaded
-     * @param {Number} canvas_width - the width of the canvas area
-     * @param {Number} canvas_height - the height of the canvas area
-     * @param {Boolean} is_acyclic - true iff the graph must be acyclic
-     * @param {Object} topology_store - optional, object implementing the TopologyStore interface
-     * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
-     * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
-     */
-    constructor(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-                node_factory, configuration_factory) {
-        topology_store = topology_store || new TopologyStore(this);
-        this.design = new SkadiDesign(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-            node_factory, configuration_factory);
+
+    constructor() {
         this.schema = null;
+        this.instance = null; // designer or application
+    }
+
+    set_instance(designer_or_application) {
+        this.instance = designer_or_application;
     }
 
     /**
@@ -5403,8 +5900,20 @@ class SkadiApi {
         for (let idx = 0; idx < package_urls.length; idx++) {
             packages.push(await loadPackageFromUrl(package_urls[idx],this.schema));
         }
-        this.design.set_schema(this.schema);
+        this.instance.set_schema(this.schema);
         return packages;
+    }
+
+    init() {
+        // load up configurations for any packages that specify them
+        for(let package_id in this.schema.package_types) {
+            let package_type = this.schema.package_types[package_id];
+            if (package_type.get_configuration_classname()) {
+                let conf = new SkadiConfiguration(this.instance,package_type,{});
+                conf.create_instance();
+                this.instance.add_configuration(conf);
+            }
+        }
     }
 
     get_schema() {
@@ -5412,8 +5921,76 @@ class SkadiApi {
     }
 
     set_graph_executor(executor) {
-        this.design.set_graph_executor(executor);
+        this.instance.set_graph_executor(executor);
     }
+
+    get_network() {
+        return this.instance.get_network();
+    }
+
+    set_status(node_id, status_msg, state) {
+        this.instance.update_node_status(node_id, state, status_msg);
+    }
+
+    set_configuration_status(package_id, status_msg, state) {
+        this.instance.update_configuration_status(package_id, state, status_msg);
+    }
+
+    update_execution_state(node_id, state) {
+        this.instance.update_execution_state(node_id, state);
+    }
+
+    execution_complete() {
+        this.instance.execution_complete();
+    }
+
+    get_version() {
+        return "0.0.1"; // placeholder substituted with actual version by the build.py script
+    }
+
+}
+
+SkadiApi.STATUS_STATE_INFO = "info";
+SkadiApi.STATUS_STATE_WARNING = "warning";
+SkadiApi.STATUS_STATE_ERROR = "error";
+SkadiApi.STATUS_STATE_CLEAR = "";
+
+SkadiApi.EXECUTION_STATE_PENDING = "pending";
+SkadiApi.EXECUTION_STATE_EXECUTING = "executing";
+SkadiApi.EXECUTION_STATE_EXECUTED = "executed";
+SkadiApi.EXECUTION_STATE_FAILED = "failed";
+SkadiApi.EXECUTION_STATE_CLEAR = "";
+
+SkadiApi.DEFAULT_CANVAS_WIDTH = 4000;
+SkadiApi.DEFAULT_CANVAS_HEIGHT = 2000;
+
+
+
+
+/* skadi/js/skadi-designer-api.js */
+
+class SkadiDesignerApi extends SkadiApi {
+
+    /**
+     * Create a skadi graphical editor
+     *
+     * @param {string} element_id - the name of the document element into which skadi will be loaded
+     * @param {Number} canvas_width - the width of the canvas area
+     * @param {Number} canvas_height - the height of the canvas area
+     * @param {Boolean} is_acyclic - true iff the graph must be acyclic
+     * @param {Object} topology_store - optional, object implementing the TopologyStore interface
+     * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
+     * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
+     */
+    constructor(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+                node_factory, configuration_factory) {
+        super();
+        topology_store = topology_store || new TopologyStore(this);
+        this.design = new SkadiDesigner(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+            node_factory, configuration_factory);
+        this.set_instance(this.design);
+    }
+
 
     load(from_obj, supress_events) {
         this.design.clear(supress_events);
@@ -5422,22 +5999,6 @@ class SkadiApi {
 
     save() {
         return this.design.serialise();
-    }
-
-    update_metadata(node_id, metadata) {
-        this.design.update_metadata(node_id,metadata);
-    }
-
-    set_status(node_id, status_msg, state) {
-        this.design.update_node_status(node_id, state, status_msg);
-    }
-
-    update_execution_state(node_id, state) {
-        this.design.update_execution_state(node_id, state);
-    }
-
-    execution_complete() {
-        this.design.execution_complete();
     }
 
     add_node(node_id, node_type_name, xc, yc, metadata) {
@@ -5503,14 +6064,6 @@ class SkadiApi {
         this.design.add_design_event_handler(design_event_type, handler);
     }
 
-    get_version() {
-        return "0.0.1"; // placeholder substituted with actual version by the build.py script
-    }
-
-    get_node(node_id) {
-        return this.design.get_node(node_id);
-    }
-
 }
 
 SkadiApi.STATUS_STATE_INFO = "info";
@@ -5530,29 +6083,98 @@ SkadiApi.DEFAULT_CANVAS_HEIGHT = 2000;
 
 
 
+/* skadi/js/skadi-view-api.js */
+
+class SkadiViewApi extends SkadiApi {
+
+    /**
+     * Create a skadi application view
+     *
+     * @param {string} element_id - the name of the document element into which skadi will be loaded
+     * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
+     * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
+     */
+    constructor(element_id, node_factory, configuration_factory) {
+        super();
+        this.application = new SkadiApplication(element_id, node_factory, configuration_factory);
+        this.set_instance(this.application);
+    }
+
+    /**
+     * Load topology into skadi
+     *
+     * @param {string} topology_url - the topology to load
+     */
+    async load_topology(topology_url) {
+        return await fetch(topology_url)
+            .then(response => response.json())
+            .then(topology => this.application.deserialise(topology, true));
+    }
+
+    add_node_event_handler(node_event_type, handler) {
+    }
+
+    add_link_event_handler(link_event_type, handler) {
+    }
+
+    add_design_event_handler(design_event_type, handler) {
+    }
+
+    init() {
+        super.init();
+        this.application.open_display();
+    }
+}
+
+
+
+
+
+
 /* skadi/js/start-skadi.js */
 
  /**
   * Asynchronous function to create a skadi graphical editor widget
   *
-  * @param {array} schema_urls - an array containing the URLs of one or more schema files to load
   * @param {string} element_id - the name of the document element into which skadi will be loaded
+  * @param {array} schema_urls - an array containing the URLs of one or more schema files to load
   * @param {Object} canvas_width - the width of the canvas area
   * @param {Number} canvas_height - the height of the canvas area
   * @param {Boolean} is_acyclic - true iff the graph must be acyclic
   * @param {Object} topology_store - optional, object implementing the TopologyStore interface
-  * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
+  * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using classname from the schema
+  * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
-async function start_skadi(schema_urls, element_id, canvas_width, canvas_height, is_acyclic, topology_store, node_factory) {
+async function start_skadi_designer(element_id, schema_urls, canvas_width, canvas_height, is_acyclic, topology_store, node_factory, configuration_factory) {
 
     if (is_acyclic == undefined || is_acyclic == null) {
         is_acyclic = true;
     }
 
-    let skadi_instance = new SkadiApi(element_id || "canvas_container_id",
-        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, is_acyclic, topology_store, node_factory);
+    let skadi_instance = new SkadiDesignerApi(element_id || "canvas_container_id",
+        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, is_acyclic, topology_store, node_factory, configuration_factory);
     await skadi_instance.load_schema(schema_urls);
+    skadi_instance.init();
+    return skadi_instance;
+}
 
+ /**
+  * Asynchronous function to create a skadi graphical editor widget
+  *
+  * @param {string} element_id - the name of the document element into which skadi will be loaded
+  * @param {array} schema_urls - an array containing the URLs of one or more schema files to load
+  * @param {array} topology_url - url for a topology to load
+  * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using classname from the schema
+  * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
+  */
+async function start_skadi_application(element_id, schema_urls, topology_url, node_factory, configuration_factory) {
+
+    let skadi_instance = new SkadiViewApi(element_id, node_factory, configuration_factory);
+    await skadi_instance.load_schema(schema_urls);
+    if (topology_url) {
+        await skadi_instance.load_topology(topology_url);
+    }
+    skadi_instance.init();
     return skadi_instance;
 }
 

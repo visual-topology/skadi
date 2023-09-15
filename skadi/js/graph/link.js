@@ -5,11 +5,11 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiLink {
+class SkadiLink extends SkadiCoreLink {
 
   constructor(design, id, fromPort, link_type, toPort) {
+    super(design, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort ? toPort.get_node(): null, toPort ? toPort.get_port_name(): null);
     this.design = design;
-    this.id = id;
 
     this.fromPort = fromPort;
     this.toPort = toPort;
@@ -20,16 +20,7 @@ class SkadiLink {
     }
     this.REMOVE_ACTION = "Remove";
 
-    this.link_type = link_type;
     this.menu_dial = null;
-  }
-
-  get_id() {
-    return this.id;
-  }
-
-  get_link_type() {
-    return this.link_type;
   }
 
   get_from_port() {
@@ -40,13 +31,6 @@ class SkadiLink {
     return this.toPort;
   }
 
-  get_from_node() {
-    return this.fromPort.get_node();
-  }
-
-  get_to_node() {
-    return this.toPort.get_node();
-  }
 
   remove() {
     this.fromPort.remove_link(this);
@@ -77,7 +61,7 @@ class SkadiLink {
         this.design.remove(this.get_id());
       }));
       let evloc = Skadi.x3.get_event_xy(evt);
-      let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, evloc.x - 50, evloc.y - 50);
+      let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, evloc.x - 50, evloc.y - 50, "Edit Link");
       tm.open();
     };
 

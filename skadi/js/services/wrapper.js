@@ -22,6 +22,10 @@ class SkadiWrapper {
         this.instance = instance;
     }
 
+    get_instance() {
+        return this.instance;
+    }
+
     get_property(property_name, default_value) {
         if (property_name in this.target.properties) {
             return this.target.properties[property_name];
@@ -165,5 +169,23 @@ class SkadiWrapper {
             }
         }
         this.pending_messages = [];
+    }
+
+    reset_execution() {
+        if (this.instance.reset_execution) {
+            try {
+                this.instance.reset_execution();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    }
+
+    async execute(inputs) {
+        if (this.instance.execute) {
+            return await this.instance.execute(inputs);
+        } else {
+            return {};
+        }
     }
 }

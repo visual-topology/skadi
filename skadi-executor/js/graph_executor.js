@@ -21,7 +21,7 @@ class SkadiGraphExecutor {
         this.execution_limit = 4;
         this.node_outputs = {}; // node-id => output-port => value
 
-        this.paused = false;
+        this.paused = true;
 
         // hook up to skadi events
         skadi.add_node_event_handler("add", (node_id, node_type_id) => {
@@ -53,6 +53,21 @@ class SkadiGraphExecutor {
                 this.resume();
             }
         });
+
+        let network = skadi.get_network();
+        let node_ids = network.get_node_list();
+        node_ids.map(node_id => {
+           this.add_node(node_id);
+        });
+
+        let link_ids = network.get_link_list();
+        link_ids.map(link_id => {
+            let link = network.get_link(link_id);
+            this.add_link(link_id,link.get_from_node().get_id(),link.get_from_port_name(),link.get_to_node().get_id(), link.get_to_port_name());
+        });
+
+        this.paused = false;
+        this.dispatch();
     }
 
     get executing_node_count() {
@@ -164,6 +179,7 @@ class SkadiGraphExecutor {
         if (!(node_id in this.nodes)) {
             return;
         }
+        console.log("executing: "+node_id);
         delete this.dirty_nodes[node_id];
         this.executing_nodes[node_id] = true;
         let node = this.nodes[node_id];
@@ -177,17 +193,9 @@ class SkadiGraphExecutor {
             }
         }
 
-        const requested_outputs = new Set();
-        for(let out_port in this.out_links[node_id]) {
-            let out_links = this.out_links[node_id][out_port];
-            if (out_links.length) {
-                requested_outputs.add(out_port);
-            }
-        }
-
         this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_EXECUTING);
 
-        node.get_wrapper().execute(inputs, requested_outputs).then(
+        node.get_wrapper().execute(inputs).then(
             (outputs) => this.executed(node_id, outputs),
             (reason) => this.executed(node_id, null, reason)).then(
                 () => this.dispatch()
@@ -215,8 +223,8 @@ class SkadiGraphExecutor {
         }
     }
 
-    add_node(node_id, node_type_id) {
-        this.nodes[node_id] = this.skadi.get_node(node_id);
+    add_node(node_id) {
+        this.nodes[node_id] = this.skadi.get_network().get_node(node_id);
         this.in_links[node_id] = {};
         this.out_links[node_id] = {};
         this.node_outputs[node_id] = {};

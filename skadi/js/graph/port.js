@@ -49,7 +49,7 @@ class SkadiPort {
     return this.node;
   }
 
-  get_portName() {
+  get_port_name() {
     return this.port_name;
   }
 
@@ -89,7 +89,7 @@ class SkadiPort {
 
   draw(parent) {
     let container = parent ? parent : this.design.getCellGroup();
-    let coords = this.node.get_portPosition(this.port_name, this.inNotOut);
+    let coords = this.node.get_port_position(this.port_name, this.inNotOut);
     this.r = coords.r;
 
     this.grp = container.append("g").attr("id", this.id.replace(":", "_"));
@@ -178,7 +178,7 @@ class SkadiPort {
   }
 
   update_position(refocus) {
-    let coords = this.node.get_portPosition(this.port_name, this.inNotOut);
+    let coords = this.node.get_port_position(this.port_name, this.inNotOut);
     this.r = coords.r;
     let sel = this.shape;
     if (refocus) {
@@ -196,7 +196,7 @@ class SkadiPort {
   }
 
   get_position() {
-    let coords = this.node.get_portPosition(this.port_name, this.inNotOut);
+    let coords = this.node.get_port_position(this.port_name, this.inNotOut);
     return {
       "x": coords.cx,
       "y": coords.cy
@@ -204,11 +204,11 @@ class SkadiPort {
   }
 
   get_port_angle() {
-    return this.node.get_portPosition(this.port_name,this.inNotOut).theta;
+    return this.node.get_port_position(this.port_name,this.inNotOut).theta;
   }
 
   get_linkPosition(len) {
-    return this.node.get_portLinkPosition(this.port_name, len, this.inNotOut);
+    return this.node.get_port_link_position(this.port_name, len, this.inNotOut);
   }
 
   add_link(link, inNotOut) {

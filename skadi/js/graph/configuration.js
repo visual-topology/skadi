@@ -5,45 +5,28 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiConfiguration {
+class SkadiConfiguration extends SkadiCoreConfiguration {
 
   constructor(design, package_type, properties) {
-    this.design = design;
-    this.package_type = package_type;
-    this.configuration_service = null;
-    this.wrapper = null;
-    this.properties = properties;
-    this.id = package_type.get_id();
+      super(design, package_type, properties);
   }
 
-  get_id() {
-      return this.id;
+  open(iframe, w, h) {
+      this.iframe = iframe;
+      this.iframe.setAttribute("width",""+w-20);
+      this.iframe.setAttribute("height",""+h-20);
+      this.wrapper.open(iframe.contentWindow, w, h);
   }
 
-  create_instance() {
-      try {
-          this.configuration_service = new SkadiConfigurationService(this);
-          this.wrapper = new SkadiWrapper(this,this.configuration_service);
-          this.configuration_service.set_wrapper(this.wrapper);
-          let configuration_factory = this.design.get_configuration_factory();
-          let o = null;
-          if (configuration_factory) {
-              o = configuration_factory(this.configuration_service);
-          } else {
-              let classname = this.package_type.get_classname();
-              let cls = eval(classname);
-              o = new cls(this.configuration_service);
-          }
-          this.wrapper.set_instance(o);
-      } catch (e) {
-          console.error(e);
-          return false;
-      }
-      return true;
+  resize(w,h) {
+      this.iframe.setAttribute("width",""+w-20);
+      this.iframe.setAttribute("height",""+h-20);
+      this.wrapper.resize(w,h);
   }
 
-  get_wrapper() {
-    return this.wrapper;
+  close() {
+      this.iframe = null;
+      this.wrapper.close();
   }
 }
 

@@ -31,3 +31,6 @@ foreignObject {
     fill: lightgray;
 }
 
+.skadi_status {
+    min-height: 40px;
+}

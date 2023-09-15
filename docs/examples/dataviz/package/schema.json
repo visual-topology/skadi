@@ -1,16 +1,22 @@
 {
     "id": "dataviz",
     "metadata": {
-        "name": "Data Viz Example App",
+        "name": "Data Viz Example Package",
         "version": "0.0.1",
-        "description": "package for building data viz",
+        "description": "A simple example package for building data visualizations",
         "link": "about.html"
     },
     "display": {
         "style": "fill:lightgrey;"
     },
     "executor": "javascript",
-    "dependencies": [ "nodes/aq_utils.js" ],
+    "configuration": {
+        "classname": "DataVizExample.Configuration",
+        "page": {
+            "url": "configuration.html"
+        }
+    },
+    "dependencies": [ "configuration.js","nodes/aq_utils.js" ],
     "node_types": {
         "csv_import": {
             "metadata": {

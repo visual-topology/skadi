@@ -86,6 +86,7 @@ class SkadiSchema {
             let linkType = new SkadiLinkType(link_id, packageType, lt);
             this.link_types[linkType.get_id()] = linkType;
         }
+
         return packageType;
     }
 

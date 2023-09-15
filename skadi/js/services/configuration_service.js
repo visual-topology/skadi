@@ -8,7 +8,7 @@
 class SkadiConfigurationService {
 
     constructor(configuration) {
-        this.design = configuration.design;
+        this.core = configuration.core;
         this.package_type = configuration.package_type;
         this.package_id = this.package_type.get_id();
         this.wrapper = null;
@@ -42,30 +42,24 @@ class SkadiConfigurationService {
         this.wrapper.set_message_handler(handler);
     }
 
-    /*
     get_package_id() {
         return this.package_id;
     }
 
-    get_package_type() {
-        return this.package_type;
-    }
-    */
-
     set_status_info(status_msg) {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.info, status_msg);
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.info, status_msg);
     }
 
     set_status_warning(status_msg) {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.warning, status_msg);
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.warning, status_msg);
     }
 
     set_status_error(status_msg) {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.error, status_msg);
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.error, status_msg);
     }
 
     clear_status() {
-        this.design.update_configuration_status(this.package_id, SkadiStatusStates.clear, "");
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.clear, "");
     }
 
     resolve_url(url) {

@@ -7,8 +7,8 @@
 
 class SkadiTextMenuDialogue extends SkadiSvgDialogue {
 
-    constructor(design, items, closeHandler, owner, x, y) {
-        super(owner.get_id() + "text_menu", design, "Menu", x, y, 100, 500, closeHandler, null, false, true, false,
+    constructor(design, items, closeHandler, owner, x, y, title) {
+        super(owner.get_id() + "text_menu", design, title, x, y, 100, 500, closeHandler, null, false, true, false,
             function (grp) {
                 this.draw(grp);
             });

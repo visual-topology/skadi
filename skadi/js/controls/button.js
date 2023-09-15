@@ -83,9 +83,9 @@ class SkadiButton {
       .attr("y",this.y-this.height/2)
       .attr("href",this.icon_url);
     let that = this;
-    let onclick = function() {
+    let onclick = function(ev) {
       if (that.enabled && that.onclick) {
-        that.onclick();
+        that.onclick(ev);
       }
     }
     this.button.on("click", onclick);

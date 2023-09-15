@@ -76,15 +76,20 @@ print("Building: skadi.js")
 
 with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/utils/resource_loader.js")
+    of.add("skadi/js/utils/icon_utils.js")
     of.add("skadi/js/services/status_states.js")
     of.add("skadi/js/utils/topology_store.js")
-    of.add("skadi/js/core/design.js")
+    of.add("skadi/js/core/core.js")
+    of.add("skadi/js/core/core_node.js")
+    of.add("skadi/js/core/core_link.js")
+    of.add("skadi/js/core/core_configuration.js")
+    of.add("skadi/js/core/network.js")
     of.add("skadi/js/dialogs/about.js")
     of.add("skadi/js/dialogs/save.js")
     of.add("skadi/js/dialogs/load.js")
     of.add("skadi/js/dialogs/clear.js")
-    of.add("skadi/js/dialogs/configuration.js")
     of.add("skadi/js/dialogs/design_metadata.js")
+    of.add("skadi/js/dialogs/configuration.js")
     of.add("skadi/js/common/icons.js")
     of.add("skadi/js/common/geometry.js")
     of.add("skadi/js/common/palette.js")
@@ -98,10 +103,10 @@ with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/common/x3.js")
     of.add("skadi/js/controls/button.js")
     of.add("skadi/js/controls/text_button.js")
+    of.add("skadi/js/graph/designer.js")
     of.add("skadi/js/graph/node.js")
     of.add("skadi/js/graph/link.js")
     of.add("skadi/js/graph/port.js")
-    of.add("skadi/js/graph/network.js")
     of.add("skadi/js/graph/configuration.js")
     of.add("skadi/js/base/configuration_base.js")
     of.add("skadi/js/base/node_base.js")
@@ -113,7 +118,10 @@ with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/schema/package_type.js")
     of.add("skadi/js/schema/port_type.js")
     of.add("skadi/js/schema/schema.js")
+    of.add("skadi/js/view/application.js")
     of.add("skadi/js/skadi-api.js")
+    of.add("skadi/js/skadi-designer-api.js")
+    of.add("skadi/js/skadi-view-api.js")
     of.add("skadi/js/start-skadi.js")
 
 print("Building: skadi.css")
@@ -126,6 +134,9 @@ with Output("docs/versions/latest/skadi.css") as of:
     of.add("skadi/css/node.css")
     of.add("skadi/css/port.css")
 
+with Output("docs/versions/latest/skadi-application.css") as of:
+    of.add("skadi/css/application.css")
+
 print("Building: skadi-executor.js")
 
 with Output("docs/versions/latest/skadi-executor.js") as of:
@@ -137,8 +148,13 @@ with Output("docs/versions/latest/skadi-executor.js") as of:
     of.add("skadi-executor/js/graph_executor.js")
     of.add("skadi-executor/js/node_execution_failed.js")
 
-with Output("docs/git coexamples/dataviz/app/index.html", comment_paths=False) as of:
+with Output("docs/examples/dataviz/app/index.html", comment_paths=False) as of:
     of.add("skadi/html/index.html", subs= {
+        "<!-- include dependencies needed by packages here -->": '<script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>'
+    })
+
+with Output("docs/examples/dataviz/app/application.html", comment_paths=False) as of:
+    of.add("skadi/html/application.html", subs= {
         "<!-- include dependencies needed by packages here -->": '<script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>'
     })
 

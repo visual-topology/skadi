@@ -35,6 +35,13 @@ class SkadiPackageType {
     return this.display;
   }
 
+  get_configuration_classname() {
+    if (this.configuration && this.configuration.classname) {
+      return this.configuration.classname;
+    }
+    return "";
+  }
+
   get_url() {
     return this.metadata["url"];
   }

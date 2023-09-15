@@ -8,7 +8,7 @@
 class SkadiNodeService {
 
     constructor(node) {
-        this.design = node.design;
+        this.core = node.core;
         this.node_id = node.id;
         this.node_type = node.node_type;
         this.wrapper = null;
@@ -47,19 +47,19 @@ class SkadiNodeService {
     }
 
     set_status_info(status_msg) {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
+        this.core.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
     }
 
     set_status_warning(status_msg) {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
+        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
     }
 
     set_status_error(status_msg) {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
+        this.core.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
     }
 
     clear_status() {
-        this.design.update_node_status(this.node_id, SkadiStatusStates.clear, "");
+        this.core.update_node_status(this.node_id, SkadiStatusStates.clear, "");
     }
 
     resolve_url(url) {
@@ -71,7 +71,11 @@ class SkadiNodeService {
     }
 
     get_configuration() {
-        return this.design.get_configuration(this.node_type.get_package_type().get_id())
+        return this.core.get_configuration(this.node_type.get_package_type().get_id()).get_instance();
+    }
+
+    request_execution() {
+        this.core.request_execution(this.node_id);
     }
 
 }

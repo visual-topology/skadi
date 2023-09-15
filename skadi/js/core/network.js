@@ -86,6 +86,14 @@ class SkadiNetwork {
         return this.configurations[id];
     }
 
+    get_configuration_list() {
+        let list = [];
+        for(let id in this.configurations) {
+            list.push(id);
+        }
+        return list;
+    }
+
     /* nodes */
 
     add_node(node) {

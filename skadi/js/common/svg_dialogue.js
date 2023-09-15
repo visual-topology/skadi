@@ -24,9 +24,6 @@ class SkadiSvgDialogue {
 
     this.width = content_width + 2*this.padding;
     this.height = content_height + 2*this.padding + this.header_sz;
-    if (this.resizebtn) {
-      this.height += this.footer_sz;
-    }
 
     this.startx = 0;
     this.starty = 0;

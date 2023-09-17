@@ -7,10 +7,14 @@
 
 class SkadiApi {
 
-
     constructor() {
         this.schema = null;
         this.instance = null; // designer or application
+    }
+
+    async load_l10n(api_base_url) {
+        this.l10n_utils = new SkadiL10NUtils(api_base_url+"/l10n");
+        await this.l10n_utils.initialise("en");
     }
 
     set_instance(designer_or_application) {
@@ -52,6 +56,10 @@ class SkadiApi {
 
     get_schema() {
         return this.schema;
+    }
+
+    get_l10n_utils() {
+        return this.l10n_utils;
     }
 
     set_graph_executor(executor) {

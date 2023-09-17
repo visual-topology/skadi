@@ -70,4 +70,12 @@ class SkadiConfigurationService {
         return "data:"+mime_type+";base64," + btoa(data);
     }
 
+    get_language() {
+        return this.core.get_language();
+    }
+
+    localise(s) {
+        return this.package_type.localise(s, this.get_language());
+    }
+
 }

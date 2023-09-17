@@ -65,5 +65,9 @@ class SkadiPackageType {
   get_configuration() {
     return this.configuration;
   }
+
+  localise(s, language) {
+      
+  }
 }
 

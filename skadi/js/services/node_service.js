@@ -78,4 +78,11 @@ class SkadiNodeService {
         this.core.request_execution(this.node_id);
     }
 
+    get_language() {
+        return this.core.get_language();
+    }
+
+    localise(s) {
+        return this.node_type.get_package_type().localise(s,this.get_language());
+    }
 }

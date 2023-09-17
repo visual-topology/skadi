@@ -22,7 +22,7 @@ class SkadiDesignerApi extends SkadiApi {
                 node_factory, configuration_factory) {
         super();
         topology_store = topology_store || new TopologyStore(this);
-        this.design = new SkadiDesigner(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        this.design = new SkadiDesigner(this, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
             node_factory, configuration_factory);
         this.set_instance(this.design);
     }

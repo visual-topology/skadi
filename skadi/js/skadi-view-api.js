@@ -14,9 +14,8 @@ class SkadiViewApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(element_id, node_factory, configuration_factory) {
-        super();
-        this.application = new SkadiApplication(element_id, node_factory, configuration_factory);
+    constructor(this, element_id, node_factory, configuration_factory) {
+        this.application = new SkadiApplication(this, element_id, node_factory, configuration_factory);
         this.set_instance(this.application);
     }
 

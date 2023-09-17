@@ -1,0 +1,10 @@
+{
+    "topology.metadata":"Topology Metadata",
+    "topology.metadata.editor.tooltip":"Use this editor to update the metadata associated with the design being edited",
+    "topology.metadata.editor": "View/edit Topology Metadata",
+    "metadata.name": "Name",
+    "metadata.description": "Description",
+    "metadata.authors": "Author(s)",
+    "metadata.filename": "Filename",
+    "metadata.version": "Version",
+}

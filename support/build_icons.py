@@ -56,6 +56,9 @@ iof.add("skadi/icons/pause.svg")
 iof.add("skadi/icons/delete.svg")
 iof.add("skadi/icons/edit_purple.svg")
 iof.add("skadi/icons/configuration_purple.svg")
+iof.add("skadi/icons/rotate_left.svg")
+iof.add("skadi/icons/rotate_right.svg")
+
 icon_js = iof.get_content()
 
 with open(os.path.join(repo_dir,"skadi/js/common/icons.js"),"w") as f:

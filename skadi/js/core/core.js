@@ -7,7 +7,8 @@
 
 class SkadiCore {
 
-    constructor(element_id, topology_store, node_factory, configuration_factory) {
+    constructor(api, element_id, topology_store, node_factory, configuration_factory) {
+        this.api = api;
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
@@ -32,10 +33,23 @@ class SkadiCore {
             "version": "0.1"
         };
 
+        this.language = "en";
     }
 
     get_id() {
         return this.id;
+    }
+
+    get_language() {
+        return this.language;
+    }
+
+    set_language(language) {
+        this.language = language;
+    }
+
+    localise(text) {
+        return this.api.get_l10n_utils().localise(text);
     }
 
     /* Get/Set Schema and Executor */

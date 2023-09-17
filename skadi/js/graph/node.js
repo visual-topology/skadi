@@ -80,7 +80,7 @@ class SkadiNode extends SkadiCoreNode {
     if (active) {
       this.register_command_window("adjust","Adjust...", (root_elt) => {
           this.open_adjust_editor(root_elt);
-      }, null, 500, 500);
+      }, null, 700, 500);
     }
   }
 
@@ -174,32 +174,7 @@ class SkadiNode extends SkadiCoreNode {
   }
 
   open_adjust_editor(root_elt) {
-    let root = new SkadiX3Selection([root_elt]);
-    let name_heading = root.append("h3");
-    name_heading.text("Name");
-    let name_input = root.append("input");
-    name_input.attr("type","text");
-    name_input.node().value = this.metadata["name"];
-    let description_heading = root.append("h3");
-    description_heading.text("Description");
-    let description_input = root.append("textarea");
-    description_input.node().value = this.metadata["description"];
-    root.append("p");
-    let rotate_button = root.append("input").attr("value","rotate").attr("type","button");
-
-    let cb = (evt) => {
-      let new_metadata = {
-         "name": name_input.node().value,
-         "description": description_input.node().value
-      };
-      this.design.update_metadata(this.id, new_metadata, false);
-    };
-    name_input.on("change", cb);
-    description_input.on("change", cb);
-    rotate_button.on("click",(evt) => {
-      this.set_rotation(this.get_rotation()+45);
-      this.update_position(this.x, this.y);
-    });
+    skadi_populate_adjust(this, root_elt, null);
   }
 
   add_port(key, port_type, is_input) {
@@ -228,8 +203,6 @@ class SkadiNode extends SkadiCoreNode {
   get_group() {
     return this.grp;
   }
-
-
 
   draw(parent) {
     let container = parent ? parent : this.design.get_node_group();

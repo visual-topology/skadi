@@ -222,9 +222,9 @@ class SkadiPalette {
 
 class SkadiPaletteEntry {
 
-  constructor(design, template) {
+  constructor(design, node_type) {
     this.design = design;
-    this.template = template;
+    this.node_type = node_type;
     this.node = null;
     this.overlay_node = null;
     this.overlay_grp = null;
@@ -232,6 +232,10 @@ class SkadiPaletteEntry {
     this.overlay_y = 0;
     this.width = 220;
     this.height = 180;
+    this.metadata = {
+      "name": this.node_type.get_name(),
+      "description": this.node_type.get_description()
+    };
   }
 
   update_position(x,y) {
@@ -250,33 +254,33 @@ class SkadiPaletteEntry {
   }
 
   draw(grp) {
-    this.node = new SkadiNode(this.design, this.template, this.design.next_id("nl"), 0, 0, false, this.template.metadata);
+    this.node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 0, 0, false, this.metadata);
     this.node.draw(grp);
-    let that = this;
+    
     this.overlay_grp = this.design.get_skadi_svg_dialogue_group();
     this.node.set_drag_handlers(
-      function(evloc) {
-        that.overlay_x = evloc.x;
-        that.overlay_y = evloc.y;
-        let meta = JSON.parse(JSON.stringify(that.template.metadata));
-        that.overlay_node = new SkadiNode(that.design, that.template, that.design.next_id("nl"), that.overlay_x, that.overlay_y, false, meta);
-        that.overlay_node.set_display_tooltips(false);
-        that.overlay_node.draw(that.overlay_grp);
+      (evloc) => {
+        this.overlay_x = evloc.x;
+        this.overlay_y = evloc.y;
+        let meta = JSON.parse(JSON.stringify(this.metadata));
+        this.overlay_node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 
+          this.overlay_x, this.overlay_y, false, this.metadata);
+        this.overlay_node.set_display_tooltips(false);
+        this.overlay_node.draw(this.overlay_grp);
       },
-      function(evloc) {
-        that.overlay_x = evloc.x;
-        that.overlay_y = evloc.y;
-        that.overlay_node.update_position(that.overlay_x, that.overlay_y);
+      (evloc) => {
+        this.overlay_x = evloc.x;
+        this.overlay_y = evloc.y;
+        this.overlay_node.update_position(this.overlay_x, this.overlay_y);
       },
-      function() {
-        if (that.overlay_node) {
-          that.overlay_node.remove();
-          that.overlay_node = null;
-
-          let tx = that.overlay_x - that.design.offset_x;
-          let ty = that.overlay_y - that.design.offset_y;
-          let cc = that.design.to_canvas_coords(tx,ty);
-          that.design.create_node(null,that.template, cc.x, cc.y,that.template.metadata);
+      () => {
+        if (this.overlay_node) {
+          this.overlay_node.remove();
+          this.overlay_node = null;
+          let tx = this.overlay_x - this.design.offset_x;
+          let ty = this.overlay_y - this.design.offset_y;
+          let cc = this.design.to_canvas_coords(tx,ty);
+          this.design.create_node(null,this.node_type, cc.x, cc.y,this.metadata);
         }
       });
     
@@ -291,15 +295,8 @@ class SkadiPaletteEntry {
   }
 
   get_package_id() {
-    if (this.template) {
-      return this.template.get_package_id();
-    }
-    return "";
-  }
-
-  get_label() {
-    if (this.template) {
-      return this.template.get_label();
+    if (this.node_type) {
+      return this.node_type.get_package_id();
     }
     return "";
   }
@@ -1719,13 +1716,13 @@ class TopologyStore {
 
 class SkadiCore {
 
-    constructor(api, element_id, topology_store, node_factory, configuration_factory) {
-        this.api = api;
+    constructor(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory) {
+        this.l10n_utils = l10n_utils;
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
         this.id = "design";
-        this.schema = null;
+        this.schema = schema;
 
         this.graph_executor = null;
         this.node_event_handlers = {};
@@ -1761,17 +1758,15 @@ class SkadiCore {
     }
 
     localise(text) {
-        return this.api.get_l10n_utils().localise(text);
-    }
-
-    /* Get/Set Schema and Executor */
-
-    set_schema(schema) {
-        this.schema = schema;
+        return this.l10n_utils.localise(text);
     }
 
     get_schema() {
         return this.schema;
+    }
+
+    get_l10n_utils() {
+        return this.l10n_utils;
     }
 
     set_graph_executor(executor) {
@@ -2209,14 +2204,6 @@ class SkadiCoreNode {
         return this.wrapper;
     }
 
-    get_label() {
-        let label = this.metadata.name;
-        if (!label) {
-            label = "";
-        }
-        return label;
-    }
-
     get_position() {
         return {
             "x": this.x,
@@ -2237,6 +2224,14 @@ class SkadiCoreNode {
 
     get_metadata() {
         return this.metadata;
+    }
+
+    get_name() {
+        return this.metadata.name;
+    }
+
+    get_description() {
+        return this.metadata.description;
     }
 
     update_status(status_message, status_state) {
@@ -2961,29 +2956,109 @@ function skadi_update_configuration_status(package_id, state, message) {
     skadi_update_configuration_status_div(package_id);
 }
 
+function skadi_create_language_select(l10n_utils) {
+    let select = document.createElement("select");
+    let languages = l10n_utils.get_languages();
+    for(var idx=0; idx<languages.length; idx++) {
+        let option = document.createElement("option");
+        option.setAttribute("value",languages[idx][0]);
+        option.appendChild(document.createTextNode(languages[idx][1]));
+        select.appendChild(option);
+    }
+    select.value = l10n_utils.get_language();
+    select.addEventListener("change", (ev) => {
+        l10n_utils.set_language(select.value);
+    });
+    return select; 
+}
+
 function skadi_populate_configuration(design, elt, close_window) {
     let header_div = document.createElement("div");
     header_div.innerHTML = skadi_configuration_header_html;
     elt.appendChild(header_div);
+
+    {
+        let select = skadi_create_language_select(design.get_l10n_utils());
+        let row = document.createElement("div");
+        row.setAttribute("class","exo-row");
+
+        let lang_cell = document.createElement("div");
+        lang_cell.setAttribute("class","exo-2-cell");
+        lang_cell.appendChild(document.createTextNode("Skadi Language"));
+        row.appendChild(lang_cell);
+
+        let l10n_cell = document.createElement("div");
+        l10n_cell.setAttribute("class","exo-2-cell");
+        l10n_cell.appendChild(select);
+        row.appendChild(l10n_cell);
+
+        elt.appendChild(row);
+    }
+
+    elt.append(document.createElement("hr"));
+    
+
     for(let package_id in design.network.configurations) {
         let configuration = design.network.configurations[package_id];
         let package_type = configuration.get_package_type();
-        let name = package_type.get_metadata().name;
-        if (configuration.get_url()) {
-            let btn = document.createElement("input");
-            btn.setAttribute("type","button");
-            btn.setAttribute("value", "Open Configuration");
-            btn.addEventListener("click", (ev) => {
-                design.open_configuration(package_id);
-            });
+        let l10n_utils = package_type.get_l10n_utils();
+        
+        if (!l10n_utils && !configuration.get_url()) {
+            continue;
+        }
+
+        {
+            let name = package_type.get_metadata().name;
             let row = document.createElement("div");
             row.setAttribute("class","exo-row");
+
+            let label_cell = document.createElement("div");
+            label_cell.setAttribute("class","exo-2-cell");
+            label_cell.appendChild(document.createTextNode("Package Name"));
+            row.appendChild(label_cell);
 
             let name_cell = document.createElement("div");
             name_cell.setAttribute("class","exo-2-cell");
             name_cell.appendChild(document.createTextNode(name));
             row.appendChild(name_cell);
+            elt.appendChild(row);
+        }
 
+        if (l10n_utils) {
+            
+            let select = skadi_create_language_select(l10n_utils);
+            let row = document.createElement("div");
+            row.setAttribute("class","exo-row");
+
+            let lang_cell = document.createElement("div");
+            lang_cell.setAttribute("class","exo-2-cell");
+            lang_cell.appendChild(document.createTextNode("Language"));
+            row.appendChild(lang_cell);
+
+            let l10n_cell = document.createElement("div");
+            l10n_cell.setAttribute("class","exo-2-cell");
+            l10n_cell.appendChild(select);
+            row.appendChild(l10n_cell);
+
+            elt.appendChild(row);
+        }
+        
+        if (configuration.get_url()) {
+            let row = document.createElement("div");
+            row.setAttribute("class","exo-row");
+
+            let cfg_cell = document.createElement("div");
+            cfg_cell.setAttribute("class","exo-2-cell");
+            cfg_cell.appendChild(document.createTextNode("Package Configuration"));
+            row.appendChild(cfg_cell);
+
+            let btn = document.createElement("input");
+            btn.setAttribute("type","button");
+            btn.setAttribute("value", "Open...");
+            btn.addEventListener("click", (ev) => {
+                design.open_configuration(package_id);
+            });
+            
             let btn_cell = document.createElement("div");
             btn_cell.setAttribute("class","exo-2-cell");
             btn_cell.appendChild(btn);
@@ -2993,8 +3068,16 @@ function skadi_populate_configuration(design, elt, close_window) {
 
             let status_row = document.createElement("div");
             status_row.setAttribute("class","exo-row skadi_status");
+            
+            
+            let st_cell = document.createElement("div");
+            st_cell.setAttribute("class","exo-2-cell");
+            st_cell.appendChild(document.createTextNode("Configuration Status"));
+            status_row.appendChild(st_cell);
+
+            
             let status_cell = document.createElement("div");
-            status_cell.setAttribute("class","exo-4-cell");
+            status_cell.setAttribute("class","exo-2-cell");
             status_cell.setAttribute("style","display:inline-block;");
 
             status_row.appendChild(status_cell);
@@ -3003,10 +3086,12 @@ function skadi_populate_configuration(design, elt, close_window) {
             skadi_update_configuration_status_div(package_id);
 
             elt.appendChild(status_row);
-            elt.append(document.createElement("hr"));
+            
         }
     }
 }
+
+
 
 /* skadi/js/controls/button.js */
 
@@ -3238,8 +3323,8 @@ let GRID_SNAP = 20;
 
 class SkadiDesigner extends SkadiCore {
 
-    constructor(api, element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
-        super(api, element_id, topology_store, node_factory, configuration_factory);
+    constructor(l10n_utils, schema, element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
+        super(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory);
         this.width = width;
         this.height = height;
         this.is_acyclic = is_acyclic;
@@ -3331,7 +3416,7 @@ class SkadiDesigner extends SkadiCore {
         button_x += this.button_size + this.button_margin;
 
         this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_edit_purple, () => { this.open_edit_design_metadata(); }, skadi_l10n_utils.lookup("topoligy.metadata"));
+            icon_edit_purple, () => { this.open_edit_design_metadata(); }, this.localise("||topology.metadata||"));
         this.edit_btn.set_fill("white");
         this.edit_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
@@ -3491,7 +3576,7 @@ class SkadiDesigner extends SkadiCore {
             }
         }
         let node = this.network.get_node(node_id);
-        let title = node.get_type().get_label();
+        let title = node.metadata.name;
         let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
                 delete this.windows[key];
                 if (close_callback) {
@@ -4100,7 +4185,7 @@ class SkadiNode extends SkadiCoreNode {
 
 
     this.text = this.grp.append("text");
-    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_label());
+    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_name());
 
     this.dragged = false;
     if (this.active) {
@@ -4836,12 +4921,7 @@ class SkadiPort {
     }
     this.r = 5;
 
-    this.label = this.link_type_id;
     this.grp = null;
-  }
-
-  get_label() {
-    return this.label;
   }
 
   get_link_type() {
@@ -5248,11 +5328,11 @@ class SkadiNodeService {
     }
 
     get_language() {
-        return this.core.get_language();
+        return this.node_type.get_package_type().get_l10n_utils().get_language();
     }
 
     localise(s) {
-        return this.node_type.get_package_type().localise(s,this.get_language());
+        return this.node_type.get_package_type().get_l10n_utils().localise(s);
     }
 }
 
@@ -5512,11 +5592,11 @@ class SkadiConfigurationService {
     }
 
     get_language() {
-        return this.core.get_language();
+        return this.package_type.get_l10n_utils.get_language();
     }
 
     localise(s) {
-        return this.package_type.localise(s, this.get_language());
+        return this.package_type.get_l10n_utils.localise(s);
     }
 
 }
@@ -5526,18 +5606,18 @@ class SkadiConfigurationService {
 
 class SkadiNodeType {
 
-  constructor(nodeTypeId, packageType, schema) {
-    this.id = packageType.get_qualified_id(nodeTypeId);
-    this.packageType = packageType;
+  constructor(nodeTypeId, package_type, schema) {
+    this.id = package_type.get_qualified_id(nodeTypeId);
+    this.package_type = package_type;
     this.schema = schema;
-    this.packageId = packageType.get_id();
+    this.package_id = package_type.get_id();
     this.enabled = schema["enabled"] !== false;
     let metadata = schema["metadata"] || { "name": nodeTypeId, "description":""};
     let display = schema["display"] || { "corners": 4, "icon": "", "html": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
     this.page = schema["page"] || {};
-    this.html_url = this.page.url ? this.packageType.get_resource_url(this.page.url) : "";
+    this.html_url = this.page.url ? this.package_type.get_resource_url(this.page.url) : "";
 
     this.classname = schema["classname"] || {};
 
@@ -5560,11 +5640,19 @@ class SkadiNodeType {
     this.hide = false;
     this.display = display;
 
-    this.configure_package_type(this.packageType);
+    this.configure_package_type(this.package_type);
+  }
+
+  get_name() {
+    return this.package_type.localise(this.metadata.name);
+  }
+
+  get_description() {
+    return this.package_type.localise(this.metadata.description);
   }
 
   get_html_url() {
-    return this.html_url;
+    return this.package_type.localise_url(this.html_url);
   }
 
   get_schema() {
@@ -5579,15 +5667,15 @@ class SkadiNodeType {
     return this.classname;
   }
 
-  configure_package_type(packageType) {
-    let pdisplay = packageType.get_display();
+  configure_package_type(package_type) {
+    let pdisplay = package_type.get_display();
     for (let key in pdisplay) {
       if (!this.display[key]) {
         this.display[key] = pdisplay[key];
       }
     }
     if ("icon" in this.display) {
-      this.image = packageType.get_url() + "/" + this.display["icon"];
+      this.image = package_type.get_url() + "/" + this.display["icon"];
     } else {
       this.image = "";
     }
@@ -5602,10 +5690,6 @@ class SkadiNodeType {
     return this.id;
   }
 
-  get_label() {
-    return this.metadata["name"];
-  }
-
   get_type() {
     return this.id;
   }
@@ -5615,11 +5699,11 @@ class SkadiNodeType {
   }
 
   get_package_id() {
-    return this.packageId;
+    return this.package_id;
   }
 
   get_package_type() {
-    return this.packageType;
+    return this.package_type;
   }
 
   is_enabled() {
@@ -5634,13 +5718,11 @@ class SkadiNodeType {
 
 class SkadiLinkType {
   
-  constructor(linkTypeId, packageType, schema) {
+  constructor(link_type_id, package_type, schema) {
     let metadata = schema["metadata"] || { "name": "?", "description":"?"};
     let display = schema["display"] || { "colour": "blue" };
-
-
-    this.id = packageType.get_qualified_id(linkTypeId);
-    this.packageId = packageType.get_id();
+    this.id = package_type.get_qualified_id(link_type_id);
+    this.package_id = package_type.get_id();
     this.name = metadata.name;
     this.description = metadata.description;
     this.colour = display.colour;
@@ -5651,7 +5733,7 @@ class SkadiLinkType {
   }
 
   get_package_id() {
-    return this.packageId;
+    return this.package_id;
   }
 
   get_name() {
@@ -5678,8 +5760,18 @@ class SkadiPackageType {
     this.id = id;
     this.metadata = obj["metadata"];
     this.display = obj["display"];
+    this.l10n = obj["l10n"];
     this.base_url = url.split("/").slice(0,-1).join("/");
     this.configuration = obj["configuration"];
+    this.l10n_utils = null;
+  }
+
+  async load_l10n(language) {
+    if (this.l10n) {
+      this.l10n_utils = new SkadiL10NUtils(this.base_url);
+      this.l10n_utils.configure_for_package(this.l10n);
+      await this.l10n_utils.initialise(language);
+    }
   }
 
   get_id() {
@@ -5687,11 +5779,11 @@ class SkadiPackageType {
   }
 
   get_name() {
-    return this.metadata["name"];
+    return this.localise(this.metadata["name"]);
   }
 
   get_description() {
-    return this.metadata["description"];
+    return this.localise(this.metadata["description"]);
   }
 
   get_metadata() {
@@ -5733,8 +5825,24 @@ class SkadiPackageType {
     return this.configuration;
   }
 
-  localise(s, language) {
-      
+  get_l10n_utils() {
+      return this.l10n_utils;
+  }
+
+  localise(txt) {
+    if (this.l10n_utils) {
+      return this.l10n_utils.localise(txt);
+    } else {
+      return txt;
+    }
+  }
+
+  localise_url(url) {
+    if (this.l10n_utils) {
+      return url.replace("{language}",this.l10n_utils.get_language());
+    } else {
+      return url;
+    }
   }
 }
 
@@ -5816,21 +5924,22 @@ class SkadiSchema {
             throw new SkadiSchemaError("Invalid value for schema executor: found \""+executor+"\", expecting \"javascript\"");
         }
 
-        let packageType = new SkadiPackageType(id, url, obj);
-        this.package_types[packageType.get_id()] = packageType;
+        let package_type = new SkadiPackageType(id, url, obj);
+        await package_type.load_l10n("");
+        this.package_types[package_type.get_id()] = package_type;
 
 
         let resources = [];
 
         if (obj["dependencies"]) {
-            obj["dependencies"].forEach(item => resources.push(packageType.get_resource_url(item)));
+            obj["dependencies"].forEach(item => resources.push(package_type.get_resource_url(item)));
         }
 
         if (obj.node_types) {
             for(let nt_id in obj.node_types) {
                 let nt = obj.node_types[nt_id];
                 if (nt["dependencies"]) {
-                    nt["dependencies"].forEach(item => resources.push(packageType.get_resource_url(item)));
+                    nt["dependencies"].forEach(item => resources.push(package_type.get_resource_url(item)));
                 }
             }
         }
@@ -5851,23 +5960,23 @@ class SkadiSchema {
             throw new SkadiSchemaError("Unable to load package resources: "+JSON.stringify(failed_resources))
         }
 
-        let nodeTypes = obj["node_types"];
-        for(let node_id in nodeTypes) {
-            let nt = nodeTypes[node_id];
-            let nodeType = new SkadiNodeType(node_id, packageType, nt);
-            if (nodeType.is_enabled()) {
-                this.node_types[nodeType.get_id()] = nodeType;
+        let node_types = obj["node_types"];
+        for(let node_id in node_types) {
+            let nt = node_types[node_id];
+            let node_type = new SkadiNodeType(node_id, package_type, nt);
+            if (node_type.is_enabled()) {
+                this.node_types[node_type.get_id()] = node_type;
             }
         }
 
-        let linkTypes = obj["link_types"];
-        for(let link_id in linkTypes) {
-            let lt = linkTypes[link_id];
-            let linkType = new SkadiLinkType(link_id, packageType, lt);
-            this.link_types[linkType.get_id()] = linkType;
+        let link_types = obj["link_types"];
+        for(let link_id in link_types) {
+            let lt = link_types[link_id];
+            let link_type = new SkadiLinkType(link_id, package_type, lt);
+            this.link_types[link_type.get_id()] = link_type;
         }
 
-        return packageType;
+        return package_type;
     }
 
     get_resource_url(package_id, relative_path) {
@@ -5928,8 +6037,8 @@ skadi_application_status_areas = {};
 
 class SkadiApplication extends SkadiCore {
 
-    constructor(api, element_id, node_factory, configuration_factory) {
-        super(api, element_id, null, node_factory, configuration_factory);
+    constructor(l10n_utils, schema, element_id, node_factory, configuration_factory) {
+        super(l10n_utils, schema, element_id, null, node_factory, configuration_factory);
     }
 
     open_display() {
@@ -6018,7 +6127,6 @@ class SkadiApi {
         for (let idx = 0; idx < package_urls.length; idx++) {
             packages.push(await loadPackageFromUrl(package_urls[idx],this.schema));
         }
-        this.instance.set_schema(this.schema);
         return packages;
     }
 
@@ -6095,6 +6203,13 @@ class SkadiDesignerApi extends SkadiApi {
 
     /**
      * Create a skadi graphical editor
+     */
+    constructor() {
+        super();   
+    }
+
+    /**
+     * Initialise skadi graphical editor
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Number} canvas_width - the width of the canvas area
@@ -6104,15 +6219,14 @@ class SkadiDesignerApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-                node_factory, configuration_factory) {
-        super();
+    init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        node_factory, configuration_factory) {
         topology_store = topology_store || new TopologyStore(this);
-        this.design = new SkadiDesigner(this, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        this.design = new SkadiDesigner(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
             node_factory, configuration_factory);
         this.set_instance(this.design);
+        super.init();
     }
-
 
     load(from_obj, supress_events) {
         this.design.clear(supress_events);
@@ -6211,14 +6325,22 @@ class SkadiViewApi extends SkadiApi {
 
     /**
      * Create a skadi application view
+     */
+    constructor() {
+        super();    
+    }
+
+    /**
+     * Initialise skadi application view
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(this, element_id, node_factory, configuration_factory) {
-        this.application = new SkadiApplication(this, element_id, node_factory, configuration_factory);
+    init(element_id, node_factory, configuration_factory) {
+        this.application = new SkadiApplication(this.l10n_utils, this.schema, element_id, node_factory, configuration_factory);
         this.set_instance(this.application);
+        super.init();
     }
 
     /**
@@ -6275,11 +6397,13 @@ async function start_skadi_designer(element_id, schema_urls, canvas_width, canva
         is_acyclic = true;
     }
 
-    let skadi_instance = new SkadiDesignerApi(element_id || "canvas_container_id",
-        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, is_acyclic, topology_store, node_factory, configuration_factory);
+    let skadi_instance = new SkadiDesignerApi();
     await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
-    skadi_instance.init();
+    skadi_instance.init(element_id || "canvas_container_id",
+        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, 
+        canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, 
+        is_acyclic, topology_store, node_factory, configuration_factory);
     return skadi_instance;
 }
 
@@ -6293,14 +6417,13 @@ async function start_skadi_designer(element_id, schema_urls, canvas_width, canva
   * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
 async function start_skadi_application(element_id, schema_urls, topology_url, node_factory, configuration_factory) {
-
-    let skadi_instance = new SkadiViewApi(element_id, node_factory, configuration_factory);
+    let skadi_instance = new SkadiViewApi();
     await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
     if (topology_url) {
         await skadi_instance.load_topology(topology_url);
     }
-    skadi_instance.init();
+    skadi_instance.init(element_id, node_factory, configuration_factory);
     return skadi_instance;
 }
 
@@ -6313,36 +6436,60 @@ class SkadiL10NUtils {
 
     constructor(l10n_folder_url) {
         this.l10n_folder_url = l10n_folder_url;
-        this.metadata = {};
+        this.metadata = null;
         this.bundle = {};
+        this.language = "";
+    }
+
+    configure_for_package(package_l10n) {
+        this.metadata = package_l10n;
     }
 
     async initialise(language) {
-        this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json());
-        let bundle_url = this.l10n_folder_url+"/"+this.metadata[language].url;    
-        this.bundle = await fetch(bundle_url).then(r => r.json());
+        if (this.metadata === null) {
+            this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
+        }
+        await this.set_language(language); 
     }
 
-    
+    async set_language(language) {
+        if (language === "" || !(language in this.metadata.languages)) {
+            language = this.metadata.default_language;
+        }
+        let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
+        this.bundle = await fetch(bundle_url).then(r => r.json());
+        this.language = language;
+    }
+
+    get_language() {
+        return this.language;
+    }
+
     get_languages() {
         let key_name_list = [];
-        for(let language_key in this.metadata) {
-            key_name_list.push([language_key,this.metadata[language_key].name]);
+        for(let language_key in this.metadata.languages) {
+            key_name_list.push([language_key,this.metadata.languages[language_key].name]);
         }
         return key_name_list;
     }
 
-    localise(html) {
+    localise(input) {
+        if (input in this.bundle) {
+            return this.bundle[input];
+        }
         let idx = 0;
         let s = "";
-        while(idx<html.length-1) {
-            if (html.slice(idx, idx+2) == "||") {
+        while(idx<input.length) {
+            if (input.slice(idx, idx+2) === "||") {
                 let startidx = idx+2;
                 idx += 2;
-                while(idx<html.length-1) {
-                    if (html.slice(idx,idx+2) == "||") {
-                        let token = html.slice(startidx,idx);
-                        s += this.lookup(token);
+                while(idx<input.length) {
+                    if (input.slice(idx,idx+2) === "||") {
+                        let token = input.slice(startidx,idx);
+                        if (token in this.bundle) {
+                            token = this.bundle[token];    
+                        } 
+                        s += token;
                         idx += 2;
                         break;
                     } else {
@@ -6350,19 +6497,11 @@ class SkadiL10NUtils {
                     }
                 }
             } else {
-                s += html.charAt(idx);
+                s += input.charAt(idx);
                 idx++;
             }
         }
         return s;
-    }
-
-    lookup(key) {
-        if (key in this.bundle) {
-            return this.bundle[key];
-        }
-        console.warn("Translation failed for key: "+key);
-        return "$$"+key+"$$";
     }
 }
 

@@ -38,7 +38,6 @@ class SkadiApi {
         for (let idx = 0; idx < package_urls.length; idx++) {
             packages.push(await loadPackageFromUrl(package_urls[idx],this.schema));
         }
-        this.instance.set_schema(this.schema);
         return packages;
     }
 

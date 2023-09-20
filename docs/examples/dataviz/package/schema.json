@@ -17,10 +17,23 @@
         }
     },
     "dependencies": [ "configuration.js","nodes/aq_utils.js" ],
+    "l10n": {
+        "languages": {
+            "en": {
+                "name": "English",
+                "bundle_url": "l10n/en.json"
+            },
+            "jp": {
+                "name": "Japanese",
+                "bundle_url": "l10n/jp.json"
+            }
+        },
+        "default_language":"en"
+    },
     "node_types": {
         "csv_import": {
             "metadata": {
-                "name": "CSV Import",
+                "name": "csv.reader.name",
                 "description": "Select a CSV file and load it into a dataset"
             },
             "output_ports": {
@@ -33,7 +46,7 @@
                 "icon": "icons/csv_import.svg"
             },
             "page": {
-                "url": "nodes/csv_import.html"
+                "url": "nodes/csv_import_{language}.html"
             },
             "classname": "DataVizExample.CsvImportNode",
             "dependencies": ["nodes/csv_import.js"]

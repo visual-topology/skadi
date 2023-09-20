@@ -9,14 +9,22 @@ class SkadiViewApi extends SkadiApi {
 
     /**
      * Create a skadi application view
+     */
+    constructor() {
+        super();    
+    }
+
+    /**
+     * Initialise skadi application view
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(this, element_id, node_factory, configuration_factory) {
-        this.application = new SkadiApplication(this, element_id, node_factory, configuration_factory);
+    init(element_id, node_factory, configuration_factory) {
+        this.application = new SkadiApplication(this.l10n_utils, this.schema, element_id, node_factory, configuration_factory);
         this.set_instance(this.application);
+        super.init();
     }
 
     /**

@@ -9,36 +9,60 @@ class SkadiL10NUtils {
 
     constructor(l10n_folder_url) {
         this.l10n_folder_url = l10n_folder_url;
-        this.metadata = {};
+        this.metadata = null;
         this.bundle = {};
+        this.language = "";
+    }
+
+    configure_for_package(package_l10n) {
+        this.metadata = package_l10n;
     }
 
     async initialise(language) {
-        this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json());
-        let bundle_url = this.l10n_folder_url+"/"+this.metadata[language].url;    
-        this.bundle = await fetch(bundle_url).then(r => r.json());
+        if (this.metadata === null) {
+            this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
+        }
+        await this.set_language(language); 
     }
 
-    
+    async set_language(language) {
+        if (language === "" || !(language in this.metadata.languages)) {
+            language = this.metadata.default_language;
+        }
+        let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
+        this.bundle = await fetch(bundle_url).then(r => r.json());
+        this.language = language;
+    }
+
+    get_language() {
+        return this.language;
+    }
+
     get_languages() {
         let key_name_list = [];
-        for(let language_key in this.metadata) {
-            key_name_list.push([language_key,this.metadata[language_key].name]);
+        for(let language_key in this.metadata.languages) {
+            key_name_list.push([language_key,this.metadata.languages[language_key].name]);
         }
         return key_name_list;
     }
 
-    localise(html) {
+    localise(input) {
+        if (input in this.bundle) {
+            return this.bundle[input];
+        }
         let idx = 0;
         let s = "";
-        while(idx<html.length-1) {
-            if (html.slice(idx, idx+2) == "||") {
+        while(idx<input.length) {
+            if (input.slice(idx, idx+2) === "||") {
                 let startidx = idx+2;
                 idx += 2;
-                while(idx<html.length-1) {
-                    if (html.slice(idx,idx+2) == "||") {
-                        let token = html.slice(startidx,idx);
-                        s += this.lookup(token);
+                while(idx<input.length) {
+                    if (input.slice(idx,idx+2) === "||") {
+                        let token = input.slice(startidx,idx);
+                        if (token in this.bundle) {
+                            token = this.bundle[token];    
+                        } 
+                        s += token;
                         idx += 2;
                         break;
                     } else {
@@ -46,19 +70,11 @@ class SkadiL10NUtils {
                     }
                 }
             } else {
-                s += html.charAt(idx);
+                s += input.charAt(idx);
                 idx++;
             }
         }
         return s;
-    }
-
-    lookup(key) {
-        if (key in this.bundle) {
-            return this.bundle[key];
-        }
-        console.warn("Translation failed for key: "+key);
-        return "$$"+key+"$$";
     }
 }
 

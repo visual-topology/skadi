@@ -9,6 +9,13 @@ class SkadiDesignerApi extends SkadiApi {
 
     /**
      * Create a skadi graphical editor
+     */
+    constructor() {
+        super();   
+    }
+
+    /**
+     * Initialise skadi graphical editor
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Number} canvas_width - the width of the canvas area
@@ -18,15 +25,14 @@ class SkadiDesignerApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-                node_factory, configuration_factory) {
-        super();
+    init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        node_factory, configuration_factory) {
         topology_store = topology_store || new TopologyStore(this);
-        this.design = new SkadiDesigner(this, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        this.design = new SkadiDesigner(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
             node_factory, configuration_factory);
         this.set_instance(this.design);
+        super.init();
     }
-
 
     load(from_obj, supress_events) {
         this.design.clear(supress_events);

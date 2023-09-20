@@ -264,7 +264,7 @@ class SkadiNode extends SkadiCoreNode {
 
 
     this.text = this.grp.append("text");
-    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_label());
+    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_name());
 
     this.dragged = false;
     if (this.active) {

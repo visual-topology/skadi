@@ -7,13 +7,13 @@
 
 class SkadiCore {
 
-    constructor(api, element_id, topology_store, node_factory, configuration_factory) {
-        this.api = api;
+    constructor(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory) {
+        this.l10n_utils = l10n_utils;
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
         this.id = "design";
-        this.schema = null;
+        this.schema = schema;
 
         this.graph_executor = null;
         this.node_event_handlers = {};
@@ -49,17 +49,15 @@ class SkadiCore {
     }
 
     localise(text) {
-        return this.api.get_l10n_utils().localise(text);
-    }
-
-    /* Get/Set Schema and Executor */
-
-    set_schema(schema) {
-        this.schema = schema;
+        return this.l10n_utils.localise(text);
     }
 
     get_schema() {
         return this.schema;
+    }
+
+    get_l10n_utils() {
+        return this.l10n_utils;
     }
 
     set_graph_executor(executor) {

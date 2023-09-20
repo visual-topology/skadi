@@ -79,10 +79,10 @@ class SkadiNodeService {
     }
 
     get_language() {
-        return this.core.get_language();
+        return this.node_type.get_package_type().get_l10n_utils().get_language();
     }
 
     localise(s) {
-        return this.node_type.get_package_type().localise(s,this.get_language());
+        return this.node_type.get_package_type().get_l10n_utils().localise(s);
     }
 }

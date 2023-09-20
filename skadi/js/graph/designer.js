@@ -9,8 +9,8 @@ let GRID_SNAP = 20;
 
 class SkadiDesigner extends SkadiCore {
 
-    constructor(api, element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
-        super(api, element_id, topology_store, node_factory, configuration_factory);
+    constructor(l10n_utils, schema, element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
+        super(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory);
         this.width = width;
         this.height = height;
         this.is_acyclic = is_acyclic;
@@ -102,7 +102,7 @@ class SkadiDesigner extends SkadiCore {
         button_x += this.button_size + this.button_margin;
 
         this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_edit_purple, () => { this.open_edit_design_metadata(); }, skadi_l10n_utils.lookup("topoligy.metadata"));
+            icon_edit_purple, () => { this.open_edit_design_metadata(); }, this.localise("||topology.metadata||"));
         this.edit_btn.set_fill("white");
         this.edit_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
@@ -262,7 +262,7 @@ class SkadiDesigner extends SkadiCore {
             }
         }
         let node = this.network.get_node(node_id);
-        let title = node.get_type().get_label();
+        let title = node.metadata.name;
         let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
                 delete this.windows[key];
                 if (close_callback) {

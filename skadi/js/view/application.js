@@ -10,8 +10,8 @@ skadi_application_status_areas = {};
 
 class SkadiApplication extends SkadiCore {
 
-    constructor(api, element_id, node_factory, configuration_factory) {
-        super(api, element_id, null, node_factory, configuration_factory);
+    constructor(l10n_utils, schema, element_id, node_factory, configuration_factory) {
+        super(l10n_utils, schema, element_id, null, node_factory, configuration_factory);
     }
 
     open_display() {

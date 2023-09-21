@@ -17,11 +17,11 @@ class SkadiPackageType {
     this.l10n_utils = null;
   }
 
-  async load_l10n(language) {
+  async load_l10n() {
     if (this.l10n) {
-      this.l10n_utils = new SkadiL10NUtils(this.base_url);
+      this.l10n_utils = new SkadiL10NUtils("package."+this.id, this.base_url);
       this.l10n_utils.configure_for_package(this.l10n);
-      await this.l10n_utils.initialise(language);
+      await this.l10n_utils.initialise();
     }
   }
 

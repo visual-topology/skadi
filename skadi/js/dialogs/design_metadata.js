@@ -19,7 +19,7 @@ let skadi_design_metadata_html = `
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.name||:
+            {{metadata.name}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_name" type="text" value="" class="exo-full-width">
@@ -27,7 +27,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.filename||:
+            {{metadata.filename}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_filename" type="text" value="" class="exo-full-width">
@@ -35,7 +35,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.description||:
+            {{metadata.description}}:
         </div>
         <div class="exo-2-cell">
             <textarea id="edit_metadata_description" rows="10" class="exo-full-width"></textarea>
@@ -43,7 +43,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.authors||:
+            {{metadata.authors}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_authors" type="text" value="" class="exo-full-width">
@@ -51,7 +51,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.version||:
+            {{metadata.version}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_version" type="text" value="" class="exo-full-width">

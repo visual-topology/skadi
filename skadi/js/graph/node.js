@@ -249,10 +249,12 @@ class SkadiNode extends SkadiCoreNode {
 
     this.isize = 2 * this.r * Math.sin(Math.PI / 4);
 
-    let icon_name = this.node_type.get_display().icon;
-    if (icon_name) {
+    let icon_url = this.node_type.get_icon_url();
+    if (icon_url) {
+      let localised_icon_url = this.node_type.get_package_type().localise_url(icon_url);
+      let full_icon_url = this.node_type.get_package_type().get_resource_url(localised_icon_url);
       this.image = this.grp2.append("image")
-          .attr("href", this.design.get_schema().get_resource_url(this.node_type.get_package_id(),icon_name))
+          .attr("href", full_icon_url)
           .attr("x", this.x - this.isize / 2)
           .attr("y", this.y - this.isize / 2)
           .attr("width", this.isize)
@@ -261,7 +263,6 @@ class SkadiNode extends SkadiCoreNode {
     } else {
       this.image = null;
     }
-
 
     this.text = this.grp.append("text");
     this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_name());

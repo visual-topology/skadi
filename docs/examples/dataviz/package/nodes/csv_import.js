@@ -47,7 +47,7 @@ DataVizExample.CsvImportNode = class {
         if (this.filename) {
             this.node_service.set_status_info(this.filename);
         } else {
-            this.node_service.set_status_warning("No File Selected");
+            this.node_service.set_status_warning(this.node_service.localise("no.file.selected"));
         }
     }
 
@@ -72,8 +72,6 @@ DataVizExample.CsvImportNode = class {
 
     open(w,h) {
         this.is_open = true;
-
-
 
         if (this.load_custom) {
             this.node_service.set_attributes("use_custom",{"checked": "true"});

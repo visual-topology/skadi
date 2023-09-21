@@ -23,9 +23,13 @@
                 "name": "English",
                 "bundle_url": "l10n/en.json"
             },
-            "jp": {
-                "name": "Japanese",
-                "bundle_url": "l10n/jp.json"
+            "ja": {
+                "name": "日本語",
+                "bundle_url": "l10n/ja.json"
+            },
+            "es": {
+                "name": "Español",
+                "bundle_url": "l10n/es.json"
             }
         },
         "default_language":"en"

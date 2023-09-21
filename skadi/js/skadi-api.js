@@ -13,8 +13,8 @@ class SkadiApi {
     }
 
     async load_l10n(api_base_url) {
-        this.l10n_utils = new SkadiL10NUtils(api_base_url+"/l10n");
-        await this.l10n_utils.initialise("en");
+        this.l10n_utils = new SkadiL10NUtils("api",api_base_url+"/l10n");
+        await this.l10n_utils.initialise();
     }
 
     set_instance(designer_or_application) {

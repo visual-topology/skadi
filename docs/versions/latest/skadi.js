@@ -2835,7 +2835,7 @@ let skadi_design_metadata_html = `
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.name||:
+            {{metadata.name}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_name" type="text" value="" class="exo-full-width">
@@ -2843,7 +2843,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.filename||:
+            {{metadata.filename}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_filename" type="text" value="" class="exo-full-width">
@@ -2851,7 +2851,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.description||:
+            {{metadata.description}}:
         </div>
         <div class="exo-2-cell">
             <textarea id="edit_metadata_description" rows="10" class="exo-full-width"></textarea>
@@ -2859,7 +2859,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.authors||:
+            {{metadata.authors}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_authors" type="text" value="" class="exo-full-width">
@@ -2867,7 +2867,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            ||metadata.version||:
+            {{metadata.version}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_version" type="text" value="" class="exo-full-width">
@@ -4170,10 +4170,12 @@ class SkadiNode extends SkadiCoreNode {
 
     this.isize = 2 * this.r * Math.sin(Math.PI / 4);
 
-    let icon_name = this.node_type.get_display().icon;
-    if (icon_name) {
+    let icon_url = this.node_type.get_icon_url();
+    if (icon_url) {
+      let localised_icon_url = this.node_type.get_package_type().localise_url(icon_url);
+      let full_icon_url = this.node_type.get_package_type().get_resource_url(localised_icon_url);
       this.image = this.grp2.append("image")
-          .attr("href", this.design.get_schema().get_resource_url(this.node_type.get_package_id(),icon_name))
+          .attr("href", full_icon_url)
           .attr("x", this.x - this.isize / 2)
           .attr("y", this.y - this.isize / 2)
           .attr("width", this.isize)
@@ -4182,7 +4184,6 @@ class SkadiNode extends SkadiCoreNode {
     } else {
       this.image = null;
     }
-
 
     this.text = this.grp.append("text");
     this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_name());
@@ -5694,6 +5695,13 @@ class SkadiNodeType {
     return this.id;
   }
 
+  get_icon_url() {
+    if (this.display) {
+      return this.display.icon;
+    }
+    return undefined;
+  }
+
   get_display() {
     return this.display;
   }
@@ -5766,11 +5774,11 @@ class SkadiPackageType {
     this.l10n_utils = null;
   }
 
-  async load_l10n(language) {
+  async load_l10n() {
     if (this.l10n) {
-      this.l10n_utils = new SkadiL10NUtils(this.base_url);
+      this.l10n_utils = new SkadiL10NUtils("package."+this.id, this.base_url);
       this.l10n_utils.configure_for_package(this.l10n);
-      await this.l10n_utils.initialise(language);
+      await this.l10n_utils.initialise();
     }
   }
 
@@ -6102,8 +6110,8 @@ class SkadiApi {
     }
 
     async load_l10n(api_base_url) {
-        this.l10n_utils = new SkadiL10NUtils(api_base_url+"/l10n");
-        await this.l10n_utils.initialise("en");
+        this.l10n_utils = new SkadiL10NUtils("api",api_base_url+"/l10n");
+        await this.l10n_utils.initialise();
     }
 
     set_instance(designer_or_application) {
@@ -6434,7 +6442,8 @@ async function start_skadi_application(element_id, schema_urls, topology_url, no
 
 class SkadiL10NUtils {
 
-    constructor(l10n_folder_url) {
+    constructor(id, l10n_folder_url) {
+        this.id = id;
         this.l10n_folder_url = l10n_folder_url;
         this.metadata = null;
         this.bundle = {};
@@ -6445,10 +6454,11 @@ class SkadiL10NUtils {
         this.metadata = package_l10n;
     }
 
-    async initialise(language) {
+    async initialise() {
         if (this.metadata === null) {
             this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
         }
+        let language = window.localStorage.getItem("skadi.settings.l10n."+this.id+".language") || this.metadata.default_language;
         await this.set_language(language); 
     }
 
@@ -6456,8 +6466,12 @@ class SkadiL10NUtils {
         if (language === "" || !(language in this.metadata.languages)) {
             language = this.metadata.default_language;
         }
-        let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
-        this.bundle = await fetch(bundle_url).then(r => r.json());
+        this.bundle = {};
+        if ("bundle_url" in this.metadata.languages[language]) {
+            let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
+            this.bundle = await fetch(bundle_url).then(r => r.json());
+        }
+        window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
         this.language = language;
     }
 
@@ -6474,17 +6488,25 @@ class SkadiL10NUtils {
     }
 
     localise(input) {
+        // for empty bundles, localise returns the input
+        if (Object.keys(this.bundle).length == 0) {
+            return input;
+        }
+        // test if the input is a key in the bundle, if so return the value
         if (input in this.bundle) {
             return this.bundle[input];
         }
+        // treat the input as possibly containing embedded keys, delimited by {{ and }}, 
+        // for example "say {{hello}}" embeds they key hello
+        // substitute any embedded keys and the surrounding delimiters with their values, if the key is present in the bundle
         let idx = 0;
         let s = "";
         while(idx<input.length) {
-            if (input.slice(idx, idx+2) === "||") {
+            if (input.slice(idx, idx+2) === "{{") {
                 let startidx = idx+2;
                 idx += 2;
                 while(idx<input.length) {
-                    if (input.slice(idx,idx+2) === "||") {
+                    if (input.slice(idx,idx+2) === "}}") {
                         let token = input.slice(startidx,idx);
                         if (token in this.bundle) {
                             token = this.bundle[token];    

@@ -95,6 +95,13 @@ class SkadiNodeType {
     return this.id;
   }
 
+  get_icon_url() {
+    if (this.display) {
+      return this.display.icon;
+    }
+    return undefined;
+  }
+
   get_display() {
     return this.display;
   }

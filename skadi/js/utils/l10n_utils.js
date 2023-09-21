@@ -7,7 +7,8 @@
 
 class SkadiL10NUtils {
 
-    constructor(l10n_folder_url) {
+    constructor(id, l10n_folder_url) {
+        this.id = id;
         this.l10n_folder_url = l10n_folder_url;
         this.metadata = null;
         this.bundle = {};
@@ -18,10 +19,11 @@ class SkadiL10NUtils {
         this.metadata = package_l10n;
     }
 
-    async initialise(language) {
+    async initialise() {
         if (this.metadata === null) {
             this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
         }
+        let language = window.localStorage.getItem("skadi.settings.l10n."+this.id+".language") || this.metadata.default_language;
         await this.set_language(language); 
     }
 
@@ -29,8 +31,12 @@ class SkadiL10NUtils {
         if (language === "" || !(language in this.metadata.languages)) {
             language = this.metadata.default_language;
         }
-        let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
-        this.bundle = await fetch(bundle_url).then(r => r.json());
+        this.bundle = {};
+        if ("bundle_url" in this.metadata.languages[language]) {
+            let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
+            this.bundle = await fetch(bundle_url).then(r => r.json());
+        }
+        window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
         this.language = language;
     }
 
@@ -47,17 +53,25 @@ class SkadiL10NUtils {
     }
 
     localise(input) {
+        // for empty bundles, localise returns the input
+        if (Object.keys(this.bundle).length == 0) {
+            return input;
+        }
+        // test if the input is a key in the bundle, if so return the value
         if (input in this.bundle) {
             return this.bundle[input];
         }
+        // treat the input as possibly containing embedded keys, delimited by {{ and }}, 
+        // for example "say {{hello}}" embeds they key hello
+        // substitute any embedded keys and the surrounding delimiters with their values, if the key is present in the bundle
         let idx = 0;
         let s = "";
         while(idx<input.length) {
-            if (input.slice(idx, idx+2) === "||") {
+            if (input.slice(idx, idx+2) === "{{") {
                 let startidx = idx+2;
                 idx += 2;
                 while(idx<input.length) {
-                    if (input.slice(idx,idx+2) === "||") {
+                    if (input.slice(idx,idx+2) === "}}") {
                         let token = input.slice(startidx,idx);
                         if (token in this.bundle) {
                             token = this.bundle[token];    

@@ -201,6 +201,12 @@ class SkadiX3Selection {
     return this;
   }
 
+  html(inner_html) {
+    for(let idx=0; idx<this.elts.length; idx++) {
+      this.elts[idx].innerHTML = inner_html;
+    }
+  }
+
   node() {
     if (this.elts) {
       return this.elts[0];

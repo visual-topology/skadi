@@ -57,7 +57,7 @@ class SkadiCoreConfiguration {
 
   get_url() {
       if (this.page && this.page.url) {
-          return this.page.url;
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
       }
       return null;
   }

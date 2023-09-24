@@ -47,8 +47,7 @@ class SkadiViewApi extends SkadiApi {
     add_design_event_handler(design_event_type, handler) {
     }
 
-    init() {
-        super.init();
+    open() {
         this.application.open_display();
     }
 }

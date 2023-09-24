@@ -41,7 +41,6 @@ class ResourceLoader {
     async load(resource) {
         // start new load
         this.loading_resources[resource] = true;
-        console.log(resource);
         if (resource.endsWith(".js")) {
             await this.js_load(resource);
         } else if (resource.endsWith(".css")) {

@@ -237,7 +237,6 @@ class SkadiCore {
         node.update_execution_state(state);
         if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
             let upstream_node_ids = this.network.get_upstream_nodes(node_id);
-            console.log(JSON.stringify(upstream_node_ids));
             for (let idx in upstream_node_ids) {
                 this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
             }

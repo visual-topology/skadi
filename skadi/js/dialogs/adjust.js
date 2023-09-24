@@ -6,19 +6,19 @@
 */
 
 let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
-    Adjust Node Metadata and Appearance
+    {{node.adjust}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="adjust-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-         Use this form to update the metadata associated with the node being edited
+         {{node.adjust.tooltip}}
     </div>
 </div>
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Name:
+            {{node.name}}:
         </div>
         <div class="exo-2-cell">
             <input id="$edit_name_id" type="text" value="" class="exo-full-width">
@@ -26,7 +26,7 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Description:
+            {{node.description}}:
         </div>
         <div class="exo-2-cell">
             <textarea id="$edit_description_id" rows="10" class="exo-full-width"></textarea>
@@ -34,7 +34,7 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Orientation:
+            {{node.orientation}}:
         </div>
         <div class="exo-2-cell">
             <input type="number" id="$rotate_id" step="1">
@@ -56,14 +56,14 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
 </div>
 `
 
-function skadi_populate_adjust(node, elt, close_window) {
+function skadi_populate_adjust(design, node, elt, close_window) {
     let edit_name_id = "edit_node_"+node.get_id()+"_name";
     let edit_description_id = "edit_description_"+node.get_id()+"_description";
     let rotate_id = "rotate_node_"+node.get_id();
     let rotate_left_id = "rotate_left_node_"+node.get_id();
     let rotate_right_id = "rotate_right_node_"+node.get_id();
     
-    elt.innerHTML = skadi_adjust_html
+    elt.innerHTML = design.localise(skadi_adjust_html)
         .replace("$edit_name_id",edit_name_id)
         .replace("$edit_description_id", edit_description_id)
         .replace("$rotate_id",rotate_id)

@@ -13,6 +13,7 @@ class SkadiL10NUtils {
         this.metadata = null;
         this.bundle = {};
         this.language = "";
+        this.language_update_listeners = [];
     }
 
     configure_for_package(package_l10n) {
@@ -38,6 +39,7 @@ class SkadiL10NUtils {
         }
         window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
         this.language = language;
+        this.language_update_listeners.forEach((callback) => callback(language));
     }
 
     get_language() {
@@ -89,6 +91,26 @@ class SkadiL10NUtils {
             }
         }
         return s;
+    }
+
+    add_language_update_listener(listener) {
+        this.language_update_listeners.push(listener);
+    }
+
+    create_language_select() {
+        let select = document.createElement("select");
+        let languages = this.get_languages();
+        for(var idx=0; idx<languages.length; idx++) {
+            let option = document.createElement("option");
+            option.setAttribute("value",languages[idx][0]);
+            option.appendChild(document.createTextNode(languages[idx][1]));
+            select.appendChild(option);
+        }
+        select.value = this.get_language();
+        select.addEventListener("change", (ev) => {
+            this.set_language(select.value);
+        });
+        return select; 
     }
 }
 

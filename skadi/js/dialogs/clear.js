@@ -7,23 +7,23 @@
 
 let skadi_clear_html = `
 <span aria-describedby="clear-tooltip">
-    Really Clear
+    {{clear.topology}}?
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="clear-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-        Press the clear button to remove all nodes and links from the design.  Press cancel or close this window to leave the design unchanged.
+        {{clear.topology.tooltip}}
     </div>
 </div>
 <div>
-<input id="clear_confirm" type="button" value="Clear All">
-<input id="clear_cancel" type="button" value="Cancel">
+<input id="clear_confirm" type="button" value="{{clear}}">
+<input id="clear_cancel" type="button" value="{{cancel}}">
 </div>
 `
 
 function skadi_populate_clear(design, elt, close_window) {
-    elt.innerHTML = skadi_clear_html;
+    elt.innerHTML = design.localise(skadi_clear_html);
     let confirm = document.getElementById("clear_confirm");
     confirm.addEventListener("click", function() {
         design.clear(false);

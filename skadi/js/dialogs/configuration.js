@@ -48,29 +48,14 @@ function skadi_update_configuration_status(package_id, state, message) {
     skadi_update_configuration_status_div(package_id);
 }
 
-function skadi_create_language_select(l10n_utils) {
-    let select = document.createElement("select");
-    let languages = l10n_utils.get_languages();
-    for(var idx=0; idx<languages.length; idx++) {
-        let option = document.createElement("option");
-        option.setAttribute("value",languages[idx][0]);
-        option.appendChild(document.createTextNode(languages[idx][1]));
-        select.appendChild(option);
-    }
-    select.value = l10n_utils.get_language();
-    select.addEventListener("change", (ev) => {
-        l10n_utils.set_language(select.value);
-    });
-    return select; 
-}
+
 
 function skadi_populate_configuration(design, elt, close_window) {
     let header_div = document.createElement("div");
     header_div.innerHTML = skadi_configuration_header_html;
     elt.appendChild(header_div);
-
     {
-        let select = skadi_create_language_select(design.get_l10n_utils());
+        let select = design.get_l10n_utils().create_language_select();
         let row = document.createElement("div");
         row.setAttribute("class","exo-row");
 

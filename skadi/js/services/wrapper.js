@@ -111,7 +111,6 @@ class SkadiWrapper {
     }
 
     recv_from_window(msg) {
-        console.log("Recv from window: "+JSON.stringify(msg));
         switch(msg.type) {
             case "event":
                 this.handle_event(msg["element_id"],msg["event_type"],msg["value"]);

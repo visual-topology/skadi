@@ -90,25 +90,25 @@ class SkadiDesigner extends SkadiCore {
         button_x += this.button_size + this.button_margin;
 
         this.help_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_help_purple, () => { this.open_about(); }, "Help/About");
+            icon_help_purple, () => { this.open_about(); }, "");
         this.help_btn.set_fill("white");
         this.help_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.clear_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_delete, () => { this.open_clear(); }, "Clear Design");
+            icon_delete, () => { this.open_clear(); }, "");
         this.clear_btn.set_fill("white");
         this.clear_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_edit_purple, () => { this.open_edit_design_metadata(); }, this.localise("||topology.metadata||"));
+            icon_edit_purple, () => { this.open_edit_design_metadata(); }, "");
         this.edit_btn.set_fill("white");
         this.edit_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.configuration_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "Edit Configurations");
+            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "");
         this.configuration_btn.set_fill("white");
         this.configuration_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
@@ -160,6 +160,17 @@ class SkadiDesigner extends SkadiCore {
         this.load_dialogue = null;
         this.save_dialogue = null;
         this.configuration_dialogue = null;
+        this.localisation_updated();
+        this.l10n_utils.add_language_update_listener(language => {
+            this.localisation_updated();
+        });
+    }
+
+    localisation_updated() {
+        this.help_btn.set_tooltip(this.localise("about.tooltip"));
+        this.clear_btn.set_tooltip(this.localise("clear.topology.tooltip"));
+        this.edit_btn.set_tooltip(this.localise("topology.metadata.editor.tooltip"));
+        this.configuration_btn.set_tooltip(this.localise("configuration.edit.tooltip"));
     }
 
     toggle_pause() {

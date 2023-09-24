@@ -7,13 +7,13 @@
 
 let skadi_design_metadata_html = `
 <span aria-describedby="edit-metadata-tooltip">
-    ||topology.metadata.editor||
+    {{topology.metadata.editor}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-        ||topology.metadata.editor.tooltip||
+        {{topology.metadata.editor.tooltip}}
     </div>
 </div>
 <div>

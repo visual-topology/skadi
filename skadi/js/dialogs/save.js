@@ -7,25 +7,25 @@
 
 let skadi_download_html = `
 <span aria-describedby="edit-metadata-tooltip">
-    Download Topology
+    {{download.topology}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-         Use this form to download a topology from the designer
+         {{download.topology.tooltip}}
     </div>
 </div>
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            File:
+            {{download.file}}:
         </div>
         <div class="exo-2-cell">
             <div class="exo-button exo-dark-blue-fg exo-light-blue-bg">
                 <a id="skadi_designer_download_file" download=""
                      href="">
-                    Download
+                    {{download}}
                 </a>
             </div>
         </div>
@@ -33,7 +33,7 @@ let skadi_download_html = `
 </div>`
 
 function skadi_populate_save(design, elt) {
-    elt.innerHTML = skadi_download_html;
+    elt.innerHTML = design.localise(skadi_download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
     design.get_topology_store().getSaveLink().then(url => {

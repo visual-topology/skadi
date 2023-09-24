@@ -1056,7 +1056,7 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
 class SkadiTextMenuDialogue extends SkadiSvgDialogue {
 
     constructor(design, items, closeHandler, owner, x, y, title) {
-        super(owner.get_id() + "text_menu", design, title, x, y, 100, 500, closeHandler, null, false, true, false,
+        super(owner.get_id() + "text_menu", design, design.localise(title), x, y, 100, 500, closeHandler, null, false, true, false,
             function (grp) {
                 this.draw(grp);
             });
@@ -1068,7 +1068,7 @@ class SkadiTextMenuDialogue extends SkadiSvgDialogue {
         for (let i = 0; i < this.items.length; i++) {
             let item = this.items[i];
             let cb = this.create_cb(item.get_handler());
-            let t = new SkadiTextButton(this.font_size, item.get_label(), cb);
+            let t = new SkadiTextButton(this.font_size, design.localise(item.get_label()), cb);
             t.set_class("menuitem");
             this.entries.push(t);
         }
@@ -1405,6 +1405,12 @@ class SkadiX3Selection {
       this.elts[idx].appendChild(tn);
     }
     return this;
+  }
+
+  html(inner_html) {
+    for(let idx=0; idx<this.elts.length; idx++) {
+      this.elts[idx].innerHTML = inner_html;
+    }
   }
 
   node() {
@@ -2383,7 +2389,7 @@ class SkadiCoreConfiguration {
 
   get_url() {
       if (this.page && this.page.url) {
-          return this.page.url;
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
       }
       return null;
   }
@@ -2613,25 +2619,25 @@ function skadi_populate_about(design, elt) {
 
 let skadi_download_html = `
 <span aria-describedby="edit-metadata-tooltip">
-    Download Topology
+    {{download.topology}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-         Use this form to download a topology from the designer
+         {{download.topology.tooltip}}
     </div>
 </div>
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            File:
+            {{download.file}}:
         </div>
         <div class="exo-2-cell">
             <div class="exo-button exo-dark-blue-fg exo-light-blue-bg">
                 <a id="skadi_designer_download_file" download=""
                      href="">
-                    Download
+                    {{download}}
                 </a>
             </div>
         </div>
@@ -2639,7 +2645,7 @@ let skadi_download_html = `
 </div>`
 
 function skadi_populate_save(design, elt) {
-    elt.innerHTML = skadi_download_html;
+    elt.innerHTML = design.localise(skadi_download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
     design.get_topology_store().getSaveLink().then(url => {
@@ -2654,19 +2660,19 @@ function skadi_populate_save(design, elt) {
 
 let skadi_upload_html = `
 <span aria-describedby="edit-metadata-tooltip">
-    Upload Topology
+    {{upload.topology}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-         Use this form to upload a topology to the designer
+         {{upload.topology.tooltip}}
     </div>
 </div>
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            File:
+            {{upload.file}}:
         </div>
         <div class="exo-2-cell">
             <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
@@ -2675,7 +2681,7 @@ let skadi_upload_html = `
 </div>`
 
 function skadi_populate_load(design, elt, close_fn) {
-    elt.innerHTML = skadi_upload_html;
+    elt.innerHTML = design.localise(skadi_upload_html);
     let input = document.getElementById("skadi_designer_upload_file");
     input.addEventListener("change", async function() {
         let file = input.files[0];
@@ -2689,23 +2695,23 @@ function skadi_populate_load(design, elt, close_fn) {
 
 let skadi_clear_html = `
 <span aria-describedby="clear-tooltip">
-    Really Clear
+    {{clear.topology}}?
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="clear-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-        Press the clear button to remove all nodes and links from the design.  Press cancel or close this window to leave the design unchanged.
+        {{clear.topology.tooltip}}
     </div>
 </div>
 <div>
-<input id="clear_confirm" type="button" value="Clear All">
-<input id="clear_cancel" type="button" value="Cancel">
+<input id="clear_confirm" type="button" value="{{clear}}">
+<input id="clear_cancel" type="button" value="{{cancel}}">
 </div>
 `
 
 function skadi_populate_clear(design, elt, close_window) {
-    elt.innerHTML = skadi_clear_html;
+    elt.innerHTML = design.localise(skadi_clear_html);
     let confirm = document.getElementById("clear_confirm");
     confirm.addEventListener("click", function() {
         design.clear(false);
@@ -2720,19 +2726,19 @@ function skadi_populate_clear(design, elt, close_window) {
 /* skadi/js/dialogs/adjust.js */
 
 let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
-    Adjust Node Metadata and Appearance
+    {{node.adjust}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="adjust-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-         Use this form to update the metadata associated with the node being edited
+         {{node.adjust.tooltip}}
     </div>
 </div>
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Name:
+            {{node.name}}:
         </div>
         <div class="exo-2-cell">
             <input id="$edit_name_id" type="text" value="" class="exo-full-width">
@@ -2740,7 +2746,7 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Description:
+            {{node.description}}:
         </div>
         <div class="exo-2-cell">
             <textarea id="$edit_description_id" rows="10" class="exo-full-width"></textarea>
@@ -2748,7 +2754,7 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Orientation:
+            {{node.orientation}}:
         </div>
         <div class="exo-2-cell">
             <input type="number" id="$rotate_id" step="1">
@@ -2770,14 +2776,14 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
 </div>
 `
 
-function skadi_populate_adjust(node, elt, close_window) {
+function skadi_populate_adjust(design, node, elt, close_window) {
     let edit_name_id = "edit_node_"+node.get_id()+"_name";
     let edit_description_id = "edit_description_"+node.get_id()+"_description";
     let rotate_id = "rotate_node_"+node.get_id();
     let rotate_left_id = "rotate_left_node_"+node.get_id();
     let rotate_right_id = "rotate_right_node_"+node.get_id();
     
-    elt.innerHTML = skadi_adjust_html
+    elt.innerHTML = design.localise(skadi_adjust_html)
         .replace("$edit_name_id",edit_name_id)
         .replace("$edit_description_id", edit_description_id)
         .replace("$rotate_id",rotate_id)
@@ -2823,13 +2829,13 @@ function skadi_populate_adjust(node, elt, close_window) {
 
 let skadi_design_metadata_html = `
 <span aria-describedby="edit-metadata-tooltip">
-    ||topology.metadata.editor||
+    {{topology.metadata.editor}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-        ||topology.metadata.editor.tooltip||
+        {{topology.metadata.editor.tooltip}}
     </div>
 </div>
 <div>
@@ -2956,29 +2962,14 @@ function skadi_update_configuration_status(package_id, state, message) {
     skadi_update_configuration_status_div(package_id);
 }
 
-function skadi_create_language_select(l10n_utils) {
-    let select = document.createElement("select");
-    let languages = l10n_utils.get_languages();
-    for(var idx=0; idx<languages.length; idx++) {
-        let option = document.createElement("option");
-        option.setAttribute("value",languages[idx][0]);
-        option.appendChild(document.createTextNode(languages[idx][1]));
-        select.appendChild(option);
-    }
-    select.value = l10n_utils.get_language();
-    select.addEventListener("change", (ev) => {
-        l10n_utils.set_language(select.value);
-    });
-    return select; 
-}
+
 
 function skadi_populate_configuration(design, elt, close_window) {
     let header_div = document.createElement("div");
     header_div.innerHTML = skadi_configuration_header_html;
     elt.appendChild(header_div);
-
     {
-        let select = skadi_create_language_select(design.get_l10n_utils());
+        let select = design.get_l10n_utils().create_language_select();
         let row = document.createElement("div");
         row.setAttribute("class","exo-row");
 
@@ -3097,7 +3088,7 @@ function skadi_populate_configuration(design, elt, close_window) {
 
 class SkadiButton {
 
-  constructor(design, x,y,width,height,icon_url,onclick,tooltip) {
+  constructor(design, x,y,width,height,icon_url,onclick,tooltip_text) {
     this.design = design;
     this.x = x;
     this.y = y;
@@ -3108,7 +3099,8 @@ class SkadiButton {
     this.onclick = onclick;
     this.fill = "";
     this.enabled = true;
-    this.tooltip = tooltip;
+    this.tooltip_text = tooltip_text;
+    this.tooltip = null;
   }
 
   set_fill(fill) {
@@ -3179,8 +3171,8 @@ class SkadiButton {
       }
     }
     this.button.on("click", onclick);
-    if (this.tooltip) {
-        new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),this.tooltip);
+    if (this.tooltip_text) {
+        this.set_tooltip(this.tooltip_text);
     }
   }
 
@@ -3190,6 +3182,15 @@ class SkadiButton {
 
   get_position() {
     return { "x":this.x, "y":this.y };
+  }
+
+  set_tooltip(text) {
+    this.tooltip_text = text;
+    if (this.tooltip) {
+      this.tooltip.update_text(text);
+    } else {
+      this.tooltip = new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),text);
+    }
   }
 
   update_position(x,y) {
@@ -3404,25 +3405,25 @@ class SkadiDesigner extends SkadiCore {
         button_x += this.button_size + this.button_margin;
 
         this.help_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_help_purple, () => { this.open_about(); }, "Help/About");
+            icon_help_purple, () => { this.open_about(); }, "");
         this.help_btn.set_fill("white");
         this.help_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.clear_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_delete, () => { this.open_clear(); }, "Clear Design");
+            icon_delete, () => { this.open_clear(); }, "");
         this.clear_btn.set_fill("white");
         this.clear_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_edit_purple, () => { this.open_edit_design_metadata(); }, this.localise("||topology.metadata||"));
+            icon_edit_purple, () => { this.open_edit_design_metadata(); }, "");
         this.edit_btn.set_fill("white");
         this.edit_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.configuration_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "Edit Configurations");
+            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "");
         this.configuration_btn.set_fill("white");
         this.configuration_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
@@ -3474,6 +3475,17 @@ class SkadiDesigner extends SkadiCore {
         this.load_dialogue = null;
         this.save_dialogue = null;
         this.configuration_dialogue = null;
+        this.localisation_updated();
+        this.l10n_utils.add_language_update_listener(language => {
+            this.localisation_updated();
+        });
+    }
+
+    localisation_updated() {
+        this.help_btn.set_tooltip(this.localise("about.tooltip"));
+        this.clear_btn.set_tooltip(this.localise("clear.topology.tooltip"));
+        this.edit_btn.set_tooltip(this.localise("topology.metadata.editor.tooltip"));
+        this.configuration_btn.set_tooltip(this.localise("configuration.edit.tooltip"));
     }
 
     toggle_pause() {
@@ -3960,7 +3972,6 @@ class SkadiNode extends SkadiCoreNode {
     } else {
       this.style = "";
     }
-    this.REMOVE_ACTION = "Remove";
 
     this.active = active;
     this.port_radius = 12;
@@ -3997,12 +4008,6 @@ class SkadiNode extends SkadiCoreNode {
     this.display_tooltips = true;
 
     this.commands = [];
-
-    if (active) {
-      this.register_command_window("adjust","Adjust...", (root_elt) => {
-          this.open_adjust_editor(root_elt);
-      }, null, 700, 500);
-    }
   }
 
   get_rotation() {
@@ -4025,7 +4030,7 @@ class SkadiNode extends SkadiCoreNode {
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
 
-    this.register_command_window("open", "Open...",
+    this.register_command_window("open", "node.menu.open",
       (elt) => {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
@@ -4046,7 +4051,7 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window_tab("open_in_tab", "Open in Tab...",this.node_type.get_html_url(),
+    this.register_command_window_tab("open_in_tab", "node.menu.opentab",this.node_type.get_html_url(),
       (w) => {
         if (w) {
           let window_width = w.innerWidth;
@@ -4061,6 +4066,11 @@ class SkadiNode extends SkadiCoreNode {
       (w,h) => {
           this.wrapper.resize(w,h);
       });
+
+    this.register_command_window("adjust","node.menu.adjust", (root_elt) => {
+        this.open_adjust_editor(root_elt);
+      }, null, 700, 500);
+      
 
     return true;
   }
@@ -4095,7 +4105,7 @@ class SkadiNode extends SkadiCoreNode {
   }
 
   open_adjust_editor(root_elt) {
-    skadi_populate_adjust(this, root_elt, null);
+    skadi_populate_adjust(this.design, this, root_elt, null);
   }
 
   add_port(key, port_type, is_input) {
@@ -4233,14 +4243,14 @@ class SkadiNode extends SkadiCoreNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
+        mitems.push(new SkadiTextMenuDialogue.MenuItem("node.menu.remove", () => {
           this.design.remove(this.get_id());
         }));
 
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "Edit Node");
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "node.menu.title");
         tm.open();
       };
 
@@ -6052,38 +6062,119 @@ class SkadiApplication extends SkadiCore {
     open_display() {
         let configuration_list = this.network.get_configuration_list();
         configuration_list.map(package_id => {
-            let e = document.createElement("p");
-            e.appendChild(document.createTextNode("Package:"+package_id));
-            this.div.node().appendChild(e);
+            let configuration = this.get_network().get_configuration(package_id);
+            let url = configuration.get_url();
+            this.embed_configuration(package_id,configuration,url);
+            
         });
         let node_list = this.get_network().get_node_list();
         node_list.map(node_id => {
             let node = this.get_network().get_node(node_id);
             let url = node.get_type().get_html_url();
-            let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
-                    .append("ul").append("li").attr("role","treeitem");
-            let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
-            let label = li.append("label").text(node.get_metadata().name);
-
-            skadi_application_status_areas[node_id] = label.append("span");
-            skadi_application_status_areas[node_id].attr("class","status_label");
-            let div = li.append("div");
-            let iframe = div.append("iframe").attr("class", "skadi_iframe")
-                .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
-            iframe.addEventListener("load", (ev) => {
-               node.get_wrapper().open(iframe.contentWindow,null,null);
-            });
-            this.div.append("hr");
-            if (node_id in skadi_application_statuses) {
-                let status = skadi_application_statuses[node_id];
-                this.update_status_area(node_id, status.state, status.status_message);
-            }
+            this.embed_node(node_id,node,url);
         });
+    }
+
+    embed_configuration(package_id,configuration,url) {
+        let l10n_utils = configuration.get_package_type().get_l10n_utils();
+
+        let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
+            .append("ul").append("li").attr("role","treeitem");
+        let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
+        let label = li.append("label").text(configuration.get_package_type().get_metadata().name);
+        
+        skadi_application_status_areas[package_id] = label.append("span");
+        skadi_application_status_areas[package_id].attr("class","status_label");
+        
+        let div = li.append("div");
+
+        if (l10n_utils) {
+            let select_elt = l10n_utils.create_language_select();
+            div.node().appendChild(select_elt);   
+        }
+
+        if (url) {
+            let content_div = div.append("div");
+            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration,url));
+        }
+
+        if (!url && !l10n_utils) {
+            input.attr("disabled","disabled");
+        }        
+
+        this.div.append("hr");
+        if (package_id in skadi_application_statuses) {
+            let status = skadi_application_statuses[package_id];
+            this.update_status_area(package_id, status.state, status.status_message);
+        }
+    }
+
+    embed_node(node_id,node,url) {
+        let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
+            .append("ul").append("li").attr("role","treeitem");
+        let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
+        let label = li.append("label").text(node.get_metadata().name);
+        let div = li.append("div");
+
+        if (url) {
+            input.node().addEventListener("change",this.create_node_openclose_callback(div,node,url));
+        }
+
+        skadi_application_status_areas[node_id] = label.append("span");
+        skadi_application_status_areas[node_id].attr("class","status_label");
+        
+        this.div.append("hr");
+        if (node_id in skadi_application_statuses) {
+            let status = skadi_application_statuses[node_id];
+            this.update_status_area(node_id, status.state, status.status_message);
+        }
+    }
+
+    create_configuration_openclose_callback(div,configuration,url) {
+        return (evt) => {
+            if (evt.target.checked) {
+                // open the configuration in an iframe
+                let iframe = div.append("iframe").attr("class", "skadi_iframe")
+                    .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
+                iframe.addEventListener("load", (ev) => {
+                    configuration.get_wrapper().open(iframe.contentWindow,null,null);
+                });
+            } else {
+                // close the configuration
+                configuration.get_wrapper().close();
+                div.html("");
+            }
+        }
+    }
+
+
+    create_node_openclose_callback(div,node,url) {
+        return (evt) => {
+            if (evt.target.checked) {
+                // open the node in an iframe
+                let iframe = div.append("iframe").attr("class", "skadi_iframe")
+                    .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
+                iframe.addEventListener("load", (ev) => {
+                    node.get_wrapper().open(iframe.contentWindow,null,null);
+                });
+            } else {
+                // close the node
+                node.get_wrapper().close();
+                div.html("");
+            }
+        }
     }
 
     update_node_status(id, state, status_message) {
         skadi_application_statuses[id] = { "state":state, "status_message":status_message };
         this.update_status_area(id, state, status_message);
+        super.update_node_status(id, state, status_message);
+    }
+
+    update_configuration_status(id, state, status_message) {
+        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
+        this.update_status_area(id, state, status_message);
+        super.update_configuration_status(id, state, status_message);
     }
 
     update_status_area(id, state, status_message) {
@@ -6371,8 +6462,7 @@ class SkadiViewApi extends SkadiApi {
     add_design_event_handler(design_event_type, handler) {
     }
 
-    init() {
-        super.init();
+    open() {
         this.application.open_display();
     }
 }
@@ -6428,10 +6518,11 @@ async function start_skadi_application(element_id, schema_urls, topology_url, no
     let skadi_instance = new SkadiViewApi();
     await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
+    skadi_instance.init(element_id, node_factory, configuration_factory);
     if (topology_url) {
         await skadi_instance.load_topology(topology_url);
     }
-    skadi_instance.init(element_id, node_factory, configuration_factory);
+    skadi_instance.open();
     return skadi_instance;
 }
 
@@ -6448,6 +6539,7 @@ class SkadiL10NUtils {
         this.metadata = null;
         this.bundle = {};
         this.language = "";
+        this.language_update_listeners = [];
     }
 
     configure_for_package(package_l10n) {
@@ -6473,6 +6565,7 @@ class SkadiL10NUtils {
         }
         window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
         this.language = language;
+        this.language_update_listeners.forEach((callback) => callback(language));
     }
 
     get_language() {
@@ -6524,6 +6617,26 @@ class SkadiL10NUtils {
             }
         }
         return s;
+    }
+
+    add_language_update_listener(listener) {
+        this.language_update_listeners.push(listener);
+    }
+
+    create_language_select() {
+        let select = document.createElement("select");
+        let languages = this.get_languages();
+        for(var idx=0; idx<languages.length; idx++) {
+            let option = document.createElement("option");
+            option.setAttribute("value",languages[idx][0]);
+            option.appendChild(document.createTextNode(languages[idx][1]));
+            select.appendChild(option);
+        }
+        select.value = this.get_language();
+        select.addEventListener("change", (ev) => {
+            this.set_language(select.value);
+        });
+        return select; 
     }
 }
 

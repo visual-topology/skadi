@@ -7,7 +7,7 @@
 
 class SkadiButton {
 
-  constructor(design, x,y,width,height,icon_url,onclick,tooltip) {
+  constructor(design, x,y,width,height,icon_url,onclick,tooltip_text) {
     this.design = design;
     this.x = x;
     this.y = y;
@@ -18,7 +18,8 @@ class SkadiButton {
     this.onclick = onclick;
     this.fill = "";
     this.enabled = true;
-    this.tooltip = tooltip;
+    this.tooltip_text = tooltip_text;
+    this.tooltip = null;
   }
 
   set_fill(fill) {
@@ -89,8 +90,8 @@ class SkadiButton {
       }
     }
     this.button.on("click", onclick);
-    if (this.tooltip) {
-        new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),this.tooltip);
+    if (this.tooltip_text) {
+        this.set_tooltip(this.tooltip_text);
     }
   }
 
@@ -100,6 +101,15 @@ class SkadiButton {
 
   get_position() {
     return { "x":this.x, "y":this.y };
+  }
+
+  set_tooltip(text) {
+    this.tooltip_text = text;
+    if (this.tooltip) {
+      this.tooltip.update_text(text);
+    } else {
+      this.tooltip = new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),text);
+    }
   }
 
   update_position(x,y) {

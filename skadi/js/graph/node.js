@@ -39,7 +39,6 @@ class SkadiNode extends SkadiCoreNode {
     } else {
       this.style = "";
     }
-    this.REMOVE_ACTION = "Remove";
 
     this.active = active;
     this.port_radius = 12;
@@ -76,12 +75,6 @@ class SkadiNode extends SkadiCoreNode {
     this.display_tooltips = true;
 
     this.commands = [];
-
-    if (active) {
-      this.register_command_window("adjust","Adjust...", (root_elt) => {
-          this.open_adjust_editor(root_elt);
-      }, null, 700, 500);
-    }
   }
 
   get_rotation() {
@@ -104,7 +97,7 @@ class SkadiNode extends SkadiCoreNode {
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
 
-    this.register_command_window("open", "Open...",
+    this.register_command_window("open", "node.menu.open",
       (elt) => {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
@@ -125,12 +118,11 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window_tab("open_in_tab", "Open in Tab...",this.node_type.get_html_url(),
+    this.register_command_window_tab("open_in_tab", "node.menu.opentab",this.node_type.get_html_url(),
       (w) => {
         if (w) {
           let window_width = w.innerWidth;
           let window_height = w.innerHeight;
-          console.log("Opening window");
           this.wrapper.open(w, window_width, window_height);
         }
       },
@@ -140,6 +132,11 @@ class SkadiNode extends SkadiCoreNode {
       (w,h) => {
           this.wrapper.resize(w,h);
       });
+
+    this.register_command_window("adjust","node.menu.adjust", (root_elt) => {
+        this.open_adjust_editor(root_elt);
+      }, null, 700, 500);
+      
 
     return true;
   }
@@ -174,7 +171,7 @@ class SkadiNode extends SkadiCoreNode {
   }
 
   open_adjust_editor(root_elt) {
-    skadi_populate_adjust(this, root_elt, null);
+    skadi_populate_adjust(this.design, this, root_elt, null);
   }
 
   add_port(key, port_type, is_input) {
@@ -312,14 +309,14 @@ class SkadiNode extends SkadiCoreNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
+        mitems.push(new SkadiTextMenuDialogue.MenuItem("node.menu.remove", () => {
           this.design.remove(this.get_id());
         }));
 
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "Edit Node");
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "node.menu.title");
         tm.open();
       };
 
@@ -766,10 +763,7 @@ class SkadiNode extends SkadiCoreNode {
       let textw = bbox.width;
       let texth = bbox.height;
 
-
-
       let pos = this.get_satellite_position(false, textw, texth);
-      console.log(textw,texth,pos.x,pos.y);
       this.text.attr("x",pos.x+textw/2).attr("y",pos.y+texth/2);
     } catch(ex) {
       // getBBox() fails if element is not visible

@@ -49,10 +49,11 @@ async function start_skadi_application(element_id, schema_urls, topology_url, no
     let skadi_instance = new SkadiViewApi();
     await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
+    skadi_instance.init(element_id, node_factory, configuration_factory);
     if (topology_url) {
         await skadi_instance.load_topology(topology_url);
     }
-    skadi_instance.init(element_id, node_factory, configuration_factory);
+    skadi_instance.open();
     return skadi_instance;
 }
 

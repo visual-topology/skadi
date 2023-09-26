@@ -1622,7 +1622,6 @@ class ResourceLoader {
     async load(resource) {
         // start new load
         this.loading_resources[resource] = true;
-        console.log(resource);
         if (resource.endsWith(".js")) {
             await this.js_load(resource);
         } else if (resource.endsWith(".css")) {
@@ -1802,7 +1801,7 @@ class SkadiCore {
             return this.graph_executor.create_node_service(node);
         } else {
             let service = new SkadiNodeService(node);
-            let wrapper = new SkadiWrapper(node, service);
+            let wrapper = new SkadiWrapper(node, service, node.get_type().get_package_type().get_l10n_utils());
             service.set_wrapper(wrapper);
             return service;
         }
@@ -1952,7 +1951,6 @@ class SkadiCore {
         node.update_execution_state(state);
         if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
             let upstream_node_ids = this.network.get_upstream_nodes(node_id);
-            console.log(JSON.stringify(upstream_node_ids));
             for (let idx in upstream_node_ids) {
                 this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
             }
@@ -2360,7 +2358,7 @@ class SkadiCoreConfiguration {
   create_instance() {
       try {
           this.configuration_service = new SkadiConfigurationService(this);
-          this.wrapper = new SkadiWrapper(this,this.configuration_service);
+          this.wrapper = new SkadiWrapper(this,this.configuration_service, this.package_type.get_l10n_utils());
           this.configuration_service.set_wrapper(this.wrapper);
           let configuration_factory = this.core.get_configuration_factory();
           let o = null;
@@ -3017,7 +3015,7 @@ function skadi_populate_configuration(design, elt, close_window) {
 
         if (l10n_utils) {
             
-            let select = skadi_create_language_select(l10n_utils);
+            let select = l10n_utils.create_language_select();
             let row = document.createElement("div");
             row.setAttribute("class","exo-row");
 
@@ -4030,7 +4028,7 @@ class SkadiNode extends SkadiCoreNode {
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
 
-    this.register_command_window("open", "node.menu.open",
+    this.register_command_window("open", "{{node.menu.open}}",
       (elt) => {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
@@ -4051,12 +4049,11 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window_tab("open_in_tab", "node.menu.opentab",this.node_type.get_html_url(),
+    this.register_command_window_tab("open_in_tab", "{{node.menu.opentab}}",this.node_type.get_html_url(),
       (w) => {
         if (w) {
           let window_width = w.innerWidth;
           let window_height = w.innerHeight;
-          console.log("Opening window");
           this.wrapper.open(w, window_width, window_height);
         }
       },
@@ -4067,7 +4064,7 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window("adjust","node.menu.adjust", (root_elt) => {
+    this.register_command_window("adjust","{{node.menu.adjust}}", (root_elt) => {
         this.open_adjust_editor(root_elt);
       }, null, 700, 500);
       
@@ -4243,7 +4240,7 @@ class SkadiNode extends SkadiCoreNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem("node.menu.remove", () => {
+        mitems.push(new SkadiTextMenuDialogue.MenuItem("{{node.menu.remove}}", () => {
           this.design.remove(this.get_id());
         }));
 
@@ -4697,10 +4694,7 @@ class SkadiNode extends SkadiCoreNode {
       let textw = bbox.width;
       let texth = bbox.height;
 
-
-
       let pos = this.get_satellite_position(false, textw, texth);
-      console.log(textw,texth,pos.x,pos.y);
       this.text.attr("x",pos.x+textw/2).attr("y",pos.y+texth/2);
     } catch(ex) {
       // getBBox() fails if element is not visible
@@ -5271,6 +5265,7 @@ class SkadiNodeService {
         this.core = node.core;
         this.node_id = node.id;
         this.node_type = node.node_type;
+        this.l10n_utils = this.node_type.get_package_type().get_l10n_utils();
         this.wrapper = null;
     }
 
@@ -5307,15 +5302,18 @@ class SkadiNodeService {
     }
 
     set_status_info(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.error, localised_msg);
     }
 
     clear_status() {
@@ -5337,14 +5335,6 @@ class SkadiNodeService {
     request_execution() {
         this.core.request_execution(this.node_id);
     }
-
-    get_language() {
-        return this.node_type.get_package_type().get_l10n_utils().get_language();
-    }
-
-    localise(s) {
-        return this.node_type.get_package_type().get_l10n_utils().localise(s);
-    }
 }
 
 
@@ -5352,9 +5342,10 @@ class SkadiNodeService {
 
 class SkadiWrapper {
 
-    constructor(target, services) {
+    constructor(target, services, l10n_utils) {
         this.target = target;
         this.services = services;
+        this.l10n_utils = l10n_utils;
         this.instance = null;
         this.window = null;
         this.event_handlers = [];
@@ -5427,9 +5418,17 @@ class SkadiWrapper {
     send_set_attributes(element_id, attributes) {
         let msg = {
             "type": "set_attributes",
-            "element_id": element_id,
-            "attributes": attributes
+            "element_id": element_id
         }
+        if (this.l10n_utils) {
+            msg.attributes = attributes = {};
+            for (let attribute_name in attributes) {
+                msg.attributes[attribute_name] = this.services.localise(attributes[attribute_name]);
+            }
+        } else {
+            msg.attributes = attributes;
+        }
+
         this.send_to_window(msg);
     }
 
@@ -5456,7 +5455,6 @@ class SkadiWrapper {
     }
 
     recv_from_window(msg) {
-        console.log("Recv from window: "+JSON.stringify(msg));
         switch(msg.type) {
             case "event":
                 this.handle_event(msg["element_id"],msg["event_type"],msg["value"]);
@@ -5466,7 +5464,6 @@ class SkadiWrapper {
                 break;
         }
     }
-
 
     open(w, width, height) {
         this.window = w;
@@ -5542,6 +5539,7 @@ class SkadiConfigurationService {
     constructor(configuration) {
         this.core = configuration.core;
         this.package_type = configuration.package_type;
+        this.l10n_utils = this.package_type.get_l10n_utils();
         this.package_id = this.package_type.get_id();
         this.wrapper = null;
     }
@@ -5579,15 +5577,18 @@ class SkadiConfigurationService {
     }
 
     set_status_info(status_msg) {
-        this.core.update_configuration_status(this.package_id, SkadiStatusStates.info, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
-        this.core.update_configuration_status(this.package_id, SkadiStatusStates.warning, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
-        this.core.update_configuration_status(this.package_id, SkadiStatusStates.error, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.error, localised_msg);
     }
 
     clear_status() {
@@ -5595,21 +5596,12 @@ class SkadiConfigurationService {
     }
 
     resolve_url(url) {
-        return this.get_package_type().get_resource_url(url);
+        return this.package_type.get_resource_url(url);
     }
 
     create_data_uri(data, mime_type) {
         return "data:"+mime_type+";base64," + btoa(data);
     }
-
-    get_language() {
-        return this.package_type.get_l10n_utils.get_language();
-    }
-
-    localise(s) {
-        return this.package_type.get_l10n_utils.localise(s);
-    }
-
 }
 
 
@@ -6063,19 +6055,16 @@ class SkadiApplication extends SkadiCore {
         let configuration_list = this.network.get_configuration_list();
         configuration_list.map(package_id => {
             let configuration = this.get_network().get_configuration(package_id);
-            let url = configuration.get_url();
-            this.embed_configuration(package_id,configuration,url);
-            
+            this.embed_configuration(package_id,configuration);
         });
         let node_list = this.get_network().get_node_list();
         node_list.map(node_id => {
             let node = this.get_network().get_node(node_id);
-            let url = node.get_type().get_html_url();
-            this.embed_node(node_id,node,url);
+            this.embed_node(node_id,node);
         });
     }
 
-    embed_configuration(package_id,configuration,url) {
+    embed_configuration(package_id,configuration) {
         let l10n_utils = configuration.get_package_type().get_l10n_utils();
 
         let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
@@ -6093,9 +6082,10 @@ class SkadiApplication extends SkadiCore {
             div.node().appendChild(select_elt);   
         }
 
+        let url = configuration.get_url();
         if (url) {
             let content_div = div.append("div");
-            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration,url));
+            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration));
         }
 
         if (!url && !l10n_utils) {
@@ -6109,15 +6099,16 @@ class SkadiApplication extends SkadiCore {
         }
     }
 
-    embed_node(node_id,node,url) {
+    embed_node(node_id,node) {
         let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
             .append("ul").append("li").attr("role","treeitem");
         let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
         let label = li.append("label").text(node.get_metadata().name);
         let div = li.append("div");
 
+        let url = node.get_type().get_html_url();
         if (url) {
-            input.node().addEventListener("change",this.create_node_openclose_callback(div,node,url));
+            input.node().addEventListener("change",this.create_node_openclose_callback(div,node));
         }
 
         skadi_application_status_areas[node_id] = label.append("span");
@@ -6130,10 +6121,11 @@ class SkadiApplication extends SkadiCore {
         }
     }
 
-    create_configuration_openclose_callback(div,configuration,url) {
+    create_configuration_openclose_callback(div,configuration) {
         return (evt) => {
             if (evt.target.checked) {
                 // open the configuration in an iframe
+                let url = configuration.get_url();
                 let iframe = div.append("iframe").attr("class", "skadi_iframe")
                     .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
                 iframe.addEventListener("load", (ev) => {
@@ -6148,10 +6140,11 @@ class SkadiApplication extends SkadiCore {
     }
 
 
-    create_node_openclose_callback(div,node,url) {
+    create_node_openclose_callback(div,node) {
         return (evt) => {
             if (evt.target.checked) {
                 // open the node in an iframe
+                let url = node.get_type().get_html_url();
                 let iframe = div.append("iframe").attr("class", "skadi_iframe")
                     .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
                 iframe.addEventListener("load", (ev) => {
@@ -6585,10 +6578,6 @@ class SkadiL10NUtils {
         if (Object.keys(this.bundle).length == 0) {
             return input;
         }
-        // test if the input is a key in the bundle, if so return the value
-        if (input in this.bundle) {
-            return this.bundle[input];
-        }
         // treat the input as possibly containing embedded keys, delimited by {{ and }}, 
         // for example "say {{hello}}" embeds they key hello
         // substitute any embedded keys and the surrounding delimiters with their values, if the key is present in the bundle
@@ -6616,6 +6605,7 @@ class SkadiL10NUtils {
                 idx++;
             }
         }
+        console.log("localised: "+input+" => "+s);
         return s;
     }
 

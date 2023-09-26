@@ -47,7 +47,7 @@ DataVizExample.CsvImportNode = class {
         if (this.filename) {
             this.node_service.set_status_info(this.filename);
         } else {
-            this.node_service.set_status_warning(this.node_service.localise("no.file.selected"));
+            this.node_service.set_status_warning("{{no.file.selected}}");
         }
     }
 

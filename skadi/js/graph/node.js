@@ -97,7 +97,7 @@ class SkadiNode extends SkadiCoreNode {
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
 
-    this.register_command_window("open", "node.menu.open",
+    this.register_command_window("open", "{{node.menu.open}}",
       (elt) => {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
@@ -118,7 +118,7 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window_tab("open_in_tab", "node.menu.opentab",this.node_type.get_html_url(),
+    this.register_command_window_tab("open_in_tab", "{{node.menu.opentab}}",this.node_type.get_html_url(),
       (w) => {
         if (w) {
           let window_width = w.innerWidth;
@@ -133,7 +133,7 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window("adjust","node.menu.adjust", (root_elt) => {
+    this.register_command_window("adjust","{{node.menu.adjust}}", (root_elt) => {
         this.open_adjust_editor(root_elt);
       }, null, 700, 500);
       
@@ -309,7 +309,7 @@ class SkadiNode extends SkadiCoreNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem("node.menu.remove", () => {
+        mitems.push(new SkadiTextMenuDialogue.MenuItem("{{node.menu.remove}}", () => {
           this.design.remove(this.get_id());
         }));
 

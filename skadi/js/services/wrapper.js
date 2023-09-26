@@ -7,9 +7,10 @@
 
 class SkadiWrapper {
 
-    constructor(target, services) {
+    constructor(target, services, l10n_utils) {
         this.target = target;
         this.services = services;
+        this.l10n_utils = l10n_utils;
         this.instance = null;
         this.window = null;
         this.event_handlers = [];
@@ -82,9 +83,17 @@ class SkadiWrapper {
     send_set_attributes(element_id, attributes) {
         let msg = {
             "type": "set_attributes",
-            "element_id": element_id,
-            "attributes": attributes
+            "element_id": element_id
         }
+        if (this.l10n_utils) {
+            msg.attributes = attributes = {};
+            for (let attribute_name in attributes) {
+                msg.attributes[attribute_name] = this.services.localise(attributes[attribute_name]);
+            }
+        } else {
+            msg.attributes = attributes;
+        }
+
         this.send_to_window(msg);
     }
 
@@ -120,7 +129,6 @@ class SkadiWrapper {
                 break;
         }
     }
-
 
     open(w, width, height) {
         this.window = w;

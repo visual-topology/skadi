@@ -37,7 +37,7 @@
     "node_types": {
         "csv_import": {
             "metadata": {
-                "name": "csv.reader.name",
+                "name": "{{csv.reader.name}}",
                 "description": "Select a CSV file and load it into a dataset"
             },
             "output_ports": {

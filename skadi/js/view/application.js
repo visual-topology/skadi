@@ -18,19 +18,16 @@ class SkadiApplication extends SkadiCore {
         let configuration_list = this.network.get_configuration_list();
         configuration_list.map(package_id => {
             let configuration = this.get_network().get_configuration(package_id);
-            let url = configuration.get_url();
-            this.embed_configuration(package_id,configuration,url);
-            
+            this.embed_configuration(package_id,configuration);
         });
         let node_list = this.get_network().get_node_list();
         node_list.map(node_id => {
             let node = this.get_network().get_node(node_id);
-            let url = node.get_type().get_html_url();
-            this.embed_node(node_id,node,url);
+            this.embed_node(node_id,node);
         });
     }
 
-    embed_configuration(package_id,configuration,url) {
+    embed_configuration(package_id,configuration) {
         let l10n_utils = configuration.get_package_type().get_l10n_utils();
 
         let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
@@ -48,9 +45,10 @@ class SkadiApplication extends SkadiCore {
             div.node().appendChild(select_elt);   
         }
 
+        let url = configuration.get_url();
         if (url) {
             let content_div = div.append("div");
-            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration,url));
+            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration));
         }
 
         if (!url && !l10n_utils) {
@@ -64,15 +62,16 @@ class SkadiApplication extends SkadiCore {
         }
     }
 
-    embed_node(node_id,node,url) {
+    embed_node(node_id,node) {
         let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
             .append("ul").append("li").attr("role","treeitem");
         let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
         let label = li.append("label").text(node.get_metadata().name);
         let div = li.append("div");
 
+        let url = node.get_type().get_html_url();
         if (url) {
-            input.node().addEventListener("change",this.create_node_openclose_callback(div,node,url));
+            input.node().addEventListener("change",this.create_node_openclose_callback(div,node));
         }
 
         skadi_application_status_areas[node_id] = label.append("span");
@@ -85,10 +84,11 @@ class SkadiApplication extends SkadiCore {
         }
     }
 
-    create_configuration_openclose_callback(div,configuration,url) {
+    create_configuration_openclose_callback(div,configuration) {
         return (evt) => {
             if (evt.target.checked) {
                 // open the configuration in an iframe
+                let url = configuration.get_url();
                 let iframe = div.append("iframe").attr("class", "skadi_iframe")
                     .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
                 iframe.addEventListener("load", (ev) => {
@@ -103,10 +103,11 @@ class SkadiApplication extends SkadiCore {
     }
 
 
-    create_node_openclose_callback(div,node,url) {
+    create_node_openclose_callback(div,node) {
         return (evt) => {
             if (evt.target.checked) {
                 // open the node in an iframe
+                let url = node.get_type().get_html_url();
                 let iframe = div.append("iframe").attr("class", "skadi_iframe")
                     .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
                 iframe.addEventListener("load", (ev) => {

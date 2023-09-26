@@ -59,10 +59,6 @@ class SkadiL10NUtils {
         if (Object.keys(this.bundle).length == 0) {
             return input;
         }
-        // test if the input is a key in the bundle, if so return the value
-        if (input in this.bundle) {
-            return this.bundle[input];
-        }
         // treat the input as possibly containing embedded keys, delimited by {{ and }}, 
         // for example "say {{hello}}" embeds they key hello
         // substitute any embedded keys and the surrounding delimiters with their values, if the key is present in the bundle
@@ -90,6 +86,7 @@ class SkadiL10NUtils {
                 idx++;
             }
         }
+        console.log("localised: "+input+" => "+s);
         return s;
     }
 

@@ -103,7 +103,7 @@ function skadi_populate_configuration(design, elt, close_window) {
 
         if (l10n_utils) {
             
-            let select = skadi_create_language_select(l10n_utils);
+            let select = l10n_utils.create_language_select();
             let row = document.createElement("div");
             row.setAttribute("class","exo-row");
 

@@ -87,7 +87,7 @@ class SkadiCore {
             return this.graph_executor.create_node_service(node);
         } else {
             let service = new SkadiNodeService(node);
-            let wrapper = new SkadiWrapper(node, service);
+            let wrapper = new SkadiWrapper(node, service, node.get_type().get_package_type().get_l10n_utils());
             service.set_wrapper(wrapper);
             return service;
         }

@@ -11,6 +11,7 @@ class SkadiNodeService {
         this.core = node.core;
         this.node_id = node.id;
         this.node_type = node.node_type;
+        this.l10n_utils = this.node_type.get_package_type().get_l10n_utils();
         this.wrapper = null;
     }
 
@@ -47,15 +48,18 @@ class SkadiNodeService {
     }
 
     set_status_info(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.error, localised_msg);
     }
 
     clear_status() {
@@ -76,13 +80,5 @@ class SkadiNodeService {
 
     request_execution() {
         this.core.request_execution(this.node_id);
-    }
-
-    get_language() {
-        return this.node_type.get_package_type().get_l10n_utils().get_language();
-    }
-
-    localise(s) {
-        return this.node_type.get_package_type().get_l10n_utils().localise(s);
     }
 }

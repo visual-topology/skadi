@@ -53,6 +53,7 @@ class SkadiUI {
                 if (name === "innerHTML") {
                     elt.innerHTML = value;
                 } else if (name === "value") {
+                    elt.setAttribute(name, value);
                     elt.value = value;
                 } else {
                     elt.setAttribute(name, value);

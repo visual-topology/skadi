@@ -5,6 +5,7 @@
 #   Licensed under the Open Software License version 3.0
 
 import os
+import shutil
 
 current_version = "0.0.1"
 
@@ -42,7 +43,7 @@ class Output:
         os.makedirs(output_dir,exist_ok=True)
         self.of = None
         self.first_entry = True
-        self.comment_paths = comment_paths
+        self.comment_paths = comment_paths    
 
     def __enter__(self):
         self.of = open(self.output_path,"w")
@@ -75,6 +76,17 @@ class Output:
 print("Building: skadi.js")
 
 with Output("docs/versions/latest/skadi.js") as of:
+    of.add("skadi/js/common/icons.js")
+    of.add("skadi/js/common/geometry.js")
+    of.add("skadi/js/common/palette.js")
+    of.add("skadi/js/common/palette_entry.js")
+    of.add("skadi/js/common/scrollbar.js")
+    of.add("skadi/js/common/svg_dialogue.js")
+    of.add("skadi/js/common/palette_dialogue.js")
+    of.add("skadi/js/common/iframe_dialogue.js")
+    of.add("skadi/js/common/text_menu_dialogue.js")
+    of.add("skadi/js/common/tooltip.js")
+    of.add("skadi/js/common/x3.js")
     of.add("skadi/js/utils/resource_loader.js")
     of.add("skadi/js/utils/icon_utils.js")
     of.add("skadi/js/services/status_states.js")
@@ -88,19 +100,9 @@ with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/dialogs/save.js")
     of.add("skadi/js/dialogs/load.js")
     of.add("skadi/js/dialogs/clear.js")
+    of.add("skadi/js/dialogs/adjust.js")
     of.add("skadi/js/dialogs/design_metadata.js")
     of.add("skadi/js/dialogs/configuration.js")
-    of.add("skadi/js/common/icons.js")
-    of.add("skadi/js/common/geometry.js")
-    of.add("skadi/js/common/palette.js")
-    of.add("skadi/js/common/palette_entry.js")
-    of.add("skadi/js/common/scrollbar.js")
-    of.add("skadi/js/common/svg_dialogue.js")
-    of.add("skadi/js/common/palette_dialogue.js")
-    of.add("skadi/js/common/iframe_dialogue.js")
-    of.add("skadi/js/common/text_menu_dialogue.js")
-    of.add("skadi/js/common/tooltip.js")
-    of.add("skadi/js/common/x3.js")
     of.add("skadi/js/controls/button.js")
     of.add("skadi/js/controls/text_button.js")
     of.add("skadi/js/graph/designer.js")
@@ -123,6 +125,7 @@ with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/skadi-designer-api.js")
     of.add("skadi/js/skadi-view-api.js")
     of.add("skadi/js/start-skadi.js")
+    of.add("skadi/js/utils/l10n_utils.js")    
 
 print("Building: skadi.css")
 
@@ -168,3 +171,9 @@ print("Building: index.html")
 with Output("docs/versions/latest/index.html", comment_paths=False) as of:
     of.add("skadi/html/index.html")
 
+target_l10n = os.path.join(repo_dir,"docs/versions/latest/l10n")
+if os.path.exists(target_l10n):
+    shutil.rmtree(target_l10n)
+source_l10n = os.path.join(repo_dir,"skadi/l10n")
+
+shutil.copytree(source_l10n, target_l10n)

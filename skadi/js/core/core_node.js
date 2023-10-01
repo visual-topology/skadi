@@ -64,14 +64,6 @@ class SkadiCoreNode {
         return this.wrapper;
     }
 
-    get_label() {
-        let label = this.metadata.name;
-        if (!label) {
-            label = "";
-        }
-        return label;
-    }
-
     get_position() {
         return {
             "x": this.x,
@@ -92,6 +84,14 @@ class SkadiCoreNode {
 
     get_metadata() {
         return this.metadata;
+    }
+
+    get_name() {
+        return this.metadata.name;
+    }
+
+    get_description() {
+        return this.metadata.description;
     }
 
     update_status(status_message, status_state) {

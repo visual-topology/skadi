@@ -8,7 +8,7 @@
 class SkadiTextMenuDialogue extends SkadiSvgDialogue {
 
     constructor(design, items, closeHandler, owner, x, y, title) {
-        super(owner.get_id() + "text_menu", design, title, x, y, 100, 500, closeHandler, null, false, true, false,
+        super(owner.get_id() + "text_menu", design, design.localise(title), x, y, 100, 500, closeHandler, null, false, true, false,
             function (grp) {
                 this.draw(grp);
             });
@@ -20,7 +20,7 @@ class SkadiTextMenuDialogue extends SkadiSvgDialogue {
         for (let i = 0; i < this.items.length; i++) {
             let item = this.items[i];
             let cb = this.create_cb(item.get_handler());
-            let t = new SkadiTextButton(this.font_size, item.get_label(), cb);
+            let t = new SkadiTextButton(this.font_size, design.localise(item.get_label()), cb);
             t.set_class("menuitem");
             this.entries.push(t);
         }

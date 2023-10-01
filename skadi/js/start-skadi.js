@@ -5,6 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
+let skadi_api_home_url = document.currentScript.src.split("/").slice(0,-1).join("/");
+
+
  /**
   * Asynchronous function to create a skadi graphical editor widget
   *
@@ -23,10 +26,13 @@ async function start_skadi_designer(element_id, schema_urls, canvas_width, canva
         is_acyclic = true;
     }
 
-    let skadi_instance = new SkadiDesignerApi(element_id || "canvas_container_id",
-        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, is_acyclic, topology_store, node_factory, configuration_factory);
+    let skadi_instance = new SkadiDesignerApi();
+    await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
-    skadi_instance.init();
+    skadi_instance.init(element_id || "canvas_container_id",
+        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, 
+        canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, 
+        is_acyclic, topology_store, node_factory, configuration_factory);
     return skadi_instance;
 }
 
@@ -40,13 +46,14 @@ async function start_skadi_designer(element_id, schema_urls, canvas_width, canva
   * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
 async function start_skadi_application(element_id, schema_urls, topology_url, node_factory, configuration_factory) {
-
-    let skadi_instance = new SkadiViewApi(element_id, node_factory, configuration_factory);
+    let skadi_instance = new SkadiViewApi();
+    await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
+    skadi_instance.init(element_id, node_factory, configuration_factory);
     if (topology_url) {
         await skadi_instance.load_topology(topology_url);
     }
-    skadi_instance.init();
+    skadi_instance.open();
     return skadi_instance;
 }
 

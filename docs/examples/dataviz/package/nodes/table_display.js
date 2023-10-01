@@ -20,22 +20,22 @@ DataVizExample.TableDisplayNode = class {
         if (this.dataset) {
             this.node_service.set_status_info(""+this.dataset.numRows()+" Rows");
             if (this.is_open) {
-                this.node_service.send_message({"html":this.dataset.toHTML({"limit":1e6})});
+                this.node_service.page_send_message({"html":this.dataset.toHTML({"limit":1e6})});
             }
         } else {
             if (this.is_open) {
-                this.node_service.send_message({"html":""});
+                this.node_service.page_send_message({"html":""});
             }
             this.node_service.set_status_warning("Waiting for input data");
         }
     }
 
-    open() {
+    page_open() {
         this.is_open = true;
         this.refresh();
     }
 
-    close() {
+    page_close() {
         this.is_open = false;
     }
 

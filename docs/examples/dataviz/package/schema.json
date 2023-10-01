@@ -17,10 +17,27 @@
         }
     },
     "dependencies": [ "configuration.js","nodes/aq_utils.js" ],
+    "l10n": {
+        "languages": {
+            "en": {
+                "name": "English",
+                "bundle_url": "l10n/en.json"
+            },
+            "ja": {
+                "name": "日本語",
+                "bundle_url": "l10n/ja.json"
+            },
+            "es": {
+                "name": "Español",
+                "bundle_url": "l10n/es.json"
+            }
+        },
+        "default_language":"en"
+    },
     "node_types": {
         "csv_import": {
             "metadata": {
-                "name": "CSV Import",
+                "name": "{{csv.reader.name}}",
                 "description": "Select a CSV file and load it into a dataset"
             },
             "output_ports": {
@@ -33,7 +50,9 @@
                 "icon": "icons/csv_import.svg"
             },
             "page": {
-                "url": "nodes/csv_import.html"
+                "url": "nodes/csv_import_{language}.html",
+                "window_width": 500,
+                "window_height": 300
             },
             "classname": "DataVizExample.CsvImportNode",
             "dependencies": ["nodes/csv_import.js"]
@@ -131,7 +150,9 @@
                 "icon": "icons/table.svg"
             },
             "page": {
-                "url": "nodes/table_display.html"
+                "url": "nodes/table_display.html",
+                "window_width": 800,
+                "window_height": 800
             },
             "classname": "DataVizExample.TableDisplayNode",
             "dependencies": ["nodes/table_display.js"]
@@ -181,6 +202,7 @@
             "dependencies": ["nodes/2d_histogram_plot.js"]
         },
         "histogram_plot": {
+            "enabled": false,
             "metadata": {
                 "name": "Histogram Plot",
                 "description": "Draw a Histogram"

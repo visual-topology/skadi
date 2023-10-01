@@ -11,6 +11,7 @@ class SkadiNodeService {
         this.core = node.core;
         this.node_id = node.id;
         this.node_type = node.node_type;
+        this.l10n_utils = this.node_type.get_package_type().get_l10n_utils();
         this.wrapper = null;
     }
 
@@ -26,19 +27,19 @@ class SkadiNodeService {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    add_event_handler(element_id, event_type, callback, event_transform) {
+    page_add_event_handler(element_id, event_type, callback, event_transform) {
         this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
     }
 
-    set_attributes(element_id, attributes) {
+    page_set_attributes(element_id, attributes) {
         this.wrapper.set_attributes(element_id, attributes);
     }
 
-    send_message(message) {
+    page_send_message(message) {
         this.wrapper.send_message(message);
     }
 
-    set_message_handler(handler) {
+    page_set_message_handler(handler) {
         this.wrapper.set_message_handler(handler);
     }
 
@@ -47,15 +48,18 @@ class SkadiNodeService {
     }
 
     set_status_info(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.error, localised_msg);
     }
 
     clear_status() {
@@ -77,5 +81,4 @@ class SkadiNodeService {
     request_execution() {
         this.core.request_execution(this.node_id);
     }
-
 }

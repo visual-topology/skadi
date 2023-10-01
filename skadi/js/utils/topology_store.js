@@ -11,17 +11,22 @@ class TopologyStore {
         this.skadi = skadi;
     }
 
-    async getSaveLink() {
+    async get_save_link() {
        return "data:application/json;base64," + btoa(JSON.stringify(this.skadi.save()));
     }
 
-    get_example_links() {
-        return [];
-    }
-
-    async loadFrom(file) {
+    async load_from(file) {
         file.text().then(t => {
+            alert(t);
             this.skadi.load(JSON.parse(t),false);
         });
+    }
+
+    get_store_callback() {
+        return undefined;
+    }
+
+    get_restore_callback() {
+        return undefined;
     }
 }

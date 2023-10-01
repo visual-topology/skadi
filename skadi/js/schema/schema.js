@@ -36,21 +36,22 @@ class SkadiSchema {
             throw new SkadiSchemaError("Invalid value for schema executor: found \""+executor+"\", expecting \"javascript\"");
         }
 
-        let packageType = new SkadiPackageType(id, url, obj);
-        this.package_types[packageType.get_id()] = packageType;
+        let package_type = new SkadiPackageType(id, url, obj);
+        await package_type.load_l10n("");
+        this.package_types[package_type.get_id()] = package_type;
 
 
         let resources = [];
 
         if (obj["dependencies"]) {
-            obj["dependencies"].forEach(item => resources.push(packageType.get_resource_url(item)));
+            obj["dependencies"].forEach(item => resources.push(package_type.get_resource_url(item)));
         }
 
         if (obj.node_types) {
             for(let nt_id in obj.node_types) {
                 let nt = obj.node_types[nt_id];
                 if (nt["dependencies"]) {
-                    nt["dependencies"].forEach(item => resources.push(packageType.get_resource_url(item)));
+                    nt["dependencies"].forEach(item => resources.push(package_type.get_resource_url(item)));
                 }
             }
         }
@@ -71,23 +72,23 @@ class SkadiSchema {
             throw new SkadiSchemaError("Unable to load package resources: "+JSON.stringify(failed_resources))
         }
 
-        let nodeTypes = obj["node_types"];
-        for(let node_id in nodeTypes) {
-            let nt = nodeTypes[node_id];
-            let nodeType = new SkadiNodeType(node_id, packageType, nt);
-            if (nodeType.is_enabled()) {
-                this.node_types[nodeType.get_id()] = nodeType;
+        let node_types = obj["node_types"];
+        for(let node_id in node_types) {
+            let nt = node_types[node_id];
+            let node_type = new SkadiNodeType(node_id, package_type, nt);
+            if (node_type.is_enabled()) {
+                this.node_types[node_type.get_id()] = node_type;
             }
         }
 
-        let linkTypes = obj["link_types"];
-        for(let link_id in linkTypes) {
-            let lt = linkTypes[link_id];
-            let linkType = new SkadiLinkType(link_id, packageType, lt);
-            this.link_types[linkType.get_id()] = linkType;
+        let link_types = obj["link_types"];
+        for(let link_id in link_types) {
+            let lt = link_types[link_id];
+            let link_type = new SkadiLinkType(link_id, package_type, lt);
+            this.link_types[link_type.get_id()] = link_type;
         }
 
-        return packageType;
+        return package_type;
     }
 
     get_resource_url(package_id, relative_path) {

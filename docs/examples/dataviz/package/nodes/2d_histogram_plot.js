@@ -28,26 +28,26 @@ DataVizExample.Histogram2DPlotNode = class {
     set_options(sel_id, names) {
         let options = [["",""]];
         names.forEach(name => options.push([name,name]));
-        this.node_service.set_attributes(sel_id,{"options": JSON.stringify(options)});
+        this.node_service.page_set_attributes(sel_id,{"options": JSON.stringify(options)});
     }
 
     create_column_selector(control_name,initial_value) {
         this.set_options(control_name,[]);
         if (initial_value != null) {
-           this.node_service.set_attributes(control_name,{"value":initial_value});
+           this.node_service.page_set_attributes(control_name,{"value":initial_value});
         }
-        this.node_service.add_event_handler(control_name, "change", v => this.update_selected_column(control_name,v));
+        this.node_service.page_add_event_handler(control_name, "change", v => this.update_selected_column(control_name,v));
     }
 
     update_selected_column(control_name,column_name) {
         switch(control_name) {
             case "x_axis":
                 this.x_col = column_name;
-                this.node_service.set_attributes("x_axis",{"value": column_name});
+                this.node_service.page_set_attributes("x_axis",{"value": column_name});
                 break;
             case "y_axis":
                 this.y_col = column_name;
-                this.node_service.set_attributes("y_axis",{"value": column_name});
+                this.node_service.page_set_attributes("y_axis",{"value": column_name});
                 break;
         }
         this.update_status();
@@ -83,8 +83,8 @@ DataVizExample.Histogram2DPlotNode = class {
         }
         this.set_options("x_axis", column_names);
         this.set_options("y_axis", column_names);
-        this.node_service.set_attributes("x_axis", {"value": this.x_col});
-        this.node_service.set_attributes("y_axis", {"value": this.y_col});
+        this.node_service.page_set_attributes("x_axis", {"value": this.x_col});
+        this.node_service.page_set_attributes("y_axis", {"value": this.y_col});
 
         this.update_status();
 
@@ -101,36 +101,26 @@ DataVizExample.Histogram2DPlotNode = class {
                 "x_col": this.x_col,
                 "y_col":this.y_col,
                 "width": this.width,
-                "height": this.height
+                "height": this.height,
+                "theme": this.node_service.get_configuration().get_theme()
             }
-        this.node_service.send_message(msg);
+        this.node_service.page_send_message(msg);
     }
 
     clear() {
-        this.node_service.send_message({});
+        this.node_service.page_send_message({});
     }
 
-    open(width,height) {
+    page_open() {
+    }
+
+    page_resize(width,height) {
         this.width = width;
         this.height = height;
         this.refresh();
     }
 
-    resize(width,height) {
-        this.width = width;
-        this.height = height;
-        if (this.valid()) {
-            this.draw();
-        }
-    }
-
-    close() {
-        this.elt = null;
-        this.width = null;
-        this.height = null;
-        this.x_column_selector = null;
-        this.y_column_selector = null;
-        this.vizdiv = null;
+    page_close() {
         this.width = null;
         this.height = null;
     }

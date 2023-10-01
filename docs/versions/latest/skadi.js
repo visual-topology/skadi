@@ -5,1317 +5,6 @@
      Licensed under the Open Software License version 3.0 
 */
 
-/* skadi/js/utils/resource_loader.js */
-
-class ResourceLoader {
-
-    constructor(js_parent, css_parent) {
-        this.loading_resources = {}; // resource_name -> true
-        this.loaded_resources = {}; // resource name -> true|false
-        this.js_parent = js_parent || document.head;
-        this.css_parent = css_parent || document.head;
-    }
-
-    async css_load(resource) {
-        let that = this;
-        await fetch(resource).then(r => r.text(), e => that.notify(resource,false)).then(txt => {
-            let ele = document.createElement("style");
-            ele.appendChild(document.createTextNode(txt));
-            this.css_parent.appendChild(ele);
-            that.notify(resource,true);
-        });
-    }
-
-    async js_load(resource) {
-        let script = document.createElement("script");
-        script.onload = (evt) => this.notify(resource, true);
-        script.setAttribute("src",resource);
-        document.head.appendChild(script);
-        while(true) {
-            await new Promise(r => setTimeout(r, 100));
-            if (resource in this.loaded_resources) {
-                break;
-            }
-        }
-
-    }
-
-    async load(resource) {
-        // start new load
-        this.loading_resources[resource] = true;
-        console.log(resource);
-        if (resource.endsWith(".js")) {
-            await this.js_load(resource);
-        } else if (resource.endsWith(".css")) {
-            await this.css_load(resource);
-        }
-    }
-
-    notify(resource,success) {
-        delete this.loading_resources[resource];
-        this.loaded_resources[resource] = success;
-    }
-
-    async load_resources(resource_list) {
-        let load_tasks = [];
-        for(let idx=0; idx<resource_list.length; idx++) {
-            let resource = resource_list[idx];
-            if (resource in this.loading_resources || resource in this.loaded_resources) {
-                /* resource already loaded or failed to load */
-            } else {
-                load_tasks.push(await this.load(resource));
-            }
-        }
-        if (load_tasks.length > 0) {
-            await Promise.all(load_tasks);
-        }
-        let results = {};
-        for(let idx=0; idx<resource_list.length; idx++) {
-            let resource = resource_list[idx];
-            results[resource] = this.loaded_resources[resource];
-        }
-        return results;
-    }
-}
-
-
-
-/* skadi/js/utils/icon_utils.js */
-
-function skadi_create_icon_for_status_state(status_state) {
-    let status_icon_url = null;
-
-    switch(status_state) {
-        case SkadiStatusStates.info:
-            status_icon_url = icon_status_info;
-            break;
-        case SkadiStatusStates.warning:
-            status_icon_url = icon_status_warning;
-            break;
-        case SkadiStatusStates.error:
-            status_icon_url = icon_status_error;
-            break;
-    }
-
-    if (status_icon_url) {
-        let status_icon = document.createElement( "img");
-        status_icon.setAttribute("width",32);
-        status_icon.setAttribute("height",32);
-        status_icon.setAttribute("style","vertical-align:middle;margin-right:10px;");
-        status_icon.setAttribute("src",status_icon_url);
-        return status_icon;
-    }
-}
-
-/* skadi/js/services/status_states.js */
-
-class SkadiStatusStates {
-    static get info() { return "info" };
-    static get warning() { return "warning" };
-    static get error() { return "error" };
-    static get clear() { return "" };
-}
-
-/* skadi/js/utils/topology_store.js */
-
-class TopologyStore {
-
-    constructor(skadi) {
-        this.skadi = skadi;
-    }
-
-    async getSaveLink() {
-       return "data:application/json;base64," + btoa(JSON.stringify(this.skadi.save()));
-    }
-
-    get_example_links() {
-        return [];
-    }
-
-    async loadFrom(file) {
-        file.text().then(t => {
-            this.skadi.load(JSON.parse(t),false);
-        });
-    }
-}
-
-/* skadi/js/core/core.js */
-
-class SkadiCore {
-
-    constructor(element_id, topology_store, node_factory, configuration_factory) {
-        this.topology_store = topology_store;
-        this.node_factory = node_factory;
-        this.configuration_factory = configuration_factory;
-        this.id = "design";
-        this.schema = null;
-
-        this.graph_executor = null;
-        this.node_event_handlers = {};
-        this.link_event_handlers = {};
-        this.design_event_handlers = {};
-
-
-        this.network = new SkadiNetwork({});
-
-        this.div = Skadi.x3.select("#" + element_id);
-
-        this.metadata = {
-            "name": "New Topology",
-            "description": "",
-            "filename": "topology.json",
-            "authors": "",
-            "version": "0.1"
-        };
-
-    }
-
-    get_id() {
-        return this.id;
-    }
-
-    /* Get/Set Schema and Executor */
-
-    set_schema(schema) {
-        this.schema = schema;
-    }
-
-    get_schema() {
-        return this.schema;
-    }
-
-    set_graph_executor(executor) {
-        this.graph_executor = executor;
-    }
-
-    /* Access the topology store and node/configuration factories */
-
-    get_topology_store() {
-        return this.topology_store;
-    }
-
-    get_node_factory() {
-        return this.node_factory;
-    }
-
-    get_configuration_factory() {
-        return this.configuration_factory;
-    }
-
-    get_network() {
-        return this.network;
-    }
-
-    create_node_service(node) {
-        if (this.graph_executor) {
-            return this.graph_executor.create_node_service(node);
-        } else {
-            let service = new SkadiNodeService(node);
-            let wrapper = new SkadiWrapper(node, service);
-            service.set_wrapper(wrapper);
-            return service;
-        }
-    }
-
-    /* event handling - add/remove event handlers */
-
-    add_node_event_handler(node_event_type, callback) {
-        this.add_event_handler(this.node_event_handlers, node_event_type, callback);
-    }
-
-    remove_node_event_handler(node_event_type, callback) {
-        this.remove_event_handler(this.node_event_handlers, node_event_type, callback);
-    }
-
-    add_link_event_handler(link_event_type, callback) {
-        this.add_event_handler(this.link_event_handlers, link_event_type, callback);
-    }
-
-    remove_link_event_handler(link_event_type, callback) {
-        this.remove_event_handler(this.link_event_handlers, link_event_type, callback);
-    }
-
-    add_design_event_handler(design_event_type, callback) {
-        this.add_event_handler(this.design_event_handlers, design_event_type, callback);
-    }
-
-    remove_design_event_handler(design_event_type, callback) {
-        this.remove_event_handler(this.design_event_handlers, design_event_type, callback);
-    }
-
-    add_event_handler(listeners, event_type, callback) {
-        if (!(event_type in listeners)) {
-            listeners[event_type] = [];
-        }
-        listeners[event_type].push(callback);
-    }
-
-    remove_event_handler(listeners, event_type, callback) {
-        if (!(event_type in listeners)) {
-            return;
-        }
-        listeners[event_type] = listeners[event_type].filter(c => c != callback);
-    }
-
-    request_execution(node_id) {
-        if (this.graph_executor) {
-            this.graph_executor.request_execution(node_id);
-        }
-    }
-
-    /* event firing */
-
-    fire_node_event(node_event_type, node) {
-        if (node_event_type in this.node_event_handlers) {
-            let callbacks = this.node_event_handlers[node_event_type];
-            for (let idx = 0; idx < callbacks.length; idx++) {
-                if (node_event_type == "add") {
-                    callbacks[idx](node.get_id(), node.get_type().get_id(), node.get_position(), node.get_metadata());
-                } else if (node_event_type == "remove") {
-                    callbacks[idx](node.get_id(), node.get_type().get_id());
-                } else if (node_event_type == "update_position") {
-                    callbacks[idx](node.get_id(), node.get_position());
-                } else if (node_event_type == "update_metadata") {
-                    callbacks[idx](node.get_id(), node.get_metadata());
-                }
-            }
-        }
-    }
-
-    fire_link_event(link_event_type, link) {
-        let link_id = link.get_id();
-        let link_type = link.get_link_type().get_id();
-        let from_node_id = link.get_from_port().get_node().get_id();
-        let from_port_name = link.get_from_port().get_port_name();
-        let to_node_id = link.get_to_port().get_node().get_id();
-        let to_port_name = link.get_to_port().get_port_name();
-        if (link_event_type in this.link_event_handlers) {
-            let callbacks = this.link_event_handlers[link_event_type];
-            for (let idx = 0; idx < callbacks.length; idx++) {
-                callbacks[idx](link_id, link_type, from_node_id, from_port_name, to_node_id, to_port_name);
-            }
-        }
-    }
-
-    fire_design_event(design_event_type, aux_info) {
-        if (design_event_type in this.design_event_handlers) {
-            let callbacks = this.design_event_handlers[design_event_type];
-            for (let idx = 0; idx < callbacks.length; idx++) {
-                callbacks[idx](aux_info);
-            }
-        }
-    }
-
-    /* configuration related */
-
-    get_configuration(package_id) {
-        return this.network.get_configuration(package_id);
-    }
-
-    add_configuration(configuration) {
-        this.network.add_configuration(configuration);
-    }
-
-    update_configuration_status(package_id, state, status_message) {
-        // TODO
-    }
-
-    create_configurations() {
-        // load up configurations for any packages that specify them
-        for(let package_id in this.schema.package_types) {
-            let package_type = this.schema.package_types[package_id];
-            if (package_type.get_configuration_classname()) {
-                let conf = new SkadiConfiguration(this,package_type,{});
-                conf.create_instance();
-                this.add_configuration(conf);
-            }
-        }
-    }
-
-    /* node related */
-
-    create_node(node_id, node_type, x, y, metadata, suppress_event) {
-        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
-        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
-        let id = node_id || this.next_id("nl");
-        let node = new SkadiCoreNode(this, node_type, id, x, y, true, metadata, {});
-        node.create_instance();
-        this.add_node(node, suppress_event);
-        return id;
-    }
-
-    add_node(node, suppress_event) {
-        this.network.add_node(node);
-        if (!suppress_event) {
-            this.fire_node_event("add", node);
-        }
-    }
-
-    get_node(node_id) {
-        return this.network.get_node(node_id);
-    }
-
-
-    update_execution_state(node_id, state) {
-        let node = this.network.get_node(node_id);
-        node.update_execution_state(state);
-        if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
-            let upstream_node_ids = this.network.get_upstream_nodes(node_id);
-            console.log(JSON.stringify(upstream_node_ids));
-            for (let idx in upstream_node_ids) {
-                this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
-            }
-        }
-    }
-
-    execution_complete() {
-        let node_ids = this.network.get_node_list();
-        for(let idx in node_ids) {
-            let node = this.network.get_node(node_ids[idx]);
-            if (node.execution_state !== SkadiApi.EXECUTION_STATE_FAILED && node.execution_state !== SkadiApi.EXECUTION_STATE_PENDING) {
-                node.update_execution_state(SkadiApi.EXECUTION_STATE_CLEAR);
-            }
-        }
-    }
-
-
-    update_metadata(node_id, metadata, suppress_event) {
-        let node = this.network.get_node(node_id);
-        if (node) {
-            node.update_metadata(metadata);
-        }
-        if (!suppress_event) {
-            this.fire_node_event("update_metadata", node);
-        }
-    }
-
-    update_design_metadata(metadata, suppress_event) {
-        for(let key in metadata) {
-            this.metadata[key] = metadata[key];
-        }
-        if (!suppress_event) {
-            this.fire_design_event("update_metadata", this.metadata);
-        }
-    }
-
-    get_design_metadata() {
-        let copy = {};
-        for(let key in this.metadata) {
-            copy[key] = this.metadata[key];
-        }
-        return copy;
-    }
-
-    update_node_status(id, state, status_message) {
-        let node = this.get_node(id);
-        if (node) {
-            node.update_status(status_message, state);
-        }
-    }
-
-    update_node_execution_state(id, state) {
-        this.update_execution_state(id, state);
-    }
-
-    /* link/port related */
-
-    create_link(fromPort, toPort, link_type_id, link_id) {
-        let id = link_id || this.next_id("ch");
-        let link_type = this.schema.get_link_type(link_type_id);
-        let link = new SkadiCoreLink(this, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort.get_node(), toPort.get_port_name());
-        this.add_link(link, link_id != undefined);
-        return id;
-    }
-
-    add_link(link, suppress_event) {
-        this.network.add_link(link);
-        if (!suppress_event) {
-            this.fire_link_event("add", link);
-        }
-    }
-
-    get_link(id) {
-        return this.network.get_link(id);
-    }
-
-    /* design metadata */
-
-    get_metadata() {
-        return this.network.get_metadata();
-    }
-
-    set_metadata(metadata) {
-        this.network.set_metadata(metadata);
-    }
-
-    /* provide unique IDs */
-
-    next_id(prefix) {
-        function fix(n,l) {
-            let s = n.toString(16);
-            if (s.length > l) {
-                return s.slice(s.length-l,s.length);
-            } else {
-                while (s.length < l) {
-                    s = "0" + s;
-                }
-                return s;
-            }
-        }
-        while (true) {
-            let id = prefix + fix(new Date().getTime(),6) + "_" + fix(Math.floor(Math.random()*256*256*256),6);
-            if (!this.network.contains_id(id)) {
-                return id;
-            }
-        }
-    }
-
-    /* clear or remove from the network */
-
-    clear(suppress_event) {
-        this.network.clear();
-        if (!suppress_event) {
-            this.fire_design_event("clear", null);
-        }
-    }
-
-    remove(id, suppress_event) {
-        let node = this.network.get_node(id);
-        if (node) {
-            // cascade to any links connected to the node to remove
-            let removed_links = [];
-            for (let link_id in this.network.links) {
-                let link = this.network.get_link(link_id);
-                if (link.fromPort.node == node || link.toPort.node == node) {
-                    removed_links.push(link_id);
-                }
-            }
-            for (let idx = 0; idx < removed_links.length; idx++) {
-                this.remove(removed_links[idx],suppress_event);
-            }
-            this.network.remove(id);
-            if (!suppress_event) {
-                this.fire_node_event("remove", node);
-            }
-        }
-        let link = this.network.get_link(id);
-        if (link) {
-            this.network.remove(id);
-            if (!suppress_event) {
-                this.fire_link_event("remove", link);
-            }
-        }
-    }
-
-
-    /* load/save */
-
-    serialise() {
-        let snodes = {};
-        let slinks = {};
-
-        let node_ids = this.network.get_node_list();
-        for (let idx in node_ids) {
-            let node_id = node_ids[idx];
-            snodes[node_id] = this.network.get_node(node_id).serialise();
-        }
-
-        let link_ids = this.network.get_link_list();
-        for (let idx in link_ids) {
-            let link_id = link_ids[idx];
-            let link = this.network.get_link(link_id);
-            slinks[link_id] = link.serialise();
-        }
-        return {"nodes": snodes, "links": slinks, "metadata": this.metadata};
-    }
-
-    deserialise(from_obj, suppress_events) {
-        if (this.graph_executor) {
-            this.graph_executor.pause();
-        }
-        for (let node_id in from_obj.nodes) {
-            let node = SkadiCoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
-            this.add_node(node, suppress_events);
-        }
-        for (let link_id in from_obj.links) {
-            let link = SkadiCoreLink.deserialise(this, link_id, from_obj.links[link_id]);
-            this.add_link(link, suppress_events);
-        }
-        let package_properties = from_obj.package_properties || {};
-        for (let package_id in package_properties) {
-            let configuration = SkadiCoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
-            this.add_configuration(configuration);
-        }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
-        if (this.graph_executor) {
-            this.graph_executor.resume();
-        }
-    }
-}
-
-
-
-
-/* skadi/js/core/core_node.js */
-
-class SkadiCoreNode {
-
-    constructor(core, node_type, id, x, y, metadata, properties) {
-        this.core = core;
-
-        this.node_type = node_type;
-        this.metadata = metadata;
-        this.node_service = null;
-        this.wrapper = null;
-        this.properties = properties;
-
-        this.id = id;
-
-        // coordinates on canvas
-        this.x = x;
-        this.y = y;
-
-        this.status_message = "";
-        this.status_state = "";
-        this.status_content = null;
-        this.status_content_rect = null;
-
-        this.execution_state = SkadiApi.EXECUTION_STATE_EXECUTED;
-
-        this.input_ports = [];
-        this.output_ports = [];
-    }
-
-
-    create_instance() {
-
-
-        // unfortunately looks like eval is needed to construct ES6 class instances from the classname
-        try {
-            this.node_service = this.core.create_node_service(this);
-            this.wrapper = this.node_service.wrapper;
-            let node_factory = this.core.get_node_factory();
-            if (node_factory) {
-                let o = node_factory(this.node_service);
-                this.wrapper.set_instance(o);
-            } else {
-                let classname = this.node_type.get_classname();
-                let cls = eval(classname);
-                let o = new cls(this.node_service);
-                this.wrapper.set_instance(o);
-            }
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
-
-
-        return true;
-    }
-
-    get_wrapper() {
-        return this.wrapper;
-    }
-
-    get_label() {
-        let label = this.metadata.name;
-        if (!label) {
-            label = "";
-        }
-        return label;
-    }
-
-    get_position() {
-        return {
-            "x": this.x,
-            "y": this.y
-        };
-    }
-
-    get_id() {
-        return this.id;
-    }
-
-
-    update_metadata(new_metadata) {
-        for (let key in new_metadata) {
-            this.metadata[key] = new_metadata[key];
-        }
-    }
-
-    get_metadata() {
-        return this.metadata;
-    }
-
-    update_status(status_message, status_state) {
-        this.status_message = status_message;
-        this.status_state = status_state;
-    }
-
-    update_execution_state(new_execution_state) {
-        this.execution_state = new_execution_state;
-    }
-
-    remove() {
-    }
-
-    serialise() {
-        return {
-            "x": this.x,
-            "y": this.y,
-            "node_type": this.node_type.get_id(),
-            "metadata": this.metadata,
-            "properties": this.properties
-        };
-    }
-
-    get_type() {
-        return this.node_type;
-    }
-}
-
-SkadiCoreNode.deserialise = function (core, id, obj) {
-    let node_type = core.get_schema().get_node_type(obj.node_type);
-    let node = new SkadiCoreNode(core, node_type, id, obj.x, obj.y, obj.metadata, obj.properties);
-    node.create_instance();
-    return node;
-}
-
-
-/* skadi/js/core/core_link.js */
-
-class SkadiCoreLink {
-
-  constructor(core, id, from_node, from_port_name, link_type, to_node, to_port_name) {
-    this.core = core;
-    this.id = id;
-
-    this.from_node = from_node;
-    this.to_node = to_node;
-
-    this.from_port_name = from_port_name;
-    this.to_port_name = to_port_name;
-
-    this.link_type = link_type;
-
-  }
-
-  get_id() {
-    return this.id;
-  }
-
-  get_link_type() {
-    return this.link_type;
-  }
-
-  get_from_node() {
-    return this.from_node;
-  }
-
-  get_from_port_name() {
-    return this.from_port_name;
-  }
-
-  get_to_node() {
-    return this.to_node;
-  }
-
-  get_to_port_name() {
-    return this.to_port_name;
-  }
-}
-
-SkadiCoreLink.deserialise = function(core, id,obj) {
-
-    let from_port = core.get_network().extract_address(obj.from_port);
-    let to_port = core.get_network().extract_address(obj.to_port);
-    let from_node = core.get_network().get_node(from_port.node);
-    let to_node = core.get_network().get_node(to_port.node);
-
-    let linkType = core.get_schema().get_link_type(obj.link_type);
-    return new SkadiCoreLink(core, id, from_node, from_port.port, linkType, to_node, to_port.port);
-}
-
-
-
-
-
-
-
-/* skadi/js/core/core_configuration.js */
-
-class SkadiCoreConfiguration {
-
-  constructor(core, package_type, properties) {
-    this.core = core;
-    this.package_type = package_type;
-    this.configuration_service = null;
-    this.wrapper = null;
-    this.properties = properties;
-    this.id = package_type.get_id();
-    this.page = this.package_type.get_configuration().page;
-  }
-
-  get_id() {
-      return this.id;
-  }
-
-  get_package_type() {
-      return this.package_type;
-  }
-
-  create_instance() {
-      try {
-          this.configuration_service = new SkadiConfigurationService(this);
-          this.wrapper = new SkadiWrapper(this,this.configuration_service);
-          this.configuration_service.set_wrapper(this.wrapper);
-          let configuration_factory = this.core.get_configuration_factory();
-          let o = null;
-          if (configuration_factory) {
-              o = configuration_factory(this.configuration_service);
-          } else {
-              let classname = this.package_type.get_configuration_classname();
-              let cls = eval(classname);
-              o = new cls(this.configuration_service);
-          }
-          this.wrapper.set_instance(o);
-      } catch (e) {
-          console.error(e);
-          return false;
-      }
-      return true;
-  }
-
-  get_wrapper() {
-    return this.wrapper;
-  }
-
-  get_instance() {
-      return this.wrapper.get_instance();
-  }
-
-  get_url() {
-      if (this.page && this.page.url) {
-          return this.page.url;
-      }
-      return null;
-  }
-
-  get_page() {
-      return this.page || {};
-  }
-}
-
-SkadiCoreConfiguration.deserialise = function(core,package_id,obj) {
-  let package_type = core.get_schema().get_package_type(package_id);
-  let configuration = new SkadiCoreConfiguration(core,package_type,obj.properties);
-  configuration.create_instance();
-  return configuration;
-}
-
-
-
-
-/* skadi/js/core/network.js */
-
-class SkadiNetwork {
-
-    constructor() {
-        this.nodes = {};
-        this.links = {};
-        this.configurations = {};
-        this.metadata = { "name":"", "description":"" };
-    }
-
-    clear() {
-        for(let id in this.links) {
-            this.links[id].remove();
-        }
-        this.links = {};
-
-        for(let id in this.nodes) {
-            this.nodes[id].remove();
-        }
-        this.nodes = {};
-    }
-
-    get_metadata() {
-        return this.metadata;
-    }
-
-    get_downstream_nodes(from_node_id) {
-        let nodes = [];
-        let start_nodes = [from_node_id];
-        do {
-            let next_gen = [];
-            for(let id in this.links) {
-                let link = this.links[id];
-                let from_node_id = link.get_from_node().get_id();
-                let to_node_id = link.get_to_node().get_id();
-                if (start_nodes.includes(from_node_id)) {
-                    if (!nodes.includes(to_node_id)) {
-                        nodes.push(to_node_id);
-                        next_gen.push(to_node_id);
-                    }
-                }
-            }
-            start_nodes = next_gen;
-        } while(start_nodes.length > 0);
-        return nodes;
-    }
-
-    get_upstream_nodes(from_node_id) {
-        let nodes = [];
-        let start_nodes = [from_node_id];
-        do {
-            let next_gen = [];
-            for(let id in this.links) {
-                let link = this.links[id];
-                let from_node_id = link.get_from_node().get_id();
-                let to_node_id = link.get_to_node().get_id();
-                if (start_nodes.includes(to_node_id)) {
-                    if (!nodes.includes(from_node_id)) {
-                        nodes.push(from_node_id);
-                        next_gen.push(from_node_id);
-                    }
-                }
-            }
-            start_nodes = next_gen;
-        } while(start_nodes.length > 0);
-        return nodes;
-    }
-
-    set_metadata(metadata) {
-        this.metadata = metadata;
-    }
-
-    /* configurations */
-
-    add_configuration(configuration) {
-        this.configurations[configuration.get_id()] = configuration;
-    }
-
-    get_configuration(id) {
-        return this.configurations[id];
-    }
-
-    get_configuration_list() {
-        let list = [];
-        for(let id in this.configurations) {
-            list.push(id);
-        }
-        return list;
-    }
-
-    /* nodes */
-
-    add_node(node) {
-        this.nodes[node.get_id()] = node;
-    }
-
-    get_node(id) {
-        return this.nodes[id];
-    }
-
-    get_node_list() {
-        let list = [];
-        for(let id in this.nodes) {
-            list.push(id);
-        }
-        return list;
-    }
-
-    remove_node(id) {
-        // links to/from this node should have already been removed in Design.remove
-        let node = this.nodes[id];
-        delete this.nodes[id];
-        node.remove();
-    }
-
-    /* links */
-
-    get_link(id) {
-        return this.links[id];
-    }
-
-    add_link(link) {
-        this.links[link.get_id()] = link;
-    }
-
-    remove_link(id) {
-        let link = this.links[id];
-        delete this.links[id];
-        link.remove();
-    }
-
-    get_link_list() {
-        let linklist = [];
-        for(let link_id in this.links) {
-            linklist.push(link_id);
-        }
-        return linklist;
-    }
-
-    extract_address(s) {
-        let obj = {};
-        let split = s.split(":");
-        obj["node"] = split[0];
-        obj["port"] = split[1];
-        return obj;
-    }
-
-    contains_id(id) {
-        return (id in this.nodes || id in this.links);
-    }
-
-    remove(id) {
-        if (id in this.nodes) {
-            this.remove_node(id);
-        }
-        if (id in this.links) {
-            this.remove_link(id);
-        }
-    }
-  }
-
-
-/* skadi/js/dialogs/about.js */
-
-function skadi_populate_about(design, elt) {
-
-    function tableize(rowdata) {
-        let tbl = document.createElement("table");
-        tbl.setAttribute("class", "exo-border");
-        rowdata.forEach(rowitem => {
-            let row = document.createElement("tr");
-            rowitem.forEach(item => {
-                let cell = document.createElement("td");
-                cell.appendChild(item);
-                row.appendChild(cell);
-            });
-            tbl.appendChild(row);
-        });
-        return tbl;
-    }
-
-    function tn(txt) {
-        return document.createTextNode(txt);
-    }
-
-    function mklink(url) {
-        let a = document.createElement("a");
-        a.setAttribute("href", url);
-        a.setAttribute("target", "_new");
-        a.appendChild(document.createTextNode(url));
-        return a;
-    }
-    let rowdata = [
-        [tn("Description"),tn("Version"),tn("Link")],
-        [tn("Skadi"), tn("0.0.1"), mklink("https://github.com/visualtopology/skadi")]];
-
-    let package_types = design.get_schema().get_package_types();
-    package_types.forEach(package_type_id => {
-        let pt = design.get_schema().get_package_type(package_type_id);
-        let metadata = pt.get_metadata();
-        rowdata.push([tn(metadata.description), tn(metadata.version), mklink(pt.get_resource_url(metadata.link))]);
-    });
-    elt.appendChild(tableize(rowdata));
-}
-
-/* skadi/js/dialogs/save.js */
-
-let skadi_download_html = `
-<span aria-describedby="edit-metadata-tooltip">
-    Download Topology
-</span>
-<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
-     tabindex="0">
-    <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
-         role="tooltip">
-         Use this form to download a topology from the designer
-    </div>
-</div>
-<div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            File:
-        </div>
-        <div class="exo-2-cell">
-            <div class="exo-button exo-dark-blue-fg exo-light-blue-bg">
-                <a id="skadi_designer_download_file" download=""
-                     href="">
-                    Download
-                </a>
-            </div>
-        </div>
-    </div>
-</div>`
-
-function skadi_populate_save(design, elt) {
-    elt.innerHTML = skadi_download_html;
-    let link = document.getElementById("skadi_designer_download_file");
-    link.appendChild(document.createTextNode("Preparing Download..."));
-    design.get_topology_store().getSaveLink().then(url => {
-        link.innerHTML = "Download";
-        link.setAttribute("href", url);
-        const filename = design.metadata.filename || "topology.json";
-        link.setAttribute("download", filename);
-    });
-}
-
-/* skadi/js/dialogs/load.js */
-
-let skadi_upload_html = `
-<span aria-describedby="edit-metadata-tooltip">
-    Upload Topology
-</span>
-<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
-     tabindex="0">
-    <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
-         role="tooltip">
-         Use this form to upload a topology to the designer
-    </div>
-</div>
-<div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            File:
-        </div>
-        <div class="exo-2-cell">
-            <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
-        </div>
-    </div>
-</div>`
-
-function skadi_populate_load(design, elt, close_fn) {
-    elt.innerHTML = skadi_upload_html;
-    let input = document.getElementById("skadi_designer_upload_file");
-    input.addEventListener("change", async function() {
-        let file = input.files[0];
-        await design.get_topology_store().loadFrom(file);
-        design.metadata.filename = file.name;
-        close_fn();
-    });
-}
-
-/* skadi/js/dialogs/clear.js */
-
-let skadi_clear_html = `
-<span aria-describedby="clear-tooltip">
-    Really Clear
-</span>
-<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
-     tabindex="0">
-    <div id="clear-tooltip" class="exo-help-content exo-white-bg exo-border"
-         role="tooltip">
-        Press the clear button to remove all nodes and links from the design.  Press cancel or close this window to leave the design unchanged.
-    </div>
-</div>
-<div>
-<input id="clear_confirm" type="button" value="Clear All">
-<input id="clear_cancel" type="button" value="Cancel">
-</div>
-`
-
-function skadi_populate_clear(design, elt, close_window) {
-    elt.innerHTML = skadi_clear_html;
-    let confirm = document.getElementById("clear_confirm");
-    confirm.addEventListener("click", function() {
-        design.clear(false);
-        close_window();
-    });
-    let cancel = document.getElementById("clear_cancel");
-    cancel.addEventListener("click", function() {
-        close_window();
-    });
-}
-
-/* skadi/js/dialogs/design_metadata.js */
-
-let skadi_design_metadata_html = `
-<span aria-describedby="edit-metadata-tooltip">
-    Edit Design Metadata
-</span>
-<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
-     tabindex="0">
-    <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
-         role="tooltip">
-         Use this form to update the metadata associated with the design being edited
-    </div>
-</div>
-<div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            Name:
-        </div>
-        <div class="exo-2-cell">
-            <input id="edit_metadata_name" type="text" value="" class="exo-full-width">
-        </div>
-    </div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            Filename:
-        </div>
-        <div class="exo-2-cell">
-            <input id="edit_metadata_filename" type="text" value="" class="exo-full-width">
-        </div>
-    </div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            Description:
-        </div>
-        <div class="exo-2-cell">
-            <textarea id="edit_metadata_description" rows="10" class="exo-full-width"></textarea>
-        </div>
-    </div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            Author(s):
-        </div>
-        <div class="exo-2-cell">
-            <input id="edit_metadata_authors" type="text" value="" class="exo-full-width">
-        </div>
-    </div>
-    <div class="exo-row">
-        <div class="exo-2-cell">
-            Version:
-        </div>
-        <div class="exo-2-cell">
-            <input id="edit_metadata_version" type="text" value="" class="exo-full-width">
-        </div>
-    </div>
-</div>
-`
-
-function skadi_populate_design_metadata(design, elt, close_window) {
-    elt.innerHTML = skadi_design_metadata_html;
-    let edit_metadata_name = document.getElementById("edit_metadata_name");
-    let edit_metadata_description = document.getElementById("edit_metadata_description");
-    let edit_metadata_filename = document.getElementById("edit_metadata_filename");
-    let edit_metadata_authors = document.getElementById("edit_metadata_authors");
-    let edit_metadata_version = document.getElementById("edit_metadata_version");
-    let design_metadata = design.get_design_metadata();
-    edit_metadata_name.value = design_metadata["name"] || "";
-    edit_metadata_description.value = design_metadata["description"] || "";
-    edit_metadata_filename.value = design_metadata["filename"] || "";
-    edit_metadata_authors.value = design_metadata["authors"] || "";
-    edit_metadata_version.value = design_metadata["version"] || "";
-    edit_metadata_name.addEventListener("change", (evt) => {
-       design_metadata["name"] = evt.target.value;
-       design.update_design_metadata(design_metadata);
-    });
-    edit_metadata_description.addEventListener("change", (evt) => {
-       design_metadata["description"] = evt.target.value;
-       design.update_design_metadata(design_metadata);
-    });
-    edit_metadata_filename.addEventListener("change", (evt) => {
-       design_metadata["filename"] = evt.target.value;
-       design.update_design_metadata(design_metadata);
-    });
-    edit_metadata_authors.addEventListener("change", (evt) => {
-       design_metadata["authors"] = evt.target.value;
-       design.update_design_metadata(design_metadata);
-    });
-    edit_metadata_version.addEventListener("change", (evt) => {
-       design_metadata["version"] = evt.target.value;
-       design.update_design_metadata(design_metadata);
-    });
-}
-
-/* skadi/js/dialogs/configuration.js */
-
-let skadi_configuration_header_html = `
-<h1>Package Configurations</h1>
-`
-
-let skadi_status_divs = {};
-
-let skadi_configuration_status = {};
-
-function skadi_update_configuration_status_div(package_id) {
-    let message = "";
-    let status_state = SkadiStatusStates.clear;
-    if (package_id in skadi_configuration_status) {
-        status_state = skadi_configuration_status[package_id].state;
-        message = skadi_configuration_status[package_id].message;
-    }
-    if (package_id in skadi_status_divs) {
-        let status_div = skadi_status_divs[package_id];
-        status_div.innerHTML = "";
-        let status_icon = skadi_create_icon_for_status_state(status_state);
-        if (status_icon) {
-            status_div.appendChild(status_icon);
-        }
-        if (message) {
-            let text = document.createElement("span");
-            text.appendChild(document.createTextNode(message));
-            text.setAttribute("style","vertical-align:middle;");
-            status_div.appendChild(text);
-        }
-    }
-}
-
-function skadi_close_configuration() {
-    this.skadi_status_divs = {};
-}
-
-function skadi_update_configuration_status(package_id, state, message) {
-    skadi_configuration_status[package_id] = {
-        "state": state,
-        "message": message
-    }
-    skadi_update_configuration_status_div(package_id);
-}
-
-function skadi_populate_configuration(design, elt, close_window) {
-    let header_div = document.createElement("div");
-    header_div.innerHTML = skadi_configuration_header_html;
-    elt.appendChild(header_div);
-    for(let package_id in design.network.configurations) {
-        let configuration = design.network.configurations[package_id];
-        let package_type = configuration.get_package_type();
-        let name = package_type.get_metadata().name;
-        if (configuration.get_url()) {
-            let btn = document.createElement("input");
-            btn.setAttribute("type","button");
-            btn.setAttribute("value", "Open Configuration");
-            btn.addEventListener("click", (ev) => {
-                design.open_configuration(package_id);
-            });
-            let row = document.createElement("div");
-            row.setAttribute("class","exo-row");
-
-            let name_cell = document.createElement("div");
-            name_cell.setAttribute("class","exo-2-cell");
-            name_cell.appendChild(document.createTextNode(name));
-            row.appendChild(name_cell);
-
-            let btn_cell = document.createElement("div");
-            btn_cell.setAttribute("class","exo-2-cell");
-            btn_cell.appendChild(btn);
-            row.appendChild(btn_cell);
-
-            elt.appendChild(row);
-
-            let status_row = document.createElement("div");
-            status_row.setAttribute("class","exo-row skadi_status");
-            let status_cell = document.createElement("div");
-            status_cell.setAttribute("class","exo-4-cell");
-            status_cell.setAttribute("style","display:inline-block;");
-
-            status_row.appendChild(status_cell);
-
-            skadi_status_divs[package_id] = status_cell;
-            skadi_update_configuration_status_div(package_id);
-
-            elt.appendChild(status_row);
-            elt.append(document.createElement("hr"));
-        }
-    }
-}
-
 /* skadi/js/common/icons.js */
 
 /* skadi/icons/close_purple.svg*/
@@ -1362,6 +51,12 @@ let icon_edit_purple = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbm
 
 /* skadi/icons/configuration_purple.svg*/
 let icon_configuration_purple = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNCIKICAgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiCiAgIHdpZHRoPSIyNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnNCIKICAgc29kaXBvZGk6ZG9jbmFtZT0iY29uZmlndXJhdGlvbl9wdXJwbGUuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjIuMiAoMToxLjIuMisyMDIyMTIwNTE1NTArYjBhODQ4NjU0MSkiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczgiIC8+CiAgPHNvZGlwb2RpOm5hbWVkdmlldwogICAgIGlkPSJuYW1lZHZpZXc2IgogICAgIHBhZ2Vjb2xvcj0iI2ZmZmZmZiIKICAgICBib3JkZXJjb2xvcj0iIzY2NjY2NiIKICAgICBib3JkZXJvcGFjaXR5PSIxLjAiCiAgICAgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAuMCIKICAgICBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIgogICAgIGlua3NjYXBlOmRlc2tjb2xvcj0iI2QxZDFkMSIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2NhcGU6em9vbT0iMjcuOTE2NjY3IgogICAgIGlua3NjYXBlOmN4PSI4LjQxNzkxMDQiCiAgICAgaW5rc2NhcGU6Y3k9IjEyLjAxNzkxIgogICAgIGlua3NjYXBlOndpbmRvdy13aWR0aD0iMTUyOCIKICAgICBpbmtzY2FwZTp3aW5kb3ctaGVpZ2h0PSI4MzYiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjcyIgogICAgIGlua3NjYXBlOndpbmRvdy15PSIyNyIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2ZzQiIC8+CiAgPHBhdGgKICAgICBkPSJtMzcwLTgwLTE2LTEyOHEtMTMtNS0yNC41LTEyVDMwNy0yMzVsLTExOSA1MEw3OC0zNzVsMTAzLTc4cS0xLTctMS0xMy41di0yN3EwLTYuNSAxLTEzLjVMNzgtNTg1bDExMC0xOTAgMTE5IDUwcTExLTggMjMtMTV0MjQtMTJsMTYtMTI4aDIyMGwxNiAxMjhxMTMgNSAyNC41IDEydDIyLjUgMTVsMTE5LTUwIDExMCAxOTAtMTAzIDc4cTEgNyAxIDEzLjV2MjdxMCA2LjUtMiAxMy41bDEwMyA3OC0xMTAgMTkwLTExOC01MHEtMTEgOC0yMyAxNXQtMjQgMTJMNTkwLTgwSDM3MFptMTEyLTI2MHE1OCAwIDk5LTQxdDQxLTk5cTAtNTgtNDEtOTl0LTk5LTQxcS01OSAwLTk5LjUgNDFUMzQyLTQ4MHEwIDU4IDQwLjUgOTl0OTkuNSA0MVptMC04MHEtMjUgMC00Mi41LTE3LjVUNDIyLTQ4MHEwLTI1IDE3LjUtNDIuNVQ0ODItNTQwcTI1IDAgNDIuNSAxNy41VDU0Mi00ODBxMCAyNS0xNy41IDQyLjVUNDgyLTQyMFptLTItNjBabS00MCAzMjBoNzlsMTQtMTA2cTMxLTggNTcuNS0yMy41VDYzOS0zMjdsOTkgNDEgMzktNjgtODYtNjVxNS0xNCA3LTI5LjV0Mi0zMS41cTAtMTYtMi0zMS41dC03LTI5LjVsODYtNjUtMzktNjgtOTkgNDJxLTIyLTIzLTQ4LjUtMzguNVQ1MzMtNjk0bC0xMy0xMDZoLTc5bC0xNCAxMDZxLTMxIDgtNTcuNSAyMy41VDMyMS02MzNsLTk5LTQxLTM5IDY4IDg2IDY0cS01IDE1LTcgMzB0LTIgMzJxMCAxNiAyIDMxdDcgMzBsLTg2IDY1IDM5IDY4IDk5LTQycTIyIDIzIDQ4LjUgMzguNVQ0MjctMjY2bDEzIDEwNloiCiAgICAgaWQ9InBhdGgyIiAvPgogIDxwYXRoCiAgICAgc3R5bGU9ImZpbGw6IzgwMDA4MDtzdHJva2Utd2lkdGg6MC41MjM2NzMiCiAgICAgZD0ibSA5LjI1OTcwMTUsMjEuOTczMzcyIGMgMCwtMC4wNTAwNyAtMC4zOTczMzE1LC0zLjE4MjM0OCAtMC40MDQyMzU2LC0zLjE4NjcwMSAtMC4wMDQyNCwtMC4wMDI3IC0wLjExNjQwMTgsLTAuMDU0OTQgLTAuMjQ5MjU0LC0wLjExNjE1OCBDIDguNDczMzU5OCwxOC42MDkyOTkgOC4yMTM5NzgxLDE4LjQ2MTYgOC4wMjk4MDc5LDE4LjM0MjI5NCA3Ljg0NTYzNzYsMTguMjIyOTg3IDcuNjc5NjI0MiwxOC4xMjUzNzMgNy42NjA4ODg4LDE4LjEyNTM3MyBjIC0wLjAxODczNSwwIC0wLjY4NTQ3MjIsMC4yNzQyMDEgLTEuNDgxNjM3NSwwLjYwOTMzNiAtMS4xNDkzOTM4LDAuNDgzODIyIC0xLjQ1NjIxNjUsMC42MDAwMzUgLTEuNDg5NTM0OCwwLjU2NDE3OSAtMC4wODUyNjYsLTAuMDkxNzYgLTIuNzA0MjU3NywtNC42NTA3NzUgLTIuNjg3Mzg1OSwtNC42NzgwNzQgMC4wMDk2MiwtMC4wMTU1NyAwLjU4MjQ1NzQsLTAuNDU0NDU4IDEuMjcyOTY2NSwtMC45NzUzMDcgbCAxLjI1NTQ3MTIsLTAuOTQ3IEwgNC41MzA4NjE1LDEyIDQuNTMwOTU0NiwxMS4zMDE0OTMgMy4yNzUxMDczLDEwLjM1NDAzOCBDIDIuNTg0Mzk0MSw5LjgzMjkzNzIgMi4wMTE1MzU2LDkuMzk0MDc5NiAyLjAwMjA5MTMsOS4zNzg3OTg0IDEuOTg5ODc3OSw5LjM1OTAzNjggNC42MDUyNzA0LDQuNzgxNTMxMiA0LjY5NzgzNjQsNC42NjA2NTg2IGMgMC4wMDU4OCwtMC4wMDc2OCAwLjY2Nzk5MzUsMC4yNjI0MDIgMS40NzEzNTU3LDAuNjAwMTg3OCAwLjgwMzM2MjQsMC4zMzc3ODU4IDEuNDc0MjE3NiwwLjYxNDA3MTcgMS40OTA3ODk0LDAuNjEzOTY4MiAwLjAxNjU3MiwtMS4wNzVlLTQgMC4xOTk5NDE1LC0wLjEwNjc4MzIgMC40MDc0ODc4LC0wLjIzNzA2NjcgMC4yMDc1NDU5LC0wLjEzMDI4MzMgMC40NjgwMTcxLC0wLjI3Nzc1MDEgMC41Nzg4MjQxLC0wLjMyNzcwNCAwLjExMDgwNzMsLTAuMDQ5OTU0IDAuMjA0OTM0OSwtMC4wOTMyNDMgMC4yMDkxNzI1LC0wLjA5NjE5OSAwLjAwNjkyLC0wLjAwNDgzIDAuNDA0MjM1NiwtMy4xMzc0NzU1IDAuNDA0MjM1NiwtMy4xODcyMTYzIDAsLTAuMDExMzYyIDEuMjMzMTM0NSwtMC4wMjA2NTkgMi43NDAyOTg1LC0wLjAyMDY1OSAxLjUwNzE2NCwwIDIuNzQwMjk5LDAuMDA5MyAyLjc0MDI5OSwwLjAyMDY1OSAwLDAuMDUwMDczIDAuMzk3MzMxLDMuMTgyMzQ3MyAwLjQwNDIzNSwzLjE4NjcwMDQgMC4wMDQyLDAuMDAyNjcgMC4xMTY0MDIsMC4wNTQ5NDMgMC4yNDkyNTQsMC4xMTYxNTc0IDAuMTMyODUyLDAuMDYxMjE1IDAuMzkyMjM0LDAuMjA4OTEzNiAwLjU3NjQwNCwwLjMyODIxOTkgMC4xODQxNywwLjExOTMwNjUgMC4zNDk1MDMsMC4yMTcwOSAwLjM2NzQwNiwwLjIxNzI5NyAwLjAxNzksMi4xNWUtNCAwLjY5MDEzMiwtMC4yNzU3OTQzIDEuNDkzODQxLC0wLjYxMzMzNjUgMC44MDM3MSwtMC4zMzc1NDI0IDEuNDY1ODA3LC0wLjYwNzcxMTkgMS40NzEzMjYsLTAuNjAwMzc2NyAwLjA5ODMxLDAuMTMwNjQwMSAyLjcwNzUwMSw0LjY5NzUxMzEgMi42OTUyMDIsNC43MTc0MTM4IC0wLjAwOTYsMC4wMTU1MjYgLTAuNTgyMywwLjQ1NDUwNDUgLTEuMjcyNjc3LDAuOTc1NTA5MSBsIC0xLjI1NTIzMSwwLjk0NzI4IC0wLjAwNjEsMC42NTM3MzEgYyAtMC4wMDMzLDAuMzU5NTUyIC0wLjAwNzcsMC42NzMzMDcgLTAuMDA5NywwLjY5NzIzMyAtMC4wMDIsMC4wMjM5MyAwLjQ3MTk0MSwwLjQwMzg1NCAxLjA1MzEzNSwwLjg0NDI4NCAwLjU4MTE5NCwwLjQ0MDQzIDEuMTU0NzUsMC44NzYyMjggMS4yNzQ1NywwLjk2ODQzOSBsIDAuMjE3ODU0LDAuMTY3NjU2IC0xLjMzODk3OSwyLjMxMDQ0OCBjIC0wLjczNjQzOSwxLjI3MDc0NiAtMS4zNTE4MTgsMi4zMzIxNzQgLTEuMzY3NTA5LDIuMzU4NzI5IC0wLjAyMjEzLDAuMDM3NDUgLTAuMzQ1MjgzLC0wLjA4NjE0IC0xLjQ0MDA2OCwtMC41NTA3MzkgLTAuNzc2MzQ3LC0wLjMyOTQ2MSAtMS40Mzg2NzIsLTAuNjA2NjY3IC0xLjQ3MTgzMywtMC42MTYwMTMgLTAuMDM0NjksLTAuMDA5OCAtMC4yMjI5NjEsMC4wODUxMiAtMC40NDMzMDksMC4yMjM0MzkgLTAuMjEwNjU4LDAuMTMyMjM3IC0wLjQ3MzY3NSwwLjI4MTMwMiAtMC41ODQ0ODIsMC4zMzEyNTYgLTAuMTEwODA4LDAuMDQ5OTUgLTAuMjA0OTM1LDAuMDkzMjQgLTAuMjA5MTczLDAuMDk2MiAtMC4wMDY5LDAuMDA0OCAtMC40MDQyMzUsMy4xMzc0NzYgLTAuNDA0MjM1LDMuMTg3MjE3IDAsMC4wMTEzNiAtMS4yMzMxMzUsMC4wMjA2NiAtMi43NDAyOTksMC4wMjA2NiAtMS41MDcxNjQsMCAtMi43NDAyOTg1LC0wLjAwOTMgLTIuNzQwMjk4NSwtMC4wMjA2NiB6IG0gMy43NDIxMjY1LC0yLjA2NTkwOSBjIDAuMDExLC0wLjA2NDAzIDAuMDg0NDEsLTAuNjE2MTIgMC4xNjMxMzksLTEuMjI2ODY2IDAuMDc4NzMsLTAuNjEwNzQ2IDAuMTU1MDg0LC0xLjE1NjY1MyAwLjE2OTY4MywtMS4yMTMxMjYgMC4wMjM3NSwtMC4wOTE4OSAwLjA2MDQyLC0wLjExMzcwNCAwLjM0ODkzMiwtMC4yMDc2MjIgMC43MTU3ODEsLTAuMjMzMDAxIDEuNDk5MTU5LC0wLjY4NTQ1OCAyLjAyMzkxOCwtMS4xNjg5NTcgbCAwLjI2ODYxOSwtMC4yNDc0OTkgMS4wOTI1MzgsMC40NTMxNzQgYyAwLjYwMDg5NSwwLjI0OTI0NiAxLjE2MDI1MSwwLjQ4MDE1NCAxLjI0MzAxMiwwLjUxMzEyOSBsIDAuMTUwNDc0LDAuMDU5OTUgMC40OTIzNTgsLTAuODYzMDE1IGMgMC40MTg3MywtMC43MzM5NTggMC40ODQzMDksLTAuODY5MDY2IDAuNDM4NTQsLTAuOTAzNDgxIC0xLjM2OTA3NCwtMS4wMjk0NDQgLTIuMDczNjM4LC0xLjU3MjEzMSAtMi4wNzM2MzgsLTEuNTk3MjA4IDAsLTAuMDE3NCAwLjAzNiwtMC4xNzM5NSAwLjA4LC0wLjM0Nzg5NCAwLjA3MTU1LC0wLjI4Mjg0MiAwLjA4LC0wLjQwNTIxMyAwLjA4LC0xLjE1ODA1MiAwLC0wLjc1MjgzOSAtMC4wMDg1LC0wLjg3NTIxIC0wLjA4LC0xLjE1ODA1MiAtMC4wNDQsLTAuMTczOTQ0IC0wLjA4LC0wLjMyOTk4MyAtMC4wOCwtMC4zNDY3NTYgMCwtMC4wMjMxMSAxLjEwMzUyNCwtMC44NzM4MzgxIDIuMDczMjg5LC0xLjU5ODM0NTggMC4wNDYxOSwtMC4wMzQ1MDkgLTAuMDE4MjksLTAuMTY3NDY3MyAtMC40Mzc5MjgsLTAuOTAzMDIwNCAtMC40NTc0NjcsLTAuODAxODU3NiAtMC40OTc2NiwtMC44NjA0MzU4IC0wLjU3MTE5LC0wLjgzMjQ2MjYgLTAuMDQzNSwwLjAxNjU1IC0wLjU5Nzk2LDAuMjUwOTAzNSAtMS4yMzIxMjcsMC41MjA3ODYxIEwgMTUuOTk4NDE2LDguMTcyODQ1IDE1LjY3MDczMSw3Ljg4MzY0NjQgQyAxNS4wODg1NTEsNy4zNjk4NDM3IDE0LjM4ODk3OCw2Ljk2NjE4MzggMTMuNzAyNTkzLDYuNzQ4MDExNiAxMy41MzQ1MjUsNi42OTQ1OTAxIDEzLjM4MzI3OSw2LjYzODk5NTcgMTMuMzY2NDksNi42MjQ0Njg1IDEzLjM0MjUwMSw2LjYwMzcxMDcgMTMuMDI0NjI3LDQuMjAzODc5OCAxMy4wMjE2MjksNC4wMjA4OTU1IDEzLjAyMTA2LDMuOTg2MTYgMTIuNzk2MzUxLDMuOTc2MTE5NCAxMi4wMTk1MzMsMy45NzYxMTk0IGggLTEuMDAxMzYxIGwgLTAuMDIsMC4xMTY0MTc5IGMgLTAuMDExLDAuMDY0MDMgLTAuMDg0NDEsMC42MTYxMTk0IC0wLjE2MzEzOSwxLjIyNjg2NTcgLTAuMDc4NzMsMC42MTA3NDYzIC0wLjE1NTA4NCwxLjE1NjAxMzcgLTAuMTY5NjgzLDEuMjExNzA1OSAtMC4wMjM5NCwwLjA5MTMyOSAtMC4wNjUxOCwwLjExNDQ0MDYgLTAuNDIwNTc0LDAuMjM1NzAyOSBDIDkuNDY0Mjg1LDcuMDMzMTE5OCA4Ljc5MDAyODcsNy40MzcxODcgOC4yMDI5ODUxLDcuOTkwNDEzMSBMIDguMDIzODgwNiw4LjE1OTIwMDEgNi45MzEzNDMzLDcuNzA0NjM4MyBDIDYuMzMwNDQ3OCw3LjQ1NDYyOTMgNS43NzEwOTIzLDcuMjIzMTM3OCA1LjY4ODMzMTMsNy4xOTAyMTMgTCA1LjUzNzg1NjcsNy4xMzAzNDk5IDUuMDQ1NDk5MSw3Ljk5MzM2NDggYyAtMC40MjExNDEsMC43MzgxODQ4IC0wLjQ4NDQ2NTMsMC44Njg4Njc3IC0wLjQzNzc5NDksMC45MDM0ODE0IDIuMDUzODI5NywxLjUyMzI1MTggMi4wNzg3MDQ0LDEuNTQyOTY5OCAyLjA2MjAzMDUsMS42MzQ0OTY4IC0wLjAwODk3LDAuMDQ5MjUgLTAuMDQ2NDY4LDAuMjE4NTA4IC0wLjA4MzMyMywwLjM3NjEyIC0wLjA1NTQzMywwLjIzNzA2MSAtMC4wNjY4MjYsMC40Mjg4OTggLTAuMDY1OTUyLDEuMTEwNDQ3IDkuMzg1ZS00LDAuNzMwMTIxIDAuMDEwMTA5LDAuODU5ODcyIDAuMDgwNTk3LDEuMTQwMTQyIDAuMDQzNzQ3LDAuMTczOTQ0IDAuMDc5NTQsMC4zMzAyNjEgMC4wNzk1NCwwLjM0NzM3MiAwLDAuMDE3MTEgLTAuNDYzNDMyOCwwLjM4MDUxIC0xLjAyOTg1MDcsMC44MDc1NTQgLTAuNTY2NDE3OSwwLjQyNzA0NCAtMS4wNDQ0MTYsMC43ODk4MjkgLTEuMDYyMjE4LDAuODA2MTkgLTAuMDE4NiwwLjAxNzA5IDAuMTc2MzA2LDAuMzk1NTEyIDAuNDU4MjE3MywwLjg4OTY1MiAwLjQ2MjM0MDEsMC44MTA0IDAuNDk1Mjk0MywwLjg1ODExNyAwLjU3MjM4NjIsMC44Mjg4MDYgMC4wNDQ5OTEsLTAuMDE3MTEgMC41OTk1ODM0LC0wLjI1MTMzOSAxLjIzMjQyOCwtMC41MjA1MiBsIDEuMTUwNjI2NiwtMC40ODk0MTkgMC4zMjczODQsMC4yODg5MzIgYyAwLjU4MTg3MzIsMC41MTM1MzIgMS4yODE1ODQ2LDAuOTE3MjQgMS45Njc4MzY5LDEuMTM1MzY5IDAuMTY4MDY4LDAuMDUzNDIgMC4zMTkzMTQsMC4xMDkwMTYgMC4zMzYxMDMsMC4xMjM1NDMgMC4wMjM5OSwwLjAyMDc2IDAuMzQxODYzLDIuNDIwNTg5IDAuMzQ0ODYxLDIuNjAzNTczIDUuNjllLTQsMC4wMzQ3NCAwLjIyNTI3OCwwLjA0NDc4IDEuMDAyMDk2LDAuMDQ0NzggaCAxLjAwMTM2MSB6IgogICAgIGlkPSJwYXRoMzA2IgogICAgIHRyYW5zZm9ybT0ibWF0cml4KDQwLDAsMCw0MCwwLC05NjApIiAvPgogIDxwYXRoCiAgICAgc3R5bGU9ImZpbGw6IzgwMDA4MDtzdHJva2Utd2lkdGg6MC41MjM2NzMiCiAgICAgZD0iTSAxMS40MzI1ODgsMTUuNDM5MzgxIEMgMTAuNzAwNzUxLDE1LjMwNjkxOSAxMC4wNzIzMywxNC45NjUwOTkgOS41NDQ0Mjc2LDE0LjQxMjM0MyA5LjExMTg1MzQsMTMuOTU5NDA0IDguODc4MTIwMSwxMy41NjM0NDQgOC42OTc0NDExLDEyLjk3NzQ5MiA4LjYwNjczNjUsMTIuNjgzMzMyIDguNjAwMzcwNCwxMi42MTkyMjYgOC42MDAzNzA0LDEyIGMgMCwtMC42MTkxMTcgMC4wMDYzOCwtMC42ODMzNjkgMC4wOTcwMDMsLTAuOTc3MjYgMC4xOTExMzQyLC0wLjYxOTgzIDAuNDc5NDQxMiwtMS4wODUwMDYyIDAuOTYxOTIxLC0xLjU1MjAzNTQgMC42MTk5MzM2LC0wLjYwMDA4MTggMS4zMDkzNzc2LC0wLjg5NTMxNDkgMi4xODI5NzA2LC0wLjkzNDc5MDcgMC45Nzg3OSwtMC4wNDQyMyAxLjcyODYwNSwwLjE5OTIzODIgMi40MzU5ODUsMC43OTA5NzM2IDAuNzYzOTA3LDAuNjM5MDIxIDEuMTk3MjU3LDEuNTEwODE4NSAxLjIzOTcxMywyLjQ5NDAwODUgMC4wMjI2OCwwLjUyNTIxMSAtMC4wMjAzLDAuODUxNTk5IC0wLjE3MjEyOSwxLjMwNzE1MSAtMC4zNTEzNjksMS4wNTQyNTcgLTEuMzA2NTQ5LDEuOTU0MTM3IC0yLjM3ODY3LDIuMjQwOTU3IC0wLjMyMDU3MiwwLjA4NTc2IC0xLjIyMTM0NiwwLjEyNzA3MSAtMS41MzQ1NzYsMC4wNzAzOCB6IG0gMS4yNzMyMjgsLTIuMDcwMjk1IGMgMC4zMDY0NTMsLTAuMTUwODY2IDAuNjMzMjQ2LC0wLjQ5MzA2MyAwLjc0OTI3NywtMC43ODQ1OTUgMC4wNjgyLC0wLjE3MTM1NyAwLjA4MjkzLC0wLjI3NTE4NCAwLjA4MjkzLC0wLjU4NDQ5MSAwLC0wLjMwOTMwNyAtMC4wMTQ3MywtMC40MTMxMzQgLTAuMDgyOTMsLTAuNTg0NDkxIC0wLjExNjI2OCwtMC4yOTIxMjcgLTAuNDQyNzczLC0wLjYzMzcwNCAtMC43NTA1OTgsLTAuNzg1MjQ1IC0wLjIyNjM2MywtMC4xMTE0MzkgLTAuMjU2NCwtMC4xMTY4MzEgLTAuNjUwNzY0LC0wLjExNjgzMSAtMC4zOTYwMzIsMCAtMC40MjM2NDMsMC4wMDUgLTAuNjU1NTQ2LDAuMTE5MTg1IC0wLjMxMTY5OSwwLjE1MzQ0OSAtMC41NzY2ODUsMC40MTg3MTIgLTAuNzE5NjQxLDAuNzIwMzk0IC0wLjEwNDU0MywwLjIyMDYyIC0wLjExMTM4LDAuMjYwMzMzIC0wLjExMTM4LDAuNjQ2OTg4IDAsMC4zNzIwOTQgMC4wMDkzLDAuNDMxNzgxIDAuMDk2MTQsMC42MTcwNjEgMC4xMjgxNjYsMC4yNzM0NTkgMC4yODY4MywwLjQ2NDcwOCAwLjUxNzExLDAuNjIzMzA4IDAuMzA2OTI2LDAuMjExMzg4IDAuNTEwNjk0LDAuMjY3Mzc4IDAuOTI5MTI2LDAuMjU1Mjk4IDAuMzIyNTM5LC0wLjAwOTMgMC4zODUwMDUsLTAuMDIyNTcgMC41OTYyNzksLTAuMTI2NTgxIHoiCiAgICAgaWQ9InBhdGgzMDgiCiAgICAgdHJhbnNmb3JtPSJtYXRyaXgoNDAsMCwwLDQwLDAsLTk2MCkiIC8+Cjwvc3ZnPgo=';
+
+/* skadi/icons/rotate_left.svg*/
+let icon_rotate_left = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9kaTpkb2NuYW1lPSJyb3RhdGVfbGVmdC5zdmciCiAgIGlua3NjYXBlOnZlcnNpb249IjEuMi4yICgxOjEuMi4yKzIwMjIxMjA1MTU1MCtiMGE4NDg2NTQxKSIKICAgeG1sbnM6aW5rc2NhcGU9Imh0dHA6Ly93d3cuaW5rc2NhcGUub3JnL25hbWVzcGFjZXMvaW5rc2NhcGUiCiAgIHhtbG5zOnNvZGlwb2RpPSJodHRwOi8vc29kaXBvZGkuc291cmNlZm9yZ2UubmV0L0RURC9zb2RpcG9kaS0wLmR0ZCIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB4bWxuczpzdmc9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcwogICAgIGlkPSJkZWZzMTAiIC8+CiAgPHNvZGlwb2RpOm5hbWVkdmlldwogICAgIGlkPSJuYW1lZHZpZXc4IgogICAgIHBhZ2Vjb2xvcj0iI2ZmZmZmZiIKICAgICBib3JkZXJjb2xvcj0iIzY2NjY2NiIKICAgICBib3JkZXJvcGFjaXR5PSIxLjAiCiAgICAgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAuMCIKICAgICBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIgogICAgIGlua3NjYXBlOmRlc2tjb2xvcj0iI2QxZDFkMSIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2NhcGU6em9vbT0iMzYuNDU4MzMzIgogICAgIGlua3NjYXBlOmN4PSI5LjI0MzQyODYiCiAgICAgaW5rc2NhcGU6Y3k9IjEyLjAxMzcxNCIKICAgICBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjE5MjAiCiAgICAgaW5rc2NhcGU6d2luZG93LWhlaWdodD0iMTA0MyIKICAgICBpbmtzY2FwZTp3aW5kb3cteD0iMCIKICAgICBpbmtzY2FwZTp3aW5kb3cteT0iMCIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2ZzYiIC8+CiAgPHBhdGgKICAgICBkPSJNMCAwaDI0djI0SDB6IgogICAgIGZpbGw9Im5vbmUiCiAgICAgaWQ9InBhdGgyIiAvPgogIDxwYXRoCiAgICAgZD0iTTcuMTEgOC41M0w1LjcgNy4xMUM0LjggOC4yNyA0LjI0IDkuNjEgNC4wNyAxMWgyLjAyYy4xNC0uODcuNDktMS43MiAxLjAyLTIuNDd6TTYuMDkgMTNINC4wN2MuMTcgMS4zOS43MiAyLjczIDEuNjIgMy44OWwxLjQxLTEuNDJjLS41Mi0uNzUtLjg3LTEuNTktMS4wMS0yLjQ3em0xLjAxIDUuMzJjMS4xNi45IDIuNTEgMS40NCAzLjkgMS42MVYxNy45Yy0uODctLjE1LTEuNzEtLjQ5LTIuNDYtMS4wM0w3LjEgMTguMzJ6TTEzIDQuMDdWMUw4LjQ1IDUuNTUgMTMgMTBWNi4wOWMyLjg0LjQ4IDUgMi45NCA1IDUuOTFzLTIuMTYgNS40My01IDUuOTF2Mi4wMmMzLjk1LS40OSA3LTMuODUgNy03Ljkzcy0zLjA1LTcuNDQtNy03LjkzeiIKICAgICBpZD0icGF0aDQiCiAgICAgc3R5bGU9ImZpbGw6IzgwMDA4MCIgLz4KPC9zdmc+Cg==';
+
+/* skadi/icons/rotate_right.svg*/
+let icon_rotate_right = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9kaTpkb2NuYW1lPSJyb3RhdGVfcmlnaHQuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjIuMiAoMToxLjIuMisyMDIyMTIwNTE1NTArYjBhODQ4NjU0MSkiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczEwIiAvPgogIDxzb2RpcG9kaTpuYW1lZHZpZXcKICAgICBpZD0ibmFtZWR2aWV3OCIKICAgICBwYWdlY29sb3I9IiNmZmZmZmYiCiAgICAgYm9yZGVyY29sb3I9IiM2NjY2NjYiCiAgICAgYm9yZGVyb3BhY2l0eT0iMS4wIgogICAgIGlua3NjYXBlOnNob3dwYWdlc2hhZG93PSIyIgogICAgIGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIwLjAiCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNrZXJib2FyZD0iMCIKICAgICBpbmtzY2FwZTpkZXNrY29sb3I9IiNkMWQxZDEiCiAgICAgc2hvd2dyaWQ9ImZhbHNlIgogICAgIGlua3NjYXBlOnpvb209IjM2LjQ1ODMzMyIKICAgICBpbmtzY2FwZTpjeD0iOS4yNDM0Mjg2IgogICAgIGlua3NjYXBlOmN5PSIxMi4wMTM3MTQiCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxOTIwIgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwNDMiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LXk9IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LW1heGltaXplZD0iMSIKICAgICBpbmtzY2FwZTpjdXJyZW50LWxheWVyPSJzdmc2IiAvPgogIDxwYXRoCiAgICAgZD0iTTAgMGgyNHYyNEgweiIKICAgICBmaWxsPSJub25lIgogICAgIGlkPSJwYXRoMiIgLz4KICA8cGF0aAogICAgIGQ9Ik0gMTYuOTYsOC41MyAxOC4zNyw3LjExIEMgMTkuMjcsOC4yNyAxOS44Myw5LjYxIDIwLDExIEggMTcuOTggQyAxNy44NCwxMC4xMyAxNy40OSw5LjI4IDE2Ljk2LDguNTMgWiBNIDE3Ljk4LDEzIEggMjAgYyAtMC4xNywxLjM5IC0wLjcyLDIuNzMgLTEuNjIsMy44OSBsIC0xLjQxLC0xLjQyIGMgMC41MiwtMC43NSAwLjg3LC0xLjU5IDEuMDEsLTIuNDcgeiBtIC0xLjAxLDUuMzIgYyAtMS4xNiwwLjkgLTIuNTEsMS40NCAtMy45LDEuNjEgViAxNy45IGMgMC44NywtMC4xNSAxLjcxLC0wLjQ5IDIuNDYsLTEuMDMgeiBNIDExLjA3LDQuMDcgViAxIEwgMTUuNjIsNS41NSAxMS4wNywxMCBWIDYuMDkgYyAtMi44NCwwLjQ4IC01LDIuOTQgLTUsNS45MSAwLDIuOTcgMi4xNiw1LjQzIDUsNS45MSB2IDIuMDIgYyAtMy45NSwtMC40OSAtNywtMy44NSAtNywtNy45MyAwLC00LjA4IDMuMDUsLTcuNDQgNywtNy45MyB6IgogICAgIGlkPSJwYXRoNCIKICAgICBzdHlsZT0iZmlsbDojODAwMDgwIiAvPgo8L3N2Zz4K';
 
 
 /* skadi/js/common/geometry.js */
@@ -1527,9 +222,9 @@ class SkadiPalette {
 
 class SkadiPaletteEntry {
 
-  constructor(design, template) {
+  constructor(design, node_type) {
     this.design = design;
-    this.template = template;
+    this.node_type = node_type;
     this.node = null;
     this.overlay_node = null;
     this.overlay_grp = null;
@@ -1537,6 +232,10 @@ class SkadiPaletteEntry {
     this.overlay_y = 0;
     this.width = 220;
     this.height = 180;
+    this.metadata = {
+      "name": this.node_type.get_name(),
+      "description": this.node_type.get_description()
+    };
   }
 
   update_position(x,y) {
@@ -1555,33 +254,33 @@ class SkadiPaletteEntry {
   }
 
   draw(grp) {
-    this.node = new SkadiNode(this.design, this.template, this.design.next_id("nl"), 0, 0, false, this.template.metadata);
+    this.node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 0, 0, false, this.metadata);
     this.node.draw(grp);
-    let that = this;
+    
     this.overlay_grp = this.design.get_skadi_svg_dialogue_group();
     this.node.set_drag_handlers(
-      function(evloc) {
-        that.overlay_x = evloc.x;
-        that.overlay_y = evloc.y;
-        let meta = JSON.parse(JSON.stringify(that.template.metadata));
-        that.overlay_node = new SkadiNode(that.design, that.template, that.design.next_id("nl"), that.overlay_x, that.overlay_y, false, meta);
-        that.overlay_node.set_display_tooltips(false);
-        that.overlay_node.draw(that.overlay_grp);
+      (evloc) => {
+        this.overlay_x = evloc.x;
+        this.overlay_y = evloc.y;
+        let meta = JSON.parse(JSON.stringify(this.metadata));
+        this.overlay_node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 
+          this.overlay_x, this.overlay_y, false, this.metadata);
+        this.overlay_node.set_display_tooltips(false);
+        this.overlay_node.draw(this.overlay_grp);
       },
-      function(evloc) {
-        that.overlay_x = evloc.x;
-        that.overlay_y = evloc.y;
-        that.overlay_node.update_position(that.overlay_x, that.overlay_y);
+      (evloc) => {
+        this.overlay_x = evloc.x;
+        this.overlay_y = evloc.y;
+        this.overlay_node.update_position(this.overlay_x, this.overlay_y);
       },
-      function() {
-        if (that.overlay_node) {
-          that.overlay_node.remove();
-          that.overlay_node = null;
-
-          let tx = that.overlay_x - that.design.offset_x;
-          let ty = that.overlay_y - that.design.offset_y;
-          let cc = that.design.to_canvas_coords(tx,ty);
-          that.design.create_node(null,that.template, cc.x, cc.y,that.template.metadata);
+      () => {
+        if (this.overlay_node) {
+          this.overlay_node.remove();
+          this.overlay_node = null;
+          let tx = this.overlay_x - this.design.offset_x;
+          let ty = this.overlay_y - this.design.offset_y;
+          let cc = this.design.to_canvas_coords(tx,ty);
+          this.design.create_node(null,this.node_type, cc.x, cc.y,this.metadata);
         }
       });
     
@@ -1596,15 +295,8 @@ class SkadiPaletteEntry {
   }
 
   get_package_id() {
-    if (this.template) {
-      return this.template.get_package_id();
-    }
-    return "";
-  }
-
-  get_label() {
-    if (this.template) {
-      return this.template.get_label();
+    if (this.node_type) {
+      return this.node_type.get_package_id();
     }
     return "";
   }
@@ -2218,72 +910,6 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
     this.flow();
   }
 
-  /*
-  pack(horizontal) {
-    this.layout = "pack";
-    if (horizontal) {
-      let max_h = 0;
-      
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        if (sz.height > max_h) {
-          max_h = sz.height;
-        }    
-      }
-      let h = this.header_sz+2*this.padding+max_h;
-      if (h < this.min_height) {
-        h = this.min_height;
-      }
-      let x_pos = this.padding;
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        this.entries[idx].update_position(x_pos+sz.width/2,this.header_sz+this.padding+max_h/2);
-        x_pos += sz.width;
-        x_pos += this.padding;
-      }
-      let w = x_pos+this.padding;
-      if (w < this.min_width) {
-        let shift = (this.min_width - w);
-        w = this.min_width;
-        for(let idx=0; idx<this.entries.length; idx++) {
-          let sz = this.entries[idx].get_position();
-          this.entries[idx].update_position(sz.x+shift,sz.y);
-        }
-      }
-    } else { 
-      let max_w = 0;
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        if (sz.width > max_w) {
-          max_w = sz.width;
-        }    
-      }
-      let w = 2*this.padding+max_w;
-      if (w < this.min_width) {
-        w = this.min_width;
-      }
-      let y_pos = this.header_sz + this.padding;
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        this.entries[idx].update_position(2*this.padding+w/2,y_pos+sz.height/2);
-        this.entries[idx].update_size(max_w,null);
-        y_pos += sz.height;
-      }
-      let h = y_pos+this.padding;
-      if (this.scrollbar) {
-        h = this.height;
-        w += this.scrollbar_width;
-      }
-    }
-    // don't reduce width as part of pack
-    if (w < this.width) {
-      w = this.width;
-    }
-    this.update_size(w,h);
-  }
-  */
-
-
   flow() {
       if (!this.entries) {
           return 0;
@@ -2341,6 +967,7 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
       this.content = this.fo.append("div").attr("width", this.content_width + "px").attr("height", this.content_height + "px");
       if (this.open_callback) {
         this.open_callback(this.content.node());
+        this.resize(this.content_width,this.content_height,true);
       }
     }
   }
@@ -2364,7 +991,7 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
 class SkadiTextMenuDialogue extends SkadiSvgDialogue {
 
     constructor(design, items, closeHandler, owner, x, y, title) {
-        super(owner.get_id() + "text_menu", design, title, x, y, 100, 500, closeHandler, null, false, true, false,
+        super(owner.get_id() + "text_menu", design, design.localise(title), x, y, 100, 500, closeHandler, null, false, true, false,
             function (grp) {
                 this.draw(grp);
             });
@@ -2376,7 +1003,7 @@ class SkadiTextMenuDialogue extends SkadiSvgDialogue {
         for (let i = 0; i < this.items.length; i++) {
             let item = this.items[i];
             let cb = this.create_cb(item.get_handler());
-            let t = new SkadiTextButton(this.font_size, item.get_label(), cb);
+            let t = new SkadiTextButton(this.font_size, design.localise(item.get_label()), cb);
             t.set_class("menuitem");
             this.entries.push(t);
         }
@@ -2575,8 +1202,8 @@ class SkadiX3Drag {
   enable_drag_overlay() {
     let that = this;
     this.drag_overlay.style = "pointer-events:all;";
-    this.drag_overlay.setAttribute("width",2000);
-    this.drag_overlay.setAttribute("height", 2000);
+    this.drag_overlay.setAttribute("width","100%");
+    this.drag_overlay.setAttribute("height", "100%");
 
     this.drag_overlay.onmousemove = function(evt) {
       that.move(evt);
@@ -2715,6 +1342,12 @@ class SkadiX3Selection {
     return this;
   }
 
+  html(inner_html) {
+    for(let idx=0; idx<this.elts.length; idx++) {
+      this.elts[idx].innerHTML = inner_html;
+    }
+  }
+
   node() {
     if (this.elts) {
       return this.elts[0];
@@ -2801,6 +1434,14 @@ class SkadiX3 {
 Skadi.x3 = new SkadiX3();
 Skadi.x3.drag = function() { return new SkadiX3Drag(); }
 
+Skadi.$ = (id) => {
+    return document.getElementById(id);
+}
+
+Skadi.$$ = (selector) => {
+    return Skadi.x3.select(selector);
+}
+
 Skadi.x3.svg_tags = [
 	"a",
 	"altGlyph",
@@ -2886,11 +1527,1548 @@ Skadi.x3.svg_tags = [
 
 
 
+/* skadi/js/utils/resource_loader.js */
+
+class ResourceLoader {
+
+    constructor(js_parent, css_parent) {
+        this.loading_resources = {}; // resource_name -> true
+        this.loaded_resources = {}; // resource name -> true|false
+        this.js_parent = js_parent || document.head;
+        this.css_parent = css_parent || document.head;
+    }
+
+    async css_load(resource) {
+        let that = this;
+        await fetch(resource).then(r => r.text(), e => that.notify(resource,false)).then(txt => {
+            let ele = document.createElement("style");
+            ele.appendChild(document.createTextNode(txt));
+            this.css_parent.appendChild(ele);
+            that.notify(resource,true);
+        });
+    }
+
+    async js_load(resource) {
+        let script = document.createElement("script");
+        script.onload = (evt) => this.notify(resource, true);
+        script.setAttribute("src",resource);
+        document.head.appendChild(script);
+        while(true) {
+            await new Promise(r => setTimeout(r, 100));
+            if (resource in this.loaded_resources) {
+                break;
+            }
+        }
+
+    }
+
+    async load(resource) {
+        // start new load
+        this.loading_resources[resource] = true;
+        if (resource.endsWith(".js")) {
+            await this.js_load(resource);
+        } else if (resource.endsWith(".css")) {
+            await this.css_load(resource);
+        }
+    }
+
+    notify(resource,success) {
+        delete this.loading_resources[resource];
+        this.loaded_resources[resource] = success;
+    }
+
+    async load_resources(resource_list) {
+        let load_tasks = [];
+        for(let idx=0; idx<resource_list.length; idx++) {
+            let resource = resource_list[idx];
+            if (resource in this.loading_resources || resource in this.loaded_resources) {
+                /* resource already loaded or failed to load */
+            } else {
+                load_tasks.push(await this.load(resource));
+            }
+        }
+        if (load_tasks.length > 0) {
+            await Promise.all(load_tasks);
+        }
+        let results = {};
+        for(let idx=0; idx<resource_list.length; idx++) {
+            let resource = resource_list[idx];
+            results[resource] = this.loaded_resources[resource];
+        }
+        return results;
+    }
+}
+
+
+
+/* skadi/js/utils/icon_utils.js */
+
+function skadi_create_icon_for_status_state(status_state) {
+    let status_icon_url = null;
+
+    switch(status_state) {
+        case SkadiStatusStates.info:
+            status_icon_url = icon_status_info;
+            break;
+        case SkadiStatusStates.warning:
+            status_icon_url = icon_status_warning;
+            break;
+        case SkadiStatusStates.error:
+            status_icon_url = icon_status_error;
+            break;
+    }
+
+    if (status_icon_url) {
+        let status_icon = document.createElement( "img");
+        status_icon.setAttribute("width",32);
+        status_icon.setAttribute("height",32);
+        status_icon.setAttribute("style","vertical-align:middle;margin-right:10px;");
+        status_icon.setAttribute("src",status_icon_url);
+        return status_icon;
+    }
+}
+
+/* skadi/js/services/status_states.js */
+
+class SkadiStatusStates {
+    static get info() { return "info" };
+    static get warning() { return "warning" };
+    static get error() { return "error" };
+    static get clear() { return "" };
+}
+
+/* skadi/js/utils/topology_store.js */
+
+class TopologyStore {
+
+    constructor(skadi) {
+        this.skadi = skadi;
+    }
+
+    async get_save_link() {
+       return "data:application/json;base64," + btoa(JSON.stringify(this.skadi.save()));
+    }
+
+    async load_from(file) {
+        file.text().then(t => {
+            alert(t);
+            this.skadi.load(JSON.parse(t),false);
+        });
+    }
+
+    get_store_callback() {
+        return undefined;
+    }
+
+    get_restore_callback() {
+        return undefined;
+    }
+}
+
+/* skadi/js/core/core.js */
+
+class SkadiCore {
+
+    constructor(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory) {
+        this.l10n_utils = l10n_utils;
+        this.topology_store = topology_store;
+        this.node_factory = node_factory;
+        this.configuration_factory = configuration_factory;
+        this.id = "design";
+        this.schema = schema;
+
+        this.graph_executor = null;
+        this.node_event_handlers = {};
+        this.link_event_handlers = {};
+        this.design_event_handlers = {};
+
+
+        this.network = new SkadiNetwork({});
+
+        this.div = Skadi.x3.select("#" + element_id);
+
+        this.metadata = {
+            "name": "New Topology",
+            "description": "",
+            "filename": "topology.json",
+            "authors": "",
+            "version": "0.1"
+        };
+
+        this.language = "en";
+    }
+
+    get_id() {
+        return this.id;
+    }
+
+    get_language() {
+        return this.language;
+    }
+
+    set_language(language) {
+        this.language = language;
+    }
+
+    localise(text) {
+        return this.l10n_utils.localise(text);
+    }
+
+    get_schema() {
+        return this.schema;
+    }
+
+    get_l10n_utils() {
+        return this.l10n_utils;
+    }
+
+    set_graph_executor(executor) {
+        this.graph_executor = executor;
+    }
+
+    /* Access the topology store and node/configuration factories */
+
+    get_topology_store() {
+        return this.topology_store;
+    }
+
+    get_node_factory() {
+        return this.node_factory;
+    }
+
+    get_configuration_factory() {
+        return this.configuration_factory;
+    }
+
+    get_network() {
+        return this.network;
+    }
+
+    create_node_service(node) {
+        if (this.graph_executor) {
+            return this.graph_executor.create_node_service(node);
+        } else {
+            let service = new SkadiNodeService(node);
+            let wrapper = new SkadiWrapper(node, service, node.get_type().get_package_type().get_l10n_utils());
+            service.set_wrapper(wrapper);
+            return service;
+        }
+    }
+
+    /* event handling - add/remove event handlers */
+
+    add_node_event_handler(node_event_type, callback) {
+        this.add_event_handler(this.node_event_handlers, node_event_type, callback);
+    }
+
+    remove_node_event_handler(node_event_type, callback) {
+        this.remove_event_handler(this.node_event_handlers, node_event_type, callback);
+    }
+
+    add_link_event_handler(link_event_type, callback) {
+        this.add_event_handler(this.link_event_handlers, link_event_type, callback);
+    }
+
+    remove_link_event_handler(link_event_type, callback) {
+        this.remove_event_handler(this.link_event_handlers, link_event_type, callback);
+    }
+
+    add_design_event_handler(design_event_type, callback) {
+        this.add_event_handler(this.design_event_handlers, design_event_type, callback);
+    }
+
+    remove_design_event_handler(design_event_type, callback) {
+        this.remove_event_handler(this.design_event_handlers, design_event_type, callback);
+    }
+
+    add_event_handler(listeners, event_type, callback) {
+        if (!(event_type in listeners)) {
+            listeners[event_type] = [];
+        }
+        listeners[event_type].push(callback);
+    }
+
+    remove_event_handler(listeners, event_type, callback) {
+        if (!(event_type in listeners)) {
+            return;
+        }
+        listeners[event_type] = listeners[event_type].filter(c => c != callback);
+    }
+
+    request_execution(node_id) {
+        if (this.graph_executor) {
+            this.graph_executor.request_execution(node_id);
+        }
+    }
+
+    /* event firing */
+
+    fire_node_event(node_event_type, node) {
+        if (node_event_type in this.node_event_handlers) {
+            let callbacks = this.node_event_handlers[node_event_type];
+            for (let idx = 0; idx < callbacks.length; idx++) {
+                if (node_event_type == "add") {
+                    callbacks[idx](node.get_id(), node.get_type().get_id(), node.get_position(), node.get_metadata());
+                } else if (node_event_type == "remove") {
+                    callbacks[idx](node.get_id(), node.get_type().get_id());
+                } else if (node_event_type == "update_position") {
+                    callbacks[idx](node.get_id(), node.get_position());
+                } else if (node_event_type == "update_metadata") {
+                    callbacks[idx](node.get_id(), node.get_metadata());
+                }
+            }
+        }
+    }
+
+    fire_link_event(link_event_type, link) {
+        let link_id = link.get_id();
+        let link_type = link.get_link_type().get_id();
+        let from_node_id = link.get_from_port().get_node().get_id();
+        let from_port_name = link.get_from_port().get_port_name();
+        let to_node_id = link.get_to_port().get_node().get_id();
+        let to_port_name = link.get_to_port().get_port_name();
+        if (link_event_type in this.link_event_handlers) {
+            let callbacks = this.link_event_handlers[link_event_type];
+            for (let idx = 0; idx < callbacks.length; idx++) {
+                callbacks[idx](link_id, link_type, from_node_id, from_port_name, to_node_id, to_port_name);
+            }
+        }
+    }
+
+    fire_design_event(design_event_type, aux_info) {
+        if (design_event_type in this.design_event_handlers) {
+            let callbacks = this.design_event_handlers[design_event_type];
+            for (let idx = 0; idx < callbacks.length; idx++) {
+                callbacks[idx](aux_info);
+            }
+        }
+    }
+
+    /* configuration related */
+
+    get_configuration(package_id) {
+        return this.network.get_configuration(package_id);
+    }
+
+    add_configuration(configuration) {
+        this.network.add_configuration(configuration);
+    }
+
+    update_configuration_status(package_id, state, status_message) {
+        // TODO
+    }
+
+    create_configurations() {
+        // load up configurations for any packages that specify them
+        for(let package_id in this.schema.package_types) {
+            let package_type = this.schema.package_types[package_id];
+            if (package_type.get_configuration_classname()) {
+                let conf = new SkadiConfiguration(this,package_type,{});
+                conf.create_instance();
+                this.add_configuration(conf);
+            }
+        }
+    }
+
+    /* node related */
+
+    create_node(node_id, node_type, x, y, metadata, suppress_event) {
+        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
+        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
+        let id = node_id || this.next_id("nl");
+        let node = new SkadiCoreNode(this, node_type, id, x, y, true, metadata, {});
+        node.create_instance();
+        this.add_node(node, suppress_event);
+        return id;
+    }
+
+    add_node(node, suppress_event) {
+        this.network.add_node(node);
+        if (!suppress_event) {
+            this.fire_node_event("add", node);
+        }
+    }
+
+    get_node(node_id) {
+        return this.network.get_node(node_id);
+    }
+
+
+    update_execution_state(node_id, state) {
+        let node = this.network.get_node(node_id);
+        if (node) {
+            node.update_execution_state(state);
+            if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
+                let upstream_node_ids = this.network.get_upstream_nodes(node_id);
+                for (let idx in upstream_node_ids) {
+                    this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+                }
+            }
+        }
+    }
+
+    execution_complete() {
+        let node_ids = this.network.get_node_list();
+        for(let idx in node_ids) {
+            let node = this.network.get_node(node_ids[idx]);
+            if (node.execution_state !== SkadiApi.EXECUTION_STATE_FAILED && node.execution_state !== SkadiApi.EXECUTION_STATE_PENDING) {
+                node.update_execution_state(SkadiApi.EXECUTION_STATE_CLEAR);
+            }
+        }
+    }
+
+
+    update_metadata(node_id, metadata, suppress_event) {
+        let node = this.network.get_node(node_id);
+        if (node) {
+            node.update_metadata(metadata);
+        }
+        if (!suppress_event) {
+            this.fire_node_event("update_metadata", node);
+        }
+    }
+
+    update_design_metadata(metadata, suppress_event) {
+        for(let key in metadata) {
+            this.metadata[key] = metadata[key];
+        }
+        if (!suppress_event) {
+            this.fire_design_event("update_metadata", this.metadata);
+        }
+    }
+
+    get_design_metadata() {
+        let copy = {};
+        for(let key in this.metadata) {
+            copy[key] = this.metadata[key];
+        }
+        return copy;
+    }
+
+    update_node_status(id, state, status_message) {
+        let node = this.get_node(id);
+        if (node) {
+            node.update_status(status_message, state);
+        }
+    }
+
+    update_node_execution_state(id, state) {
+        this.update_execution_state(id, state);
+    }
+
+    /* link/port related */
+
+    create_link(fromPort, toPort, link_type_id, link_id) {
+        let id = link_id || this.next_id("ch");
+        let link_type = this.schema.get_link_type(link_type_id);
+        let link = new SkadiCoreLink(this, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort.get_node(), toPort.get_port_name());
+        this.add_link(link, link_id != undefined);
+        return id;
+    }
+
+    add_link(link, suppress_event) {
+        this.network.add_link(link);
+        if (!suppress_event) {
+            this.fire_link_event("add", link);
+        }
+    }
+
+    get_link(id) {
+        return this.network.get_link(id);
+    }
+
+    /* design metadata */
+
+    get_metadata() {
+        return this.network.get_metadata();
+    }
+
+    set_metadata(metadata) {
+        this.network.set_metadata(metadata);
+    }
+
+    /* provide unique IDs */
+
+    next_id(prefix) {
+        function fix(n,l) {
+            let s = n.toString(16);
+            if (s.length > l) {
+                return s.slice(s.length-l,s.length);
+            } else {
+                while (s.length < l) {
+                    s = "0" + s;
+                }
+                return s;
+            }
+        }
+        while (true) {
+            let id = prefix + fix(new Date().getTime(),6) + "_" + fix(Math.floor(Math.random()*256*256*256),6);
+            if (!this.network.contains_id(id)) {
+                return id;
+            }
+        }
+    }
+
+    /* clear or remove from the network */
+
+    clear(suppress_event) {
+        this.network.clear();
+        if (!suppress_event) {
+            this.fire_design_event("clear", null);
+        }
+    }
+
+    remove(id, suppress_event) {
+        let node = this.network.get_node(id);
+        if (node) {
+            // cascade to any links connected to the node to remove
+            let removed_links = [];
+            for (let link_id in this.network.links) {
+                let link = this.network.get_link(link_id);
+                if (link.fromPort.node == node || link.toPort.node == node) {
+                    removed_links.push(link_id);
+                }
+            }
+            for (let idx = 0; idx < removed_links.length; idx++) {
+                this.remove(removed_links[idx],suppress_event);
+            }
+            this.network.remove(id);
+            if (!suppress_event) {
+                this.fire_node_event("remove", node);
+            }
+        }
+        let link = this.network.get_link(id);
+        if (link) {
+            this.network.remove(id);
+            if (!suppress_event) {
+                this.fire_link_event("remove", link);
+            }
+        }
+    }
+
+
+    /* load/save */
+
+    serialise() {
+        let snodes = {};
+        let slinks = {};
+
+        let node_ids = this.network.get_node_list();
+        for (let idx in node_ids) {
+            let node_id = node_ids[idx];
+            snodes[node_id] = this.network.get_node(node_id).serialise();
+        }
+
+        let link_ids = this.network.get_link_list();
+        for (let idx in link_ids) {
+            let link_id = link_ids[idx];
+            let link = this.network.get_link(link_id);
+            slinks[link_id] = link.serialise();
+        }
+        return {"nodes": snodes, "links": slinks, "metadata": this.metadata};
+    }
+
+    deserialise(from_obj, suppress_events) {
+        if (this.graph_executor) {
+            this.graph_executor.pause();
+        }
+        for (let node_id in from_obj.nodes) {
+            let node = SkadiCoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            this.add_node(node, suppress_events);
+        }
+        for (let link_id in from_obj.links) {
+            let link = SkadiCoreLink.deserialise(this, link_id, from_obj.links[link_id]);
+            this.add_link(link, suppress_events);
+        }
+        let package_properties = from_obj.package_properties || {};
+        for (let package_id in package_properties) {
+            let configuration = SkadiCoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
+            this.add_configuration(configuration);
+        }
+        if ("metadata" in from_obj) {
+            this.metadata = from_obj["metadata"];
+        }
+        if (this.graph_executor) {
+            this.graph_executor.resume();
+        }
+    }
+}
+
+
+
+
+/* skadi/js/core/core_node.js */
+
+class SkadiCoreNode {
+
+    constructor(core, node_type, id, x, y, metadata, properties) {
+        this.core = core;
+
+        this.node_type = node_type;
+        this.metadata = metadata;
+        this.node_service = null;
+        this.wrapper = null;
+        this.properties = properties;
+
+        this.id = id;
+
+        // coordinates on canvas
+        this.x = x;
+        this.y = y;
+
+        this.status_message = "";
+        this.status_state = "";
+        this.status_content = null;
+        this.status_content_rect = null;
+
+        this.execution_state = SkadiApi.EXECUTION_STATE_EXECUTED;
+
+        this.input_ports = [];
+        this.output_ports = [];
+    }
+
+
+    create_instance() {
+
+
+        // unfortunately looks like eval is needed to construct ES6 class instances from the classname
+        try {
+            this.node_service = this.core.create_node_service(this);
+            this.wrapper = this.node_service.wrapper;
+            let node_factory = this.core.get_node_factory();
+            if (node_factory) {
+                let o = node_factory(this.node_service);
+                this.wrapper.set_instance(o);
+            } else {
+                let classname = this.node_type.get_classname();
+                let cls = eval(classname);
+                let o = new cls(this.node_service);
+                this.wrapper.set_instance(o);
+            }
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+
+
+        return true;
+    }
+
+    get_wrapper() {
+        return this.wrapper;
+    }
+
+    get_position() {
+        return {
+            "x": this.x,
+            "y": this.y
+        };
+    }
+
+    get_id() {
+        return this.id;
+    }
+
+
+    update_metadata(new_metadata) {
+        for (let key in new_metadata) {
+            this.metadata[key] = new_metadata[key];
+        }
+    }
+
+    get_metadata() {
+        return this.metadata;
+    }
+
+    get_name() {
+        return this.metadata.name;
+    }
+
+    get_description() {
+        return this.metadata.description;
+    }
+
+    update_status(status_message, status_state) {
+        this.status_message = status_message;
+        this.status_state = status_state;
+    }
+
+    update_execution_state(new_execution_state) {
+        this.execution_state = new_execution_state;
+    }
+
+    remove() {
+    }
+
+    serialise() {
+        return {
+            "x": this.x,
+            "y": this.y,
+            "node_type": this.node_type.get_id(),
+            "metadata": this.metadata,
+            "properties": this.properties
+        };
+    }
+
+    get_type() {
+        return this.node_type;
+    }
+}
+
+SkadiCoreNode.deserialise = function (core, id, obj) {
+    let node_type = core.get_schema().get_node_type(obj.node_type);
+    let node = new SkadiCoreNode(core, node_type, id, obj.x, obj.y, obj.metadata, obj.properties);
+    node.create_instance();
+    return node;
+}
+
+
+/* skadi/js/core/core_link.js */
+
+class SkadiCoreLink {
+
+  constructor(core, id, from_node, from_port_name, link_type, to_node, to_port_name) {
+    this.core = core;
+    this.id = id;
+
+    this.from_node = from_node;
+    this.to_node = to_node;
+
+    this.from_port_name = from_port_name;
+    this.to_port_name = to_port_name;
+
+    this.link_type = link_type;
+
+  }
+
+  get_id() {
+    return this.id;
+  }
+
+  get_link_type() {
+    return this.link_type;
+  }
+
+  get_from_node() {
+    return this.from_node;
+  }
+
+  get_from_port_name() {
+    return this.from_port_name;
+  }
+
+  get_to_node() {
+    return this.to_node;
+  }
+
+  get_to_port_name() {
+    return this.to_port_name;
+  }
+}
+
+SkadiCoreLink.deserialise = function(core, id,obj) {
+
+    let from_port = core.get_network().extract_address(obj.from_port);
+    let to_port = core.get_network().extract_address(obj.to_port);
+    let from_node = core.get_network().get_node(from_port.node);
+    let to_node = core.get_network().get_node(to_port.node);
+
+    let linkType = core.get_schema().get_link_type(obj.link_type);
+    return new SkadiCoreLink(core, id, from_node, from_port.port, linkType, to_node, to_port.port);
+}
+
+
+
+
+
+
+
+/* skadi/js/core/core_configuration.js */
+
+class SkadiCoreConfiguration {
+
+  constructor(core, package_type, properties) {
+    this.core = core;
+    this.package_type = package_type;
+    this.configuration_service = null;
+    this.wrapper = null;
+    this.properties = properties;
+    this.id = package_type.get_id();
+    this.page = this.package_type.get_configuration().page;
+  }
+
+  get_id() {
+      return this.id;
+  }
+
+  get_package_type() {
+      return this.package_type;
+  }
+
+  create_instance() {
+      try {
+          this.configuration_service = new SkadiConfigurationService(this);
+          this.wrapper = new SkadiWrapper(this,this.configuration_service, this.package_type.get_l10n_utils());
+          this.configuration_service.set_wrapper(this.wrapper);
+          let configuration_factory = this.core.get_configuration_factory();
+          let o = null;
+          if (configuration_factory) {
+              o = configuration_factory(this.configuration_service);
+          } else {
+              let classname = this.package_type.get_configuration_classname();
+              let cls = eval(classname);
+              o = new cls(this.configuration_service);
+          }
+          this.wrapper.set_instance(o);
+      } catch (e) {
+          console.error(e);
+          return false;
+      }
+      return true;
+  }
+
+  get_wrapper() {
+    return this.wrapper;
+  }
+
+  get_instance() {
+      return this.wrapper.get_instance();
+  }
+
+  get_url() {
+      if (this.page && this.page.url) {
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
+      }
+      return null;
+  }
+
+  get_page() {
+      return this.page || {};
+  }
+}
+
+SkadiCoreConfiguration.deserialise = function(core,package_id,obj) {
+  let package_type = core.get_schema().get_package_type(package_id);
+  let configuration = new SkadiCoreConfiguration(core,package_type,obj.properties);
+  configuration.create_instance();
+  return configuration;
+}
+
+
+
+
+/* skadi/js/core/network.js */
+
+class SkadiNetwork {
+
+    constructor() {
+        this.nodes = {};
+        this.links = {};
+        this.configurations = {};
+        this.metadata = { "name":"", "description":"" };
+    }
+
+    clear() {
+        for(let id in this.links) {
+            this.links[id].remove();
+        }
+        this.links = {};
+
+        for(let id in this.nodes) {
+            this.nodes[id].remove();
+        }
+        this.nodes = {};
+    }
+
+    get_metadata() {
+        return this.metadata;
+    }
+
+    get_downstream_nodes(from_node_id) {
+        let nodes = [];
+        let start_nodes = [from_node_id];
+        do {
+            let next_gen = [];
+            for(let id in this.links) {
+                let link = this.links[id];
+                let from_node_id = link.get_from_node().get_id();
+                let to_node_id = link.get_to_node().get_id();
+                if (start_nodes.includes(from_node_id)) {
+                    if (!nodes.includes(to_node_id)) {
+                        nodes.push(to_node_id);
+                        next_gen.push(to_node_id);
+                    }
+                }
+            }
+            start_nodes = next_gen;
+        } while(start_nodes.length > 0);
+        return nodes;
+    }
+
+    get_upstream_nodes(from_node_id) {
+        let nodes = [];
+        let start_nodes = [from_node_id];
+        do {
+            let next_gen = [];
+            for(let id in this.links) {
+                let link = this.links[id];
+                let from_node_id = link.get_from_node().get_id();
+                let to_node_id = link.get_to_node().get_id();
+                if (start_nodes.includes(to_node_id)) {
+                    if (!nodes.includes(from_node_id)) {
+                        nodes.push(from_node_id);
+                        next_gen.push(from_node_id);
+                    }
+                }
+            }
+            start_nodes = next_gen;
+        } while(start_nodes.length > 0);
+        return nodes;
+    }
+
+    set_metadata(metadata) {
+        this.metadata = metadata;
+    }
+
+    /* configurations */
+
+    add_configuration(configuration) {
+        this.configurations[configuration.get_id()] = configuration;
+    }
+
+    get_configuration(id) {
+        return this.configurations[id];
+    }
+
+    get_configuration_list() {
+        let list = [];
+        for(let id in this.configurations) {
+            list.push(id);
+        }
+        return list;
+    }
+
+    /* nodes */
+
+    add_node(node) {
+        this.nodes[node.get_id()] = node;
+    }
+
+    get_node(id) {
+        return this.nodes[id];
+    }
+
+    get_node_list() {
+        let list = [];
+        for(let id in this.nodes) {
+            list.push(id);
+        }
+        return list;
+    }
+
+    remove_node(id) {
+        // links to/from this node should have already been removed in Design.remove
+        let node = this.nodes[id];
+        delete this.nodes[id];
+        node.remove();
+    }
+
+    /* links */
+
+    get_link(id) {
+        return this.links[id];
+    }
+
+    add_link(link) {
+        this.links[link.get_id()] = link;
+    }
+
+    remove_link(id) {
+        let link = this.links[id];
+        delete this.links[id];
+        link.remove();
+    }
+
+    get_link_list() {
+        let linklist = [];
+        for(let link_id in this.links) {
+            linklist.push(link_id);
+        }
+        return linklist;
+    }
+
+    extract_address(s) {
+        let obj = {};
+        let split = s.split(":");
+        obj["node"] = split[0];
+        obj["port"] = split[1];
+        return obj;
+    }
+
+    contains_id(id) {
+        return (id in this.nodes || id in this.links);
+    }
+
+    remove(id) {
+        if (id in this.nodes) {
+            this.remove_node(id);
+        }
+        if (id in this.links) {
+            this.remove_link(id);
+        }
+    }
+  }
+
+
+/* skadi/js/dialogs/about.js */
+
+function skadi_populate_about(design, elt) {
+
+    function tableize(rowdata) {
+        let tbl = document.createElement("table");
+        tbl.setAttribute("class", "exo-border");
+        rowdata.forEach(rowitem => {
+            let row = document.createElement("tr");
+            rowitem.forEach(item => {
+                let cell = document.createElement("td");
+                cell.appendChild(item);
+                row.appendChild(cell);
+            });
+            tbl.appendChild(row);
+        });
+        return tbl;
+    }
+
+    function tn(txt) {
+        return document.createTextNode(txt);
+    }
+
+    function mklink(url) {
+        let a = document.createElement("a");
+        a.setAttribute("href", url);
+        a.setAttribute("target", "_new");
+        a.appendChild(document.createTextNode(url));
+        return a;
+    }
+    let rowdata = [
+        [tn("Description"),tn("Version"),tn("Link")],
+        [tn("Skadi"), tn("0.0.1"), mklink("https://github.com/visualtopology/skadi")]];
+
+    let package_types = design.get_schema().get_package_types();
+    package_types.forEach(package_type_id => {
+        let pt = design.get_schema().get_package_type(package_type_id);
+        let metadata = pt.get_metadata();
+        rowdata.push([tn(metadata.description), tn(metadata.version), mklink(pt.get_resource_url(metadata.link))]);
+    });
+    elt.appendChild(tableize(rowdata));
+}
+
+/* skadi/js/dialogs/save.js */
+
+let skadi_download_html = `
+<span aria-describedby="edit-metadata-tooltip">
+    {{download.topology}}
+</span>
+<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
+     tabindex="0">
+    <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
+         role="tooltip">
+         {{download.topology.tooltip}}
+    </div>
+</div>
+<div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{download.file}}:
+        </div>
+        <div class="exo-2-cell">
+            <div class="exo-button exo-dark-blue-fg exo-light-blue-bg">
+                <a id="skadi_designer_download_file" download=""
+                     href="">
+                    {{download}}
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="exo-row" style="visibility:hidden;" id="store_updates_row">
+        <div class="exo-2-cell">
+            {{store.label}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="button" id="store_updates_btn" value="{{store}}">
+        </div>
+    </div>
+</div>`
+
+function skadi_populate_save(design, elt) {
+    elt.innerHTML = design.localise(skadi_download_html);
+    let link = document.getElementById("skadi_designer_download_file");
+    link.appendChild(document.createTextNode("Preparing Download..."));
+    design.get_topology_store().get_save_link().then(url => {
+        link.innerHTML = "Download";
+        link.setAttribute("href", url);
+        const filename = design.metadata.filename || "topology.json";
+        link.setAttribute("download", filename);
+    });
+
+    let store_cb = design.get_topology_store().get_store_callback();
+    if (store_cb) {
+        Skadi.$("store_updates_row").style.visibility = "visible";
+        Skadi.$("store_updates_btn").addEventListener("click", (e) =>{
+            store_cb();
+        });
+    }
+
+}
+
+/* skadi/js/dialogs/load.js */
+
+let skadi_upload_html = `
+<span aria-describedby="edit-metadata-tooltip">
+    {{upload.topology}}
+</span>
+<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
+     tabindex="0">
+    <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
+         role="tooltip">
+         {{upload.topology.tooltip}}
+    </div>
+</div>
+<div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{upload.file}}:
+        </div>
+        <div class="exo-2-cell">
+            <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
+        </div>
+    </div>
+    <div class="exo-row" style="visibility:hidden;" id="restore_updates_row">
+        <div class="exo-2-cell">
+            {{restore.label}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="button" id="restore_updates_btn" value="{{restore}}">
+        </div>
+    </div>
+</div>`
+
+function skadi_populate_load(design, elt, close_fn) {
+    elt.innerHTML = design.localise(skadi_upload_html);
+    let input = document.getElementById("skadi_designer_upload_file");
+    input.addEventListener("change", async function() {
+        let file = input.files[0];
+        await design.get_topology_store().load_from(file);
+        design.metadata.filename = file.name;
+        close_fn();
+    });
+    let restore_cb = design.get_topology_store().get_restore_callback();
+    if (restore_cb) {
+        Skadi.$("restore_updates_row").style.visibility = "visible";
+        Skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
+            restore_cb();
+        });
+    }
+}
+
+/* skadi/js/dialogs/clear.js */
+
+let skadi_clear_html = `
+<span aria-describedby="clear-tooltip">
+    {{clear.topology}}?
+</span>
+<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
+     tabindex="0">
+    <div id="clear-tooltip" class="exo-help-content exo-white-bg exo-border"
+         role="tooltip">
+        {{clear.topology.tooltip}}
+    </div>
+</div>
+<div>
+<input id="clear_confirm" type="button" value="{{clear}}">
+<input id="clear_cancel" type="button" value="{{cancel}}">
+</div>
+`
+
+function skadi_populate_clear(design, elt, close_window) {
+    elt.innerHTML = design.localise(skadi_clear_html);
+    let confirm = document.getElementById("clear_confirm");
+    confirm.addEventListener("click", function() {
+        design.clear(false);
+        close_window();
+    });
+    let cancel = document.getElementById("clear_cancel");
+    cancel.addEventListener("click", function() {
+        close_window();
+    });
+}
+
+/* skadi/js/dialogs/adjust.js */
+
+let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
+    {{node.adjust}}
+</span>
+<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
+     tabindex="0">
+    <div id="adjust-tooltip" class="exo-help-content exo-white-bg exo-border"
+         role="tooltip">
+         {{node.adjust.tooltip}}
+    </div>
+</div>
+<div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{node.name}}:
+        </div>
+        <div class="exo-2-cell">
+            <input id="$edit_name_id" type="text" value="" class="exo-full-width">
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{node.description}}:
+        </div>
+        <div class="exo-2-cell">
+            <textarea id="$edit_description_id" rows="10" class="exo-full-width"></textarea>
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{node.orientation}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="number" id="$rotate_id" step="1">
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+        </div>
+        <div class="exo-1-cell">
+            <button id="$rotate_left_id">
+                <img alt="Rotate icon left" src="${icon_rotate_left}" class="exo-icon-large">
+            </button>
+        </div><div class="exo-1-cell">
+            <button id="$rotate_right_id">
+                <img alt="Rotate icon right" src="${icon_rotate_right}" class="exo-icon-large">
+            </button>
+        </div>
+    </div>
+</div>
+`
+
+function skadi_populate_adjust(design, node, elt, close_window) {
+    let edit_name_id = "edit_node_"+node.get_id()+"_name";
+    let edit_description_id = "edit_description_"+node.get_id()+"_description";
+    let rotate_id = "rotate_node_"+node.get_id();
+    let rotate_left_id = "rotate_left_node_"+node.get_id();
+    let rotate_right_id = "rotate_right_node_"+node.get_id();
+    
+    elt.innerHTML = design.localise(skadi_adjust_html)
+        .replace("$edit_name_id",edit_name_id)
+        .replace("$edit_description_id", edit_description_id)
+        .replace("$rotate_id",rotate_id)
+        .replace("$rotate_left_id",rotate_left_id)
+        .replace("$rotate_right_id",rotate_right_id);
+    
+    let name_input = document.getElementById(edit_name_id);
+    name_input.value = node.metadata["name"];
+    let description_input = document.getElementById(edit_description_id);
+    description_input.value = node.metadata["description"];
+    let rotate_input = document.getElementById(rotate_id);
+    let rotate_left_button = document.getElementById(rotate_left_id);
+    let rotate_right_button = document.getElementById(rotate_right_id);
+
+    let cb = (evt) => {
+      let new_metadata = {
+         "name": name_input.value,
+         "description": description_input.value
+      };
+      node.design.update_metadata(node.id, new_metadata, false);
+    };
+    name_input.addEventListener("change", cb);
+    description_input.addEventListener("change", cb);
+    rotate_input.value = node.get_rotation().toFixed(0);
+    rotate_input.addEventListener("change", ev=> {
+        let a = Number.parseInt(rotate_input.value);
+        node.set_rotation(a);
+        node.update_position(node.x, node.y);
+    });
+    rotate_left_button.addEventListener("click",(evt) => {
+        node.set_rotation(node.get_rotation()-15);
+        node.update_position(node.x, node.y);
+        rotate_input.value = ""+node.get_rotation();
+      });
+    rotate_right_button.addEventListener("click",(evt) => {
+      node.set_rotation(node.get_rotation()+15);
+      node.update_position(node.x, node.y);
+      rotate_input.value = ""+node.get_rotation();
+    });
+}
+
+/* skadi/js/dialogs/design_metadata.js */
+
+let skadi_design_metadata_html = `
+<span aria-describedby="edit-metadata-tooltip">
+    {{topology.metadata.editor}}
+</span>
+<div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
+     tabindex="0">
+    <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
+         role="tooltip">
+        {{topology.metadata.editor.tooltip}}
+    </div>
+</div>
+<div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{metadata.name}}:
+        </div>
+        <div class="exo-2-cell">
+            <input id="edit_metadata_name" type="text" value="" class="exo-full-width">
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{metadata.filename}}:
+        </div>
+        <div class="exo-2-cell">
+            <input id="edit_metadata_filename" type="text" value="" class="exo-full-width">
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{metadata.description}}:
+        </div>
+        <div class="exo-2-cell">
+            <textarea id="edit_metadata_description" rows="10" class="exo-full-width"></textarea>
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{metadata.authors}}:
+        </div>
+        <div class="exo-2-cell">
+            <input id="edit_metadata_authors" type="text" value="" class="exo-full-width">
+        </div>
+    </div>
+    <div class="exo-row">
+        <div class="exo-2-cell">
+            {{metadata.version}}:
+        </div>
+        <div class="exo-2-cell">
+            <input id="edit_metadata_version" type="text" value="" class="exo-full-width">
+        </div>
+    </div>
+</div>
+`
+
+function skadi_populate_design_metadata(design, elt, close_window) {
+    elt.innerHTML = design.localise(skadi_design_metadata_html);
+    let edit_metadata_name = document.getElementById("edit_metadata_name");
+    let edit_metadata_description = document.getElementById("edit_metadata_description");
+    let edit_metadata_filename = document.getElementById("edit_metadata_filename");
+    let edit_metadata_authors = document.getElementById("edit_metadata_authors");
+    let edit_metadata_version = document.getElementById("edit_metadata_version");
+    let design_metadata = design.get_design_metadata();
+    edit_metadata_name.value = design_metadata["name"] || "";
+    edit_metadata_description.value = design_metadata["description"] || "";
+    edit_metadata_filename.value = design_metadata["filename"] || "";
+    edit_metadata_authors.value = design_metadata["authors"] || "";
+    edit_metadata_version.value = design_metadata["version"] || "";
+    edit_metadata_name.addEventListener("change", (evt) => {
+       design_metadata["name"] = evt.target.value;
+       design.update_design_metadata(design_metadata);
+    });
+    edit_metadata_description.addEventListener("change", (evt) => {
+       design_metadata["description"] = evt.target.value;
+       design.update_design_metadata(design_metadata);
+    });
+    edit_metadata_filename.addEventListener("change", (evt) => {
+       design_metadata["filename"] = evt.target.value;
+       design.update_design_metadata(design_metadata);
+    });
+    edit_metadata_authors.addEventListener("change", (evt) => {
+       design_metadata["authors"] = evt.target.value;
+       design.update_design_metadata(design_metadata);
+    });
+    edit_metadata_version.addEventListener("change", (evt) => {
+       design_metadata["version"] = evt.target.value;
+       design.update_design_metadata(design_metadata);
+    });
+}
+
+/* skadi/js/dialogs/configuration.js */
+
+let skadi_configuration_header_html = `
+<h1>Package Configurations</h1>
+`
+
+let skadi_status_divs = {};
+
+let skadi_configuration_status = {};
+
+function skadi_update_configuration_status_div(package_id) {
+    let message = "";
+    let status_state = SkadiStatusStates.clear;
+    if (package_id in skadi_configuration_status) {
+        status_state = skadi_configuration_status[package_id].state;
+        message = skadi_configuration_status[package_id].message;
+    }
+    if (package_id in skadi_status_divs) {
+        let status_div = skadi_status_divs[package_id];
+        status_div.innerHTML = "";
+        let status_icon = skadi_create_icon_for_status_state(status_state);
+        if (status_icon) {
+            status_div.appendChild(status_icon);
+        }
+        if (message) {
+            let text = document.createElement("span");
+            text.appendChild(document.createTextNode(message));
+            text.setAttribute("style","vertical-align:middle;");
+            status_div.appendChild(text);
+        }
+    }
+}
+
+function skadi_close_configuration() {
+    this.skadi_status_divs = {};
+}
+
+function skadi_update_configuration_status(package_id, state, message) {
+    skadi_configuration_status[package_id] = {
+        "state": state,
+        "message": message
+    }
+    skadi_update_configuration_status_div(package_id);
+}
+
+
+
+function skadi_populate_configuration(design, elt, close_window) {
+    let header_div = document.createElement("div");
+    header_div.innerHTML = skadi_configuration_header_html;
+    elt.appendChild(header_div);
+    {
+        let select = design.get_l10n_utils().create_language_select();
+        let row = document.createElement("div");
+        row.setAttribute("class","exo-row");
+
+        let lang_cell = document.createElement("div");
+        lang_cell.setAttribute("class","exo-2-cell");
+        lang_cell.appendChild(document.createTextNode("Skadi Language"));
+        row.appendChild(lang_cell);
+
+        let l10n_cell = document.createElement("div");
+        l10n_cell.setAttribute("class","exo-2-cell");
+        l10n_cell.appendChild(select);
+        row.appendChild(l10n_cell);
+
+        elt.appendChild(row);
+    }
+
+    elt.append(document.createElement("hr"));
+    
+
+    for(let package_id in design.network.configurations) {
+        let configuration = design.network.configurations[package_id];
+        let package_type = configuration.get_package_type();
+        let l10n_utils = package_type.get_l10n_utils();
+        
+        if (!l10n_utils && !configuration.get_url()) {
+            continue;
+        }
+
+        {
+            let name = package_type.get_metadata().name;
+            let row = document.createElement("div");
+            row.setAttribute("class","exo-row");
+
+            let label_cell = document.createElement("div");
+            label_cell.setAttribute("class","exo-2-cell");
+            label_cell.appendChild(document.createTextNode("Package Name"));
+            row.appendChild(label_cell);
+
+            let name_cell = document.createElement("div");
+            name_cell.setAttribute("class","exo-2-cell");
+            name_cell.appendChild(document.createTextNode(name));
+            row.appendChild(name_cell);
+            elt.appendChild(row);
+        }
+
+        if (l10n_utils) {
+            
+            let select = l10n_utils.create_language_select();
+            let row = document.createElement("div");
+            row.setAttribute("class","exo-row");
+
+            let lang_cell = document.createElement("div");
+            lang_cell.setAttribute("class","exo-2-cell");
+            lang_cell.appendChild(document.createTextNode("Language"));
+            row.appendChild(lang_cell);
+
+            let l10n_cell = document.createElement("div");
+            l10n_cell.setAttribute("class","exo-2-cell");
+            l10n_cell.appendChild(select);
+            row.appendChild(l10n_cell);
+
+            elt.appendChild(row);
+        }
+        
+        if (configuration.get_url()) {
+            let row = document.createElement("div");
+            row.setAttribute("class","exo-row");
+
+            let cfg_cell = document.createElement("div");
+            cfg_cell.setAttribute("class","exo-2-cell");
+            cfg_cell.appendChild(document.createTextNode("Package Configuration"));
+            row.appendChild(cfg_cell);
+
+            let btn = document.createElement("input");
+            btn.setAttribute("type","button");
+            btn.setAttribute("value", "Open...");
+            btn.addEventListener("click", (ev) => {
+                design.open_configuration(package_id);
+            });
+            
+            let btn_cell = document.createElement("div");
+            btn_cell.setAttribute("class","exo-2-cell");
+            btn_cell.appendChild(btn);
+            row.appendChild(btn_cell);
+
+            elt.appendChild(row);
+
+            let status_row = document.createElement("div");
+            status_row.setAttribute("class","exo-row skadi_status");
+            
+            
+            let st_cell = document.createElement("div");
+            st_cell.setAttribute("class","exo-2-cell");
+            st_cell.appendChild(document.createTextNode("Configuration Status"));
+            status_row.appendChild(st_cell);
+
+            
+            let status_cell = document.createElement("div");
+            status_cell.setAttribute("class","exo-2-cell");
+            status_cell.setAttribute("style","display:inline-block;");
+
+            status_row.appendChild(status_cell);
+
+            skadi_status_divs[package_id] = status_cell;
+            skadi_update_configuration_status_div(package_id);
+
+            elt.appendChild(status_row);
+            
+        }
+    }
+}
+
+
+
 /* skadi/js/controls/button.js */
 
 class SkadiButton {
 
-  constructor(design, x,y,width,height,icon_url,onclick,tooltip) {
+  constructor(design, x,y,width,height,icon_url,onclick,tooltip_text) {
     this.design = design;
     this.x = x;
     this.y = y;
@@ -2901,7 +3079,8 @@ class SkadiButton {
     this.onclick = onclick;
     this.fill = "";
     this.enabled = true;
-    this.tooltip = tooltip;
+    this.tooltip_text = tooltip_text;
+    this.tooltip = null;
   }
 
   set_fill(fill) {
@@ -2972,8 +3151,8 @@ class SkadiButton {
       }
     }
     this.button.on("click", onclick);
-    if (this.tooltip) {
-        new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),this.tooltip);
+    if (this.tooltip_text) {
+        this.set_tooltip(this.tooltip_text);
     }
   }
 
@@ -2983,6 +3162,15 @@ class SkadiButton {
 
   get_position() {
     return { "x":this.x, "y":this.y };
+  }
+
+  set_tooltip(text) {
+    this.tooltip_text = text;
+    if (this.tooltip) {
+      this.tooltip.update_text(text);
+    } else {
+      this.tooltip = new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),text);
+    }
   }
 
   update_position(x,y) {
@@ -3116,8 +3304,8 @@ let GRID_SNAP = 20;
 
 class SkadiDesigner extends SkadiCore {
 
-    constructor(element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
-        super(element_id, topology_store, node_factory, configuration_factory);
+    constructor(l10n_utils, schema, element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
+        super(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory);
         this.width = width;
         this.height = height;
         this.is_acyclic = is_acyclic;
@@ -3197,25 +3385,25 @@ class SkadiDesigner extends SkadiCore {
         button_x += this.button_size + this.button_margin;
 
         this.help_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_help_purple, () => { this.open_about(); }, "Help/About");
+            icon_help_purple, () => { this.open_about(); }, "");
         this.help_btn.set_fill("white");
         this.help_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.clear_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_delete, () => { this.open_clear(); }, "Clear Design");
+            icon_delete, () => { this.open_clear(); }, "");
         this.clear_btn.set_fill("white");
         this.clear_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_edit_purple, () => { this.open_edit_design_metadata(); }, "Edit Design Metadata");
+            icon_edit_purple, () => { this.open_edit_design_metadata(); }, "");
         this.edit_btn.set_fill("white");
         this.edit_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
         this.configuration_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
-            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "Edit Configurations");
+            icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "");
         this.configuration_btn.set_fill("white");
         this.configuration_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
@@ -3267,6 +3455,17 @@ class SkadiDesigner extends SkadiCore {
         this.load_dialogue = null;
         this.save_dialogue = null;
         this.configuration_dialogue = null;
+        this.localisation_updated();
+        this.l10n_utils.add_language_update_listener(language => {
+            this.localisation_updated();
+        });
+    }
+
+    localisation_updated() {
+        this.help_btn.set_tooltip(this.localise("about.tooltip"));
+        this.clear_btn.set_tooltip(this.localise("clear.topology.tooltip"));
+        this.edit_btn.set_tooltip(this.localise("topology.metadata.editor.tooltip"));
+        this.configuration_btn.set_tooltip(this.localise("configuration.edit.tooltip"));
     }
 
     toggle_pause() {
@@ -3369,7 +3568,7 @@ class SkadiDesigner extends SkadiCore {
             }
         }
         let node = this.network.get_node(node_id);
-        let title = node.get_type().get_label();
+        let title = node.metadata.name;
         let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
                 delete this.windows[key];
                 if (close_callback) {
@@ -3753,7 +3952,6 @@ class SkadiNode extends SkadiCoreNode {
     } else {
       this.style = "";
     }
-    this.REMOVE_ACTION = "Remove";
 
     this.active = active;
     this.port_radius = 12;
@@ -3790,12 +3988,6 @@ class SkadiNode extends SkadiCoreNode {
     this.display_tooltips = true;
 
     this.commands = [];
-
-    if (active) {
-      this.register_command_window("adjust","Adjust...", (root_elt) => {
-          this.open_adjust_editor(root_elt);
-      }, null, 500, 500);
-    }
   }
 
   get_rotation() {
@@ -3818,15 +4010,13 @@ class SkadiNode extends SkadiCoreNode {
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
 
-    this.register_command_window("open", "Open...",
+    this.register_command_window("open", "{{node.menu.open}}",
       (elt) => {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
           this.iframe.setAttribute("src",html_url);
-          this.iframe.setAttribute("width",""+window_width-20);
-          this.iframe.setAttribute("height",""+window_height-20);
           this.iframe.addEventListener("load", (evt) => {
-            this.wrapper.open(this.iframe.contentWindow, window_width, window_width);
+            this.wrapper.open(this.iframe.contentWindow);
           });
           elt.appendChild(this.iframe);
       },
@@ -3834,17 +4024,16 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.close();
       }, window_width, window_height,
       (w,h) => {
-          this.iframe.setAttribute("width",""+w-20);
-          this.iframe.setAttribute("height",""+h-20);
+          this.iframe.setAttribute("width",""+w-10);
+          this.iframe.setAttribute("height",""+h-10);
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window_tab("open_in_tab", "Open in Tab...",this.node_type.get_html_url(),
+    this.register_command_window_tab("open_in_tab", "{{node.menu.opentab}}",this.node_type.get_html_url(),
       (w) => {
         if (w) {
           let window_width = w.innerWidth;
           let window_height = w.innerHeight;
-          console.log("Opening window");
           this.wrapper.open(w, window_width, window_height);
         }
       },
@@ -3854,6 +4043,11 @@ class SkadiNode extends SkadiCoreNode {
       (w,h) => {
           this.wrapper.resize(w,h);
       });
+
+    this.register_command_window("adjust","{{node.menu.adjust}}", (root_elt) => {
+        this.open_adjust_editor(root_elt);
+      }, null, 700, 500);
+      
 
     return true;
   }
@@ -3888,32 +4082,7 @@ class SkadiNode extends SkadiCoreNode {
   }
 
   open_adjust_editor(root_elt) {
-    let root = new SkadiX3Selection([root_elt]);
-    let name_heading = root.append("h3");
-    name_heading.text("Name");
-    let name_input = root.append("input");
-    name_input.attr("type","text");
-    name_input.node().value = this.metadata["name"];
-    let description_heading = root.append("h3");
-    description_heading.text("Description");
-    let description_input = root.append("textarea");
-    description_input.node().value = this.metadata["description"];
-    root.append("p");
-    let rotate_button = root.append("input").attr("value","rotate").attr("type","button");
-
-    let cb = (evt) => {
-      let new_metadata = {
-         "name": name_input.node().value,
-         "description": description_input.node().value
-      };
-      this.design.update_metadata(this.id, new_metadata, false);
-    };
-    name_input.on("change", cb);
-    description_input.on("change", cb);
-    rotate_button.on("click",(evt) => {
-      this.set_rotation(this.get_rotation()+45);
-      this.update_position(this.x, this.y);
-    });
+    skadi_populate_adjust(this.design, this, root_elt, null);
   }
 
   add_port(key, port_type, is_input) {
@@ -3942,8 +4111,6 @@ class SkadiNode extends SkadiCoreNode {
   get_group() {
     return this.grp;
   }
-
-
 
   draw(parent) {
     let container = parent ? parent : this.design.get_node_group();
@@ -3990,10 +4157,12 @@ class SkadiNode extends SkadiCoreNode {
 
     this.isize = 2 * this.r * Math.sin(Math.PI / 4);
 
-    let icon_name = this.node_type.get_display().icon;
-    if (icon_name) {
+    let icon_url = this.node_type.get_icon_url();
+    if (icon_url) {
+      let localised_icon_url = this.node_type.get_package_type().localise_url(icon_url);
+      let full_icon_url = this.node_type.get_package_type().get_resource_url(localised_icon_url);
       this.image = this.grp2.append("image")
-          .attr("href", this.design.get_schema().get_resource_url(this.node_type.get_package_id(),icon_name))
+          .attr("href", full_icon_url)
           .attr("x", this.x - this.isize / 2)
           .attr("y", this.y - this.isize / 2)
           .attr("width", this.isize)
@@ -4003,9 +4172,8 @@ class SkadiNode extends SkadiCoreNode {
       this.image = null;
     }
 
-
     this.text = this.grp.append("text");
-    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_label());
+    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_name());
 
     this.dragged = false;
     if (this.active) {
@@ -4052,14 +4220,14 @@ class SkadiNode extends SkadiCoreNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
+        mitems.push(new SkadiTextMenuDialogue.MenuItem("{{node.menu.remove}}", () => {
           this.design.remove(this.get_id());
         }));
 
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "Edit Node");
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "node.menu.title");
         tm.open();
       };
 
@@ -4506,10 +4674,7 @@ class SkadiNode extends SkadiCoreNode {
       let textw = bbox.width;
       let texth = bbox.height;
 
-
-
       let pos = this.get_satellite_position(false, textw, texth);
-      console.log(textw,texth,pos.x,pos.y);
       this.text.attr("x",pos.x+textw/2).attr("y",pos.y+texth/2);
     } catch(ex) {
       // getBBox() fails if element is not visible
@@ -4741,12 +4906,7 @@ class SkadiPort {
     }
     this.r = 5;
 
-    this.label = this.link_type_id;
     this.grp = null;
-  }
-
-  get_label() {
-    return this.label;
   }
 
   get_link_type() {
@@ -4994,13 +5154,16 @@ class SkadiConfiguration extends SkadiCoreConfiguration {
       this.iframe = iframe;
       this.iframe.setAttribute("width",""+w-20);
       this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.open(iframe.contentWindow, w, h);
+      this.wrapper.open(iframe.contentWindow);
+      this.wrapper.resize(w-20, h-20);
   }
 
   resize(w,h) {
-      this.iframe.setAttribute("width",""+w-20);
-      this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.resize(w,h);
+      if (this.iframe) {
+          this.iframe.setAttribute("width", "" + w - 20);
+          this.iframe.setAttribute("height", "" + h - 20);
+          this.wrapper.resize(w, h);
+      }
   }
 
   close() {
@@ -5085,6 +5248,7 @@ class SkadiNodeService {
         this.core = node.core;
         this.node_id = node.id;
         this.node_type = node.node_type;
+        this.l10n_utils = this.node_type.get_package_type().get_l10n_utils();
         this.wrapper = null;
     }
 
@@ -5100,19 +5264,19 @@ class SkadiNodeService {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    add_event_handler(element_id, event_type, callback, event_transform) {
+    page_add_event_handler(element_id, event_type, callback, event_transform) {
         this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
     }
 
-    set_attributes(element_id, attributes) {
+    page_set_attributes(element_id, attributes) {
         this.wrapper.set_attributes(element_id, attributes);
     }
 
-    send_message(message) {
+    page_send_message(message) {
         this.wrapper.send_message(message);
     }
 
-    set_message_handler(handler) {
+    page_set_message_handler(handler) {
         this.wrapper.set_message_handler(handler);
     }
 
@@ -5121,15 +5285,18 @@ class SkadiNodeService {
     }
 
     set_status_info(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.info, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.error, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_node_status(this.node_id, SkadiStatusStates.error, localised_msg);
     }
 
     clear_status() {
@@ -5151,7 +5318,6 @@ class SkadiNodeService {
     request_execution() {
         this.core.request_execution(this.node_id);
     }
-
 }
 
 
@@ -5159,9 +5325,10 @@ class SkadiNodeService {
 
 class SkadiWrapper {
 
-    constructor(target, services) {
+    constructor(target, services, l10n_utils) {
         this.target = target;
         this.services = services;
+        this.l10n_utils = l10n_utils;
         this.instance = null;
         this.window = null;
         this.event_handlers = [];
@@ -5234,9 +5401,17 @@ class SkadiWrapper {
     send_set_attributes(element_id, attributes) {
         let msg = {
             "type": "set_attributes",
-            "element_id": element_id,
-            "attributes": attributes
+            "element_id": element_id
         }
+        if (this.l10n_utils) {
+            msg.attributes = {};
+            for (let attribute_name in attributes) {
+                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
+            }
+        } else {
+            msg.attributes = attributes;
+        }
+
         this.send_to_window(msg);
     }
 
@@ -5263,7 +5438,6 @@ class SkadiWrapper {
     }
 
     recv_from_window(msg) {
-        console.log("Recv from window: "+JSON.stringify(msg));
         switch(msg.type) {
             case "event":
                 this.handle_event(msg["element_id"],msg["event_type"],msg["value"]);
@@ -5274,8 +5448,7 @@ class SkadiWrapper {
         }
     }
 
-
-    open(w, width, height) {
+    open(w) {
         this.window = w;
         this.pending_messages = [];
         window.addEventListener("message", (event) => {
@@ -5283,9 +5456,9 @@ class SkadiWrapper {
                 this.recv_from_window(event.data);
             }
         });
-        if (this.instance.open) {
+        if (this.instance.page_open) {
             try {
-                this.instance.open(width, height);
+                this.instance.page_open();
             } catch(e) {
                 console.error(e);
             }
@@ -5302,9 +5475,9 @@ class SkadiWrapper {
     }
 
     resize(width,height) {
-        if (this.instance.resize) {
+        if (this.instance.page_resize) {
             try {
-                this.instance.resize(width, height);
+                this.instance.page_resize(width, height);
             } catch(e) {
                 console.error(e);
             }
@@ -5313,32 +5486,14 @@ class SkadiWrapper {
 
     close() {
         this.window = null;
-        if (this.instance.close) {
+        if (this.instance.page_close) {
             try {
-                this.instance.close();
+                this.instance.page_close();
             } catch(e) {
                 console.error(e);
             }
         }
         this.pending_messages = [];
-    }
-
-    reset_execution() {
-        if (this.instance.reset_execution) {
-            try {
-                this.instance.reset_execution();
-            } catch(e) {
-                console.error(e);
-            }
-        }
-    }
-
-    async execute(inputs) {
-        if (this.instance.execute) {
-            return await this.instance.execute(inputs);
-        } else {
-            return {};
-        }
     }
 }
 
@@ -5349,6 +5504,7 @@ class SkadiConfigurationService {
     constructor(configuration) {
         this.core = configuration.core;
         this.package_type = configuration.package_type;
+        this.l10n_utils = this.package_type.get_l10n_utils();
         this.package_id = this.package_type.get_id();
         this.wrapper = null;
     }
@@ -5365,19 +5521,19 @@ class SkadiConfigurationService {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    add_event_handler(element_id, event_type, callback, event_transform) {
+    page_add_event_handler(element_id, event_type, callback, event_transform) {
         this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
     }
 
-    set_attributes(element_id, attributes) {
+    page_set_attributes(element_id, attributes) {
         this.wrapper.set_attributes(element_id, attributes);
     }
 
-    send_message(message) {
+    page_send_message(message) {
         this.wrapper.send_message(message);
     }
 
-    set_message_handler(handler) {
+    page_set_message_handler(handler) {
         this.wrapper.set_message_handler(handler);
     }
 
@@ -5386,15 +5542,18 @@ class SkadiConfigurationService {
     }
 
     set_status_info(status_msg) {
-        this.core.update_configuration_status(this.package_id, SkadiStatusStates.info, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
-        this.core.update_configuration_status(this.package_id, SkadiStatusStates.warning, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
-        this.core.update_configuration_status(this.package_id, SkadiStatusStates.error, status_msg);
+        let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
+        this.core.update_configuration_status(this.package_id, SkadiStatusStates.error, localised_msg);
     }
 
     clear_status() {
@@ -5402,13 +5561,12 @@ class SkadiConfigurationService {
     }
 
     resolve_url(url) {
-        return this.get_package_type().get_resource_url(url);
+        return this.package_type.get_resource_url(url);
     }
 
     create_data_uri(data, mime_type) {
         return "data:"+mime_type+";base64," + btoa(data);
     }
-
 }
 
 
@@ -5416,18 +5574,18 @@ class SkadiConfigurationService {
 
 class SkadiNodeType {
 
-  constructor(nodeTypeId, packageType, schema) {
-    this.id = packageType.get_qualified_id(nodeTypeId);
-    this.packageType = packageType;
+  constructor(nodeTypeId, package_type, schema) {
+    this.id = package_type.get_qualified_id(nodeTypeId);
+    this.package_type = package_type;
     this.schema = schema;
-    this.packageId = packageType.get_id();
+    this.package_id = package_type.get_id();
     this.enabled = schema["enabled"] !== false;
     let metadata = schema["metadata"] || { "name": nodeTypeId, "description":""};
-    let display = schema["display"] || { "corners": 4, "icon": "", "html": "" };
+    let display = schema["display"] || { "corners": 4, "icon": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
     this.page = schema["page"] || {};
-    this.html_url = this.page.url ? this.packageType.get_resource_url(this.page.url) : "";
+    this.html_url = this.page.url ? this.package_type.get_resource_url(this.page.url) : "";
 
     this.classname = schema["classname"] || {};
 
@@ -5450,11 +5608,19 @@ class SkadiNodeType {
     this.hide = false;
     this.display = display;
 
-    this.configure_package_type(this.packageType);
+    this.configure_package_type(this.package_type);
+  }
+
+  get_name() {
+    return this.package_type.localise(this.metadata.name);
+  }
+
+  get_description() {
+    return this.package_type.localise(this.metadata.description);
   }
 
   get_html_url() {
-    return this.html_url;
+    return this.package_type.localise_url(this.html_url);
   }
 
   get_schema() {
@@ -5469,15 +5635,15 @@ class SkadiNodeType {
     return this.classname;
   }
 
-  configure_package_type(packageType) {
-    let pdisplay = packageType.get_display();
+  configure_package_type(package_type) {
+    let pdisplay = package_type.get_display();
     for (let key in pdisplay) {
       if (!this.display[key]) {
         this.display[key] = pdisplay[key];
       }
     }
     if ("icon" in this.display) {
-      this.image = packageType.get_url() + "/" + this.display["icon"];
+      this.image = package_type.get_url() + "/" + this.display["icon"];
     } else {
       this.image = "";
     }
@@ -5492,12 +5658,15 @@ class SkadiNodeType {
     return this.id;
   }
 
-  get_label() {
-    return this.metadata["name"];
-  }
-
   get_type() {
     return this.id;
+  }
+
+  get_icon_url() {
+    if (this.display) {
+      return this.display.icon;
+    }
+    return undefined;
   }
 
   get_display() {
@@ -5505,11 +5674,11 @@ class SkadiNodeType {
   }
 
   get_package_id() {
-    return this.packageId;
+    return this.package_id;
   }
 
   get_package_type() {
-    return this.packageType;
+    return this.package_type;
   }
 
   is_enabled() {
@@ -5524,13 +5693,11 @@ class SkadiNodeType {
 
 class SkadiLinkType {
   
-  constructor(linkTypeId, packageType, schema) {
+  constructor(link_type_id, package_type, schema) {
     let metadata = schema["metadata"] || { "name": "?", "description":"?"};
     let display = schema["display"] || { "colour": "blue" };
-
-
-    this.id = packageType.get_qualified_id(linkTypeId);
-    this.packageId = packageType.get_id();
+    this.id = package_type.get_qualified_id(link_type_id);
+    this.package_id = package_type.get_id();
     this.name = metadata.name;
     this.description = metadata.description;
     this.colour = display.colour;
@@ -5541,7 +5708,7 @@ class SkadiLinkType {
   }
 
   get_package_id() {
-    return this.packageId;
+    return this.package_id;
   }
 
   get_name() {
@@ -5568,8 +5735,18 @@ class SkadiPackageType {
     this.id = id;
     this.metadata = obj["metadata"];
     this.display = obj["display"];
+    this.l10n = obj["l10n"];
     this.base_url = url.split("/").slice(0,-1).join("/");
     this.configuration = obj["configuration"];
+    this.l10n_utils = null;
+  }
+
+  async load_l10n() {
+    if (this.l10n) {
+      this.l10n_utils = new SkadiL10NUtils("package."+this.id, this.base_url);
+      this.l10n_utils.configure_for_package(this.l10n);
+      await this.l10n_utils.initialise();
+    }
   }
 
   get_id() {
@@ -5577,11 +5754,11 @@ class SkadiPackageType {
   }
 
   get_name() {
-    return this.metadata["name"];
+    return this.localise(this.metadata["name"]);
   }
 
   get_description() {
-    return this.metadata["description"];
+    return this.localise(this.metadata["description"]);
   }
 
   get_metadata() {
@@ -5621,6 +5798,26 @@ class SkadiPackageType {
 
   get_configuration() {
     return this.configuration;
+  }
+
+  get_l10n_utils() {
+      return this.l10n_utils;
+  }
+
+  localise(txt) {
+    if (this.l10n_utils) {
+      return this.l10n_utils.localise(txt);
+    } else {
+      return txt;
+    }
+  }
+
+  localise_url(url) {
+    if (this.l10n_utils) {
+      return url.replace("{language}",this.l10n_utils.get_language());
+    } else {
+      return url;
+    }
   }
 }
 
@@ -5702,21 +5899,22 @@ class SkadiSchema {
             throw new SkadiSchemaError("Invalid value for schema executor: found \""+executor+"\", expecting \"javascript\"");
         }
 
-        let packageType = new SkadiPackageType(id, url, obj);
-        this.package_types[packageType.get_id()] = packageType;
+        let package_type = new SkadiPackageType(id, url, obj);
+        await package_type.load_l10n("");
+        this.package_types[package_type.get_id()] = package_type;
 
 
         let resources = [];
 
         if (obj["dependencies"]) {
-            obj["dependencies"].forEach(item => resources.push(packageType.get_resource_url(item)));
+            obj["dependencies"].forEach(item => resources.push(package_type.get_resource_url(item)));
         }
 
         if (obj.node_types) {
             for(let nt_id in obj.node_types) {
                 let nt = obj.node_types[nt_id];
                 if (nt["dependencies"]) {
-                    nt["dependencies"].forEach(item => resources.push(packageType.get_resource_url(item)));
+                    nt["dependencies"].forEach(item => resources.push(package_type.get_resource_url(item)));
                 }
             }
         }
@@ -5737,23 +5935,23 @@ class SkadiSchema {
             throw new SkadiSchemaError("Unable to load package resources: "+JSON.stringify(failed_resources))
         }
 
-        let nodeTypes = obj["node_types"];
-        for(let node_id in nodeTypes) {
-            let nt = nodeTypes[node_id];
-            let nodeType = new SkadiNodeType(node_id, packageType, nt);
-            if (nodeType.is_enabled()) {
-                this.node_types[nodeType.get_id()] = nodeType;
+        let node_types = obj["node_types"];
+        for(let node_id in node_types) {
+            let nt = node_types[node_id];
+            let node_type = new SkadiNodeType(node_id, package_type, nt);
+            if (node_type.is_enabled()) {
+                this.node_types[node_type.get_id()] = node_type;
             }
         }
 
-        let linkTypes = obj["link_types"];
-        for(let link_id in linkTypes) {
-            let lt = linkTypes[link_id];
-            let linkType = new SkadiLinkType(link_id, packageType, lt);
-            this.link_types[linkType.get_id()] = linkType;
+        let link_types = obj["link_types"];
+        for(let link_id in link_types) {
+            let lt = link_types[link_id];
+            let link_type = new SkadiLinkType(link_id, package_type, lt);
+            this.link_types[link_type.get_id()] = link_type;
         }
 
-        return packageType;
+        return package_type;
     }
 
     get_resource_url(package_id, relative_path) {
@@ -5814,45 +6012,127 @@ skadi_application_status_areas = {};
 
 class SkadiApplication extends SkadiCore {
 
-    constructor(element_id, node_factory, configuration_factory) {
-        super(element_id, null, node_factory, configuration_factory);
+    constructor(l10n_utils, schema, element_id, node_factory, configuration_factory) {
+        super(l10n_utils, schema, element_id, null, node_factory, configuration_factory);
     }
 
     open_display() {
         let configuration_list = this.network.get_configuration_list();
         configuration_list.map(package_id => {
-            let e = document.createElement("p");
-            e.appendChild(document.createTextNode("Package:"+package_id));
-            this.div.node().appendChild(e);
+            let configuration = this.get_network().get_configuration(package_id);
+            this.embed_configuration(package_id,configuration);
         });
         let node_list = this.get_network().get_node_list();
         node_list.map(node_id => {
             let node = this.get_network().get_node(node_id);
-            let url = node.get_type().get_html_url();
-            let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
-                    .append("ul").append("li").attr("role","treeitem");
-            let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
-            let label = li.append("label").text(node.get_metadata().name);
-
-            skadi_application_status_areas[node_id] = label.append("span");
-            skadi_application_status_areas[node_id].attr("class","status_label");
-            let div = li.append("div");
-            let iframe = div.append("iframe").attr("class", "skadi_iframe")
-                .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
-            iframe.addEventListener("load", (ev) => {
-               node.get_wrapper().open(iframe.contentWindow,null,null);
-            });
-            this.div.append("hr");
-            if (node_id in skadi_application_statuses) {
-                let status = skadi_application_statuses[node_id];
-                this.update_status_area(node_id, status.state, status.status_message);
-            }
+            this.embed_node(node_id,node);
         });
+    }
+
+    embed_configuration(package_id,configuration) {
+        let l10n_utils = configuration.get_package_type().get_l10n_utils();
+
+        let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
+            .append("ul").append("li").attr("role","treeitem");
+        let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
+        let label = li.append("label").text(configuration.get_package_type().get_metadata().name);
+        
+        skadi_application_status_areas[package_id] = label.append("span");
+        skadi_application_status_areas[package_id].attr("class","status_label");
+        
+        let div = li.append("div");
+
+        if (l10n_utils) {
+            let select_elt = l10n_utils.create_language_select();
+            div.node().appendChild(select_elt);   
+        }
+
+        let url = configuration.get_url();
+        if (url) {
+            let content_div = div.append("div");
+            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration));
+        }
+
+        if (!url && !l10n_utils) {
+            input.attr("disabled","disabled");
+        }        
+
+        this.div.append("hr");
+        if (package_id in skadi_application_statuses) {
+            let status = skadi_application_statuses[package_id];
+            this.update_status_area(package_id, status.state, status.status_message);
+        }
+    }
+
+    embed_node(node_id,node) {
+        let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
+            .append("ul").append("li").attr("role","treeitem");
+        let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
+        let label = li.append("label").text(node.get_metadata().name);
+        let div = li.append("div");
+
+        let url = node.get_type().get_html_url();
+        if (url) {
+            input.node().addEventListener("change",this.create_node_openclose_callback(div,node));
+        }
+
+        skadi_application_status_areas[node_id] = label.append("span");
+        skadi_application_status_areas[node_id].attr("class","status_label");
+        
+        this.div.append("hr");
+        if (node_id in skadi_application_statuses) {
+            let status = skadi_application_statuses[node_id];
+            this.update_status_area(node_id, status.state, status.status_message);
+        }
+    }
+
+    create_configuration_openclose_callback(div,configuration) {
+        return (evt) => {
+            if (evt.target.checked) {
+                // open the configuration in an iframe
+                let url = configuration.get_url();
+                let iframe = div.append("iframe").attr("class", "skadi_iframe")
+                    .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
+                iframe.addEventListener("load", (ev) => {
+                    configuration.get_wrapper().open(iframe.contentWindow,null,null);
+                });
+            } else {
+                // close the configuration
+                configuration.get_wrapper().close();
+                div.html("");
+            }
+        }
+    }
+
+
+    create_node_openclose_callback(div,node) {
+        return (evt) => {
+            if (evt.target.checked) {
+                // open the node in an iframe
+                let url = node.get_type().get_html_url();
+                let iframe = div.append("iframe").attr("class", "skadi_iframe")
+                    .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
+                iframe.addEventListener("load", (ev) => {
+                    node.get_wrapper().open(iframe.contentWindow,null,null);
+                });
+            } else {
+                // close the node
+                node.get_wrapper().close();
+                div.html("");
+            }
+        }
     }
 
     update_node_status(id, state, status_message) {
         skadi_application_statuses[id] = { "state":state, "status_message":status_message };
         this.update_status_area(id, state, status_message);
+        super.update_node_status(id, state, status_message);
+    }
+
+    update_configuration_status(id, state, status_message) {
+        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
+        this.update_status_area(id, state, status_message);
+        super.update_configuration_status(id, state, status_message);
     }
 
     update_status_area(id, state, status_message) {
@@ -5873,10 +6153,14 @@ class SkadiApplication extends SkadiCore {
 
 class SkadiApi {
 
-
     constructor() {
         this.schema = null;
         this.instance = null; // designer or application
+    }
+
+    async load_l10n(api_base_url) {
+        this.l10n_utils = new SkadiL10NUtils("api",api_base_url+"/l10n");
+        await this.l10n_utils.initialise();
     }
 
     set_instance(designer_or_application) {
@@ -5900,7 +6184,6 @@ class SkadiApi {
         for (let idx = 0; idx < package_urls.length; idx++) {
             packages.push(await loadPackageFromUrl(package_urls[idx],this.schema));
         }
-        this.instance.set_schema(this.schema);
         return packages;
     }
 
@@ -5918,6 +6201,10 @@ class SkadiApi {
 
     get_schema() {
         return this.schema;
+    }
+
+    get_l10n_utils() {
+        return this.l10n_utils;
     }
 
     set_graph_executor(executor) {
@@ -5973,6 +6260,13 @@ class SkadiDesignerApi extends SkadiApi {
 
     /**
      * Create a skadi graphical editor
+     */
+    constructor() {
+        super();   
+    }
+
+    /**
+     * Initialise skadi graphical editor
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Number} canvas_width - the width of the canvas area
@@ -5982,15 +6276,14 @@ class SkadiDesignerApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-                node_factory, configuration_factory) {
-        super();
+    init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        node_factory, configuration_factory) {
         topology_store = topology_store || new TopologyStore(this);
-        this.design = new SkadiDesigner(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        this.design = new SkadiDesigner(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
             node_factory, configuration_factory);
         this.set_instance(this.design);
+        super.init();
     }
-
 
     load(from_obj, supress_events) {
         this.design.clear(supress_events);
@@ -6089,15 +6382,22 @@ class SkadiViewApi extends SkadiApi {
 
     /**
      * Create a skadi application view
+     */
+    constructor() {
+        super();    
+    }
+
+    /**
+     * Initialise skadi application view
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(element_id, node_factory, configuration_factory) {
-        super();
-        this.application = new SkadiApplication(element_id, node_factory, configuration_factory);
+    init(element_id, node_factory, configuration_factory) {
+        this.application = new SkadiApplication(this.l10n_utils, this.schema, element_id, node_factory, configuration_factory);
         this.set_instance(this.application);
+        super.init();
     }
 
     /**
@@ -6105,10 +6405,14 @@ class SkadiViewApi extends SkadiApi {
      *
      * @param {string} topology_url - the topology to load
      */
-    async load_topology(topology_url) {
-        return await fetch(topology_url)
-            .then(response => response.json())
-            .then(topology => this.application.deserialise(topology, true));
+    async load_topology(topology) {
+        if (typeof topology === "string") {
+            return await fetch(topology)
+                .then(response => response.json())
+                .then(topology => this.load_topology_object(topology));
+        } else {
+            this.application.deserialise(topology, true);
+        }
     }
 
     add_node_event_handler(node_event_type, handler) {
@@ -6120,8 +6424,7 @@ class SkadiViewApi extends SkadiApi {
     add_design_event_handler(design_event_type, handler) {
     }
 
-    init() {
-        super.init();
+    open() {
         this.application.open_display();
     }
 }
@@ -6132,6 +6435,9 @@ class SkadiViewApi extends SkadiApi {
 
 
 /* skadi/js/start-skadi.js */
+
+let skadi_api_home_url = document.currentScript.src.split("/").slice(0,-1).join("/");
+
 
  /**
   * Asynchronous function to create a skadi graphical editor widget
@@ -6151,10 +6457,13 @@ async function start_skadi_designer(element_id, schema_urls, canvas_width, canva
         is_acyclic = true;
     }
 
-    let skadi_instance = new SkadiDesignerApi(element_id || "canvas_container_id",
-        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, is_acyclic, topology_store, node_factory, configuration_factory);
+    let skadi_instance = new SkadiDesignerApi();
+    await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
-    skadi_instance.init();
+    skadi_instance.init(element_id || "canvas_container_id",
+        canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, 
+        canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, 
+        is_acyclic, topology_store, node_factory, configuration_factory);
     return skadi_instance;
 }
 
@@ -6168,16 +6477,127 @@ async function start_skadi_designer(element_id, schema_urls, canvas_width, canva
   * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
 async function start_skadi_application(element_id, schema_urls, topology_url, node_factory, configuration_factory) {
-
-    let skadi_instance = new SkadiViewApi(element_id, node_factory, configuration_factory);
+    let skadi_instance = new SkadiViewApi();
+    await skadi_instance.load_l10n(skadi_api_home_url);
     await skadi_instance.load_schema(schema_urls);
+    skadi_instance.init(element_id, node_factory, configuration_factory);
     if (topology_url) {
         await skadi_instance.load_topology(topology_url);
     }
-    skadi_instance.init();
+    skadi_instance.open();
     return skadi_instance;
 }
 
+
+
+
+/* skadi/js/utils/l10n_utils.js */
+
+class SkadiL10NUtils {
+
+    constructor(id, l10n_folder_url) {
+        this.id = id;
+        this.l10n_folder_url = l10n_folder_url;
+        this.metadata = null;
+        this.bundle = {};
+        this.language = "";
+        this.language_update_listeners = [];
+    }
+
+    configure_for_package(package_l10n) {
+        this.metadata = package_l10n;
+    }
+
+    async initialise() {
+        if (this.metadata === null) {
+            this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
+        }
+        let language = window.localStorage.getItem("skadi.settings.l10n."+this.id+".language") || this.metadata.default_language;
+        await this.set_language(language); 
+    }
+
+    async set_language(language) {
+        if (language === "" || !(language in this.metadata.languages)) {
+            language = this.metadata.default_language;
+        }
+        this.bundle = {};
+        if ("bundle_url" in this.metadata.languages[language]) {
+            let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
+            this.bundle = await fetch(bundle_url).then(r => r.json());
+        }
+        window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
+        this.language = language;
+        this.language_update_listeners.forEach((callback) => callback(language));
+    }
+
+    get_language() {
+        return this.language;
+    }
+
+    get_languages() {
+        let key_name_list = [];
+        for(let language_key in this.metadata.languages) {
+            key_name_list.push([language_key,this.metadata.languages[language_key].name]);
+        }
+        return key_name_list;
+    }
+
+    localise(input) {
+        // for empty bundles, localise returns the input
+        if (Object.keys(this.bundle).length == 0) {
+            return input;
+        }
+        // treat the input as possibly containing embedded keys, delimited by {{ and }}, 
+        // for example "say {{hello}}" embeds they key hello
+        // substitute any embedded keys and the surrounding delimiters with their values, if the key is present in the bundle
+        let idx = 0;
+        let s = "";
+        while(idx<input.length) {
+            if (input.slice(idx, idx+2) === "{{") {
+                let startidx = idx+2;
+                idx += 2;
+                while(idx<input.length) {
+                    if (input.slice(idx,idx+2) === "}}") {
+                        let token = input.slice(startidx,idx);
+                        if (token in this.bundle) {
+                            token = this.bundle[token];    
+                        } 
+                        s += token;
+                        idx += 2;
+                        break;
+                    } else {
+                        idx += 1;
+                    }
+                }
+            } else {
+                s += input.charAt(idx);
+                idx++;
+            }
+        }
+        console.log("localised: "+input+" => "+s);
+        return s;
+    }
+
+    add_language_update_listener(listener) {
+        this.language_update_listeners.push(listener);
+    }
+
+    create_language_select() {
+        let select = document.createElement("select");
+        let languages = this.get_languages();
+        for(var idx=0; idx<languages.length; idx++) {
+            let option = document.createElement("option");
+            option.setAttribute("value",languages[idx][0]);
+            option.appendChild(document.createTextNode(languages[idx][1]));
+            select.appendChild(option);
+        }
+        select.value = this.get_language();
+        select.addEventListener("change", (ev) => {
+            this.set_language(select.value);
+        });
+        return select; 
+    }
+}
 
 
 

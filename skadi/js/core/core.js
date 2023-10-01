@@ -7,12 +7,13 @@
 
 class SkadiCore {
 
-    constructor(element_id, topology_store, node_factory, configuration_factory) {
+    constructor(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory) {
+        this.l10n_utils = l10n_utils;
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
         this.id = "design";
-        this.schema = null;
+        this.schema = schema;
 
         this.graph_executor = null;
         this.node_event_handlers = {};
@@ -32,20 +33,31 @@ class SkadiCore {
             "version": "0.1"
         };
 
+        this.language = "en";
     }
 
     get_id() {
         return this.id;
     }
 
-    /* Get/Set Schema and Executor */
+    get_language() {
+        return this.language;
+    }
 
-    set_schema(schema) {
-        this.schema = schema;
+    set_language(language) {
+        this.language = language;
+    }
+
+    localise(text) {
+        return this.l10n_utils.localise(text);
     }
 
     get_schema() {
         return this.schema;
+    }
+
+    get_l10n_utils() {
+        return this.l10n_utils;
     }
 
     set_graph_executor(executor) {
@@ -75,7 +87,7 @@ class SkadiCore {
             return this.graph_executor.create_node_service(node);
         } else {
             let service = new SkadiNodeService(node);
-            let wrapper = new SkadiWrapper(node, service);
+            let wrapper = new SkadiWrapper(node, service, node.get_type().get_package_type().get_l10n_utils());
             service.set_wrapper(wrapper);
             return service;
         }
@@ -222,12 +234,13 @@ class SkadiCore {
 
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
-        node.update_execution_state(state);
-        if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
-            let upstream_node_ids = this.network.get_upstream_nodes(node_id);
-            console.log(JSON.stringify(upstream_node_ids));
-            for (let idx in upstream_node_ids) {
-                this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+        if (node) {
+            node.update_execution_state(state);
+            if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
+                let upstream_node_ids = this.network.get_upstream_nodes(node_id);
+                for (let idx in upstream_node_ids) {
+                    this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+                }
             }
         }
     }

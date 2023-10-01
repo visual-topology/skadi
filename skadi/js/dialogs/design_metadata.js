@@ -7,19 +7,19 @@
 
 let skadi_design_metadata_html = `
 <span aria-describedby="edit-metadata-tooltip">
-    Edit Design Metadata
+    {{topology.metadata.editor}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
      tabindex="0">
     <div id="edit-metadata-tooltip" class="exo-help-content exo-white-bg exo-border"
          role="tooltip">
-         Use this form to update the metadata associated with the design being edited
+        {{topology.metadata.editor.tooltip}}
     </div>
 </div>
 <div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Name:
+            {{metadata.name}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_name" type="text" value="" class="exo-full-width">
@@ -27,7 +27,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Filename:
+            {{metadata.filename}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_filename" type="text" value="" class="exo-full-width">
@@ -35,7 +35,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Description:
+            {{metadata.description}}:
         </div>
         <div class="exo-2-cell">
             <textarea id="edit_metadata_description" rows="10" class="exo-full-width"></textarea>
@@ -43,7 +43,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Author(s):
+            {{metadata.authors}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_authors" type="text" value="" class="exo-full-width">
@@ -51,7 +51,7 @@ let skadi_design_metadata_html = `
     </div>
     <div class="exo-row">
         <div class="exo-2-cell">
-            Version:
+            {{metadata.version}}:
         </div>
         <div class="exo-2-cell">
             <input id="edit_metadata_version" type="text" value="" class="exo-full-width">
@@ -61,7 +61,7 @@ let skadi_design_metadata_html = `
 `
 
 function skadi_populate_design_metadata(design, elt, close_window) {
-    elt.innerHTML = skadi_design_metadata_html;
+    elt.innerHTML = design.localise(skadi_design_metadata_html);
     let edit_metadata_name = document.getElementById("edit_metadata_name");
     let edit_metadata_description = document.getElementById("edit_metadata_description");
     let edit_metadata_filename = document.getElementById("edit_metadata_filename");

@@ -7,9 +7,9 @@
 
 class SkadiPaletteEntry {
 
-  constructor(design, template) {
+  constructor(design, node_type) {
     this.design = design;
-    this.template = template;
+    this.node_type = node_type;
     this.node = null;
     this.overlay_node = null;
     this.overlay_grp = null;
@@ -17,6 +17,10 @@ class SkadiPaletteEntry {
     this.overlay_y = 0;
     this.width = 220;
     this.height = 180;
+    this.metadata = {
+      "name": this.node_type.get_name(),
+      "description": this.node_type.get_description()
+    };
   }
 
   update_position(x,y) {
@@ -35,33 +39,33 @@ class SkadiPaletteEntry {
   }
 
   draw(grp) {
-    this.node = new SkadiNode(this.design, this.template, this.design.next_id("nl"), 0, 0, false, this.template.metadata);
+    this.node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 0, 0, false, this.metadata);
     this.node.draw(grp);
-    let that = this;
+    
     this.overlay_grp = this.design.get_skadi_svg_dialogue_group();
     this.node.set_drag_handlers(
-      function(evloc) {
-        that.overlay_x = evloc.x;
-        that.overlay_y = evloc.y;
-        let meta = JSON.parse(JSON.stringify(that.template.metadata));
-        that.overlay_node = new SkadiNode(that.design, that.template, that.design.next_id("nl"), that.overlay_x, that.overlay_y, false, meta);
-        that.overlay_node.set_display_tooltips(false);
-        that.overlay_node.draw(that.overlay_grp);
+      (evloc) => {
+        this.overlay_x = evloc.x;
+        this.overlay_y = evloc.y;
+        let meta = JSON.parse(JSON.stringify(this.metadata));
+        this.overlay_node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 
+          this.overlay_x, this.overlay_y, false, this.metadata);
+        this.overlay_node.set_display_tooltips(false);
+        this.overlay_node.draw(this.overlay_grp);
       },
-      function(evloc) {
-        that.overlay_x = evloc.x;
-        that.overlay_y = evloc.y;
-        that.overlay_node.update_position(that.overlay_x, that.overlay_y);
+      (evloc) => {
+        this.overlay_x = evloc.x;
+        this.overlay_y = evloc.y;
+        this.overlay_node.update_position(this.overlay_x, this.overlay_y);
       },
-      function() {
-        if (that.overlay_node) {
-          that.overlay_node.remove();
-          that.overlay_node = null;
-
-          let tx = that.overlay_x - that.design.offset_x;
-          let ty = that.overlay_y - that.design.offset_y;
-          let cc = that.design.to_canvas_coords(tx,ty);
-          that.design.create_node(null,that.template, cc.x, cc.y,that.template.metadata);
+      () => {
+        if (this.overlay_node) {
+          this.overlay_node.remove();
+          this.overlay_node = null;
+          let tx = this.overlay_x - this.design.offset_x;
+          let ty = this.overlay_y - this.design.offset_y;
+          let cc = this.design.to_canvas_coords(tx,ty);
+          this.design.create_node(null,this.node_type, cc.x, cc.y,this.metadata);
         }
       });
     
@@ -76,15 +80,8 @@ class SkadiPaletteEntry {
   }
 
   get_package_id() {
-    if (this.template) {
-      return this.template.get_package_id();
-    }
-    return "";
-  }
-
-  get_label() {
-    if (this.template) {
-      return this.template.get_label();
+    if (this.node_type) {
+      return this.node_type.get_package_id();
     }
     return "";
   }

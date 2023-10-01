@@ -11,22 +11,32 @@ DataVizExample.Configuration = class {
 
     constructor(configuration_services) {
         this.services = configuration_services;
-        this.services.add_event_handler("btn","click", () => {
-            this.services.set_status_info("Clicked!");
+        let attrs = {
+            "options":JSON.stringify([
+                ["quartz","quartz"],
+                ["excel","excel"],
+                ["ggplot2","ggplot2"],
+                ["fivethirtyeight","fivethirtyeight"]
+            ]),
+            "value":this.services.get_property("theme","quartz")};
+        this.services.page_set_attributes("select_theme",attrs);
+        this.services.page_add_event_handler("select_theme","change", (v) => {
+            this.services.set_property("theme",v);
+            this.services.page_set_attributes("select_theme",{"value": v});
         });
-        this.services.set_attributes("content",{"innerHTML":"Hello There"});
-        console.log("Constructed configuration");
     }
 
-    open(width, height) {
-        console.log("Opened configuration:"+width+","+height);
+    page_open() {
+
     }
 
-    resize(width, height) {
-        console.log("Resize configuration:"+width+","+height);
+    page_resize(width, height) {
     }
 
-    close() {
-        console.log("Closed configuration");
+    page_close() {
+    }
+
+    get_theme() {
+        return this.services.get_property("theme","quartz");
     }
 }

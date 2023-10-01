@@ -15,14 +15,4 @@ class SkadiExecutableNodeService extends SkadiNodeService {
     request_execution() {
         this.graph_executor.request_execution(this.node_id);
     }
-
-    set_executing(is_executing) {
-        this.wrapper.set_executing(is_executing);
-    }
-
-    raise_execution_failed(message, from_exn) {
-        let exn = new SkadiNodeExecutionFailed(this.node_id, message, from_exn);
-        throw(exn);
-    }
-
 }

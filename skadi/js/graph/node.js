@@ -39,7 +39,6 @@ class SkadiNode extends SkadiCoreNode {
     } else {
       this.style = "";
     }
-    this.REMOVE_ACTION = "Remove";
 
     this.active = active;
     this.port_radius = 12;
@@ -76,12 +75,6 @@ class SkadiNode extends SkadiCoreNode {
     this.display_tooltips = true;
 
     this.commands = [];
-
-    if (active) {
-      this.register_command_window("adjust","Adjust...", (root_elt) => {
-          this.open_adjust_editor(root_elt);
-      }, null, 500, 500);
-    }
   }
 
   get_rotation() {
@@ -104,15 +97,13 @@ class SkadiNode extends SkadiCoreNode {
     let window_width = this.node_type.get_page().window_width || 400;
     // make sure that when the node's window is opened, closed or resized, the instance will receive the events
 
-    this.register_command_window("open", "Open...",
+    this.register_command_window("open", "{{node.menu.open}}",
       (elt) => {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
           this.iframe.setAttribute("src",html_url);
-          this.iframe.setAttribute("width",""+window_width-20);
-          this.iframe.setAttribute("height",""+window_height-20);
           this.iframe.addEventListener("load", (evt) => {
-            this.wrapper.open(this.iframe.contentWindow, window_width, window_width);
+            this.wrapper.open(this.iframe.contentWindow);
           });
           elt.appendChild(this.iframe);
       },
@@ -120,17 +111,16 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.close();
       }, window_width, window_height,
       (w,h) => {
-          this.iframe.setAttribute("width",""+w-20);
-          this.iframe.setAttribute("height",""+h-20);
+          this.iframe.setAttribute("width",""+w-10);
+          this.iframe.setAttribute("height",""+h-10);
           this.wrapper.resize(w,h);
       });
 
-    this.register_command_window_tab("open_in_tab", "Open in Tab...",this.node_type.get_html_url(),
+    this.register_command_window_tab("open_in_tab", "{{node.menu.opentab}}",this.node_type.get_html_url(),
       (w) => {
         if (w) {
           let window_width = w.innerWidth;
           let window_height = w.innerHeight;
-          console.log("Opening window");
           this.wrapper.open(w, window_width, window_height);
         }
       },
@@ -140,6 +130,11 @@ class SkadiNode extends SkadiCoreNode {
       (w,h) => {
           this.wrapper.resize(w,h);
       });
+
+    this.register_command_window("adjust","{{node.menu.adjust}}", (root_elt) => {
+        this.open_adjust_editor(root_elt);
+      }, null, 700, 500);
+      
 
     return true;
   }
@@ -174,32 +169,7 @@ class SkadiNode extends SkadiCoreNode {
   }
 
   open_adjust_editor(root_elt) {
-    let root = new SkadiX3Selection([root_elt]);
-    let name_heading = root.append("h3");
-    name_heading.text("Name");
-    let name_input = root.append("input");
-    name_input.attr("type","text");
-    name_input.node().value = this.metadata["name"];
-    let description_heading = root.append("h3");
-    description_heading.text("Description");
-    let description_input = root.append("textarea");
-    description_input.node().value = this.metadata["description"];
-    root.append("p");
-    let rotate_button = root.append("input").attr("value","rotate").attr("type","button");
-
-    let cb = (evt) => {
-      let new_metadata = {
-         "name": name_input.node().value,
-         "description": description_input.node().value
-      };
-      this.design.update_metadata(this.id, new_metadata, false);
-    };
-    name_input.on("change", cb);
-    description_input.on("change", cb);
-    rotate_button.on("click",(evt) => {
-      this.set_rotation(this.get_rotation()+45);
-      this.update_position(this.x, this.y);
-    });
+    skadi_populate_adjust(this.design, this, root_elt, null);
   }
 
   add_port(key, port_type, is_input) {
@@ -228,8 +198,6 @@ class SkadiNode extends SkadiCoreNode {
   get_group() {
     return this.grp;
   }
-
-
 
   draw(parent) {
     let container = parent ? parent : this.design.get_node_group();
@@ -276,10 +244,12 @@ class SkadiNode extends SkadiCoreNode {
 
     this.isize = 2 * this.r * Math.sin(Math.PI / 4);
 
-    let icon_name = this.node_type.get_display().icon;
-    if (icon_name) {
+    let icon_url = this.node_type.get_icon_url();
+    if (icon_url) {
+      let localised_icon_url = this.node_type.get_package_type().localise_url(icon_url);
+      let full_icon_url = this.node_type.get_package_type().get_resource_url(localised_icon_url);
       this.image = this.grp2.append("image")
-          .attr("href", this.design.get_schema().get_resource_url(this.node_type.get_package_id(),icon_name))
+          .attr("href", full_icon_url)
           .attr("x", this.x - this.isize / 2)
           .attr("y", this.y - this.isize / 2)
           .attr("width", this.isize)
@@ -289,9 +259,8 @@ class SkadiNode extends SkadiCoreNode {
       this.image = null;
     }
 
-
     this.text = this.grp.append("text");
-    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_label());
+    this.text.attr("x", this.x).attr("y", this.y).attr("class","node_label").text(this.get_name());
 
     this.dragged = false;
     if (this.active) {
@@ -338,14 +307,14 @@ class SkadiNode extends SkadiCoreNode {
         for(let idx=0; idx<this.commands.length; idx++) {
           mitems.push(this.create_menu_item_from_command(this.commands[idx]));
         }
-        mitems.push(new SkadiTextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
+        mitems.push(new SkadiTextMenuDialogue.MenuItem("{{node.menu.remove}}", () => {
           this.design.remove(this.get_id());
         }));
 
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "Edit Node");
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "node.menu.title");
         tm.open();
       };
 
@@ -792,10 +761,7 @@ class SkadiNode extends SkadiCoreNode {
       let textw = bbox.width;
       let texth = bbox.height;
 
-
-
       let pos = this.get_satellite_position(false, textw, texth);
-      console.log(textw,texth,pos.x,pos.y);
       this.text.attr("x",pos.x+textw/2).attr("y",pos.y+texth/2);
     } catch(ex) {
       // getBBox() fails if element is not visible

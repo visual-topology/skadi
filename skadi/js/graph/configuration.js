@@ -15,13 +15,16 @@ class SkadiConfiguration extends SkadiCoreConfiguration {
       this.iframe = iframe;
       this.iframe.setAttribute("width",""+w-20);
       this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.open(iframe.contentWindow, w, h);
+      this.wrapper.open(iframe.contentWindow);
+      this.wrapper.resize(w-20, h-20);
   }
 
   resize(w,h) {
-      this.iframe.setAttribute("width",""+w-20);
-      this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.resize(w,h);
+      if (this.iframe) {
+          this.iframe.setAttribute("width", "" + w - 20);
+          this.iframe.setAttribute("height", "" + h - 20);
+          this.wrapper.resize(w, h);
+      }
   }
 
   close() {

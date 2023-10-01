@@ -9,15 +9,22 @@ class SkadiViewApi extends SkadiApi {
 
     /**
      * Create a skadi application view
+     */
+    constructor() {
+        super();    
+    }
+
+    /**
+     * Initialise skadi application view
      *
      * @param {string} element_id - the name of the document element into which skadi will be loaded
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    constructor(element_id, node_factory, configuration_factory) {
-        super();
-        this.application = new SkadiApplication(element_id, node_factory, configuration_factory);
+    init(element_id, node_factory, configuration_factory) {
+        this.application = new SkadiApplication(this.l10n_utils, this.schema, element_id, node_factory, configuration_factory);
         this.set_instance(this.application);
+        super.init();
     }
 
     /**
@@ -25,10 +32,14 @@ class SkadiViewApi extends SkadiApi {
      *
      * @param {string} topology_url - the topology to load
      */
-    async load_topology(topology_url) {
-        return await fetch(topology_url)
-            .then(response => response.json())
-            .then(topology => this.application.deserialise(topology, true));
+    async load_topology(topology) {
+        if (typeof topology === "string") {
+            return await fetch(topology)
+                .then(response => response.json())
+                .then(topology => this.load_topology_object(topology));
+        } else {
+            this.application.deserialise(topology, true);
+        }
     }
 
     add_node_event_handler(node_event_type, handler) {
@@ -40,8 +51,7 @@ class SkadiViewApi extends SkadiApi {
     add_design_event_handler(design_event_type, handler) {
     }
 
-    init() {
-        super.init();
+    open() {
         this.application.open_display();
     }
 }

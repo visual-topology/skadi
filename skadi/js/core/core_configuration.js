@@ -28,7 +28,7 @@ class SkadiCoreConfiguration {
   create_instance() {
       try {
           this.configuration_service = new SkadiConfigurationService(this);
-          this.wrapper = new SkadiWrapper(this,this.configuration_service);
+          this.wrapper = new SkadiWrapper(this,this.configuration_service, this.package_type.get_l10n_utils());
           this.configuration_service.set_wrapper(this.wrapper);
           let configuration_factory = this.core.get_configuration_factory();
           let o = null;
@@ -57,7 +57,7 @@ class SkadiCoreConfiguration {
 
   get_url() {
       if (this.page && this.page.url) {
-          return this.page.url;
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
       }
       return null;
   }

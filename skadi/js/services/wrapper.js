@@ -7,9 +7,10 @@
 
 class SkadiWrapper {
 
-    constructor(target, services) {
+    constructor(target, services, l10n_utils) {
         this.target = target;
         this.services = services;
+        this.l10n_utils = l10n_utils;
         this.instance = null;
         this.window = null;
         this.event_handlers = [];
@@ -82,9 +83,17 @@ class SkadiWrapper {
     send_set_attributes(element_id, attributes) {
         let msg = {
             "type": "set_attributes",
-            "element_id": element_id,
-            "attributes": attributes
+            "element_id": element_id
         }
+        if (this.l10n_utils) {
+            msg.attributes = {};
+            for (let attribute_name in attributes) {
+                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
+            }
+        } else {
+            msg.attributes = attributes;
+        }
+
         this.send_to_window(msg);
     }
 
@@ -111,7 +120,6 @@ class SkadiWrapper {
     }
 
     recv_from_window(msg) {
-        console.log("Recv from window: "+JSON.stringify(msg));
         switch(msg.type) {
             case "event":
                 this.handle_event(msg["element_id"],msg["event_type"],msg["value"]);
@@ -122,8 +130,7 @@ class SkadiWrapper {
         }
     }
 
-
-    open(w, width, height) {
+    open(w) {
         this.window = w;
         this.pending_messages = [];
         window.addEventListener("message", (event) => {
@@ -131,9 +138,9 @@ class SkadiWrapper {
                 this.recv_from_window(event.data);
             }
         });
-        if (this.instance.open) {
+        if (this.instance.page_open) {
             try {
-                this.instance.open(width, height);
+                this.instance.page_open();
             } catch(e) {
                 console.error(e);
             }
@@ -150,9 +157,9 @@ class SkadiWrapper {
     }
 
     resize(width,height) {
-        if (this.instance.resize) {
+        if (this.instance.page_resize) {
             try {
-                this.instance.resize(width, height);
+                this.instance.page_resize(width, height);
             } catch(e) {
                 console.error(e);
             }
@@ -161,31 +168,13 @@ class SkadiWrapper {
 
     close() {
         this.window = null;
-        if (this.instance.close) {
+        if (this.instance.page_close) {
             try {
-                this.instance.close();
+                this.instance.page_close();
             } catch(e) {
                 console.error(e);
             }
         }
         this.pending_messages = [];
-    }
-
-    reset_execution() {
-        if (this.instance.reset_execution) {
-            try {
-                this.instance.reset_execution();
-            } catch(e) {
-                console.error(e);
-            }
-        }
-    }
-
-    async execute(inputs) {
-        if (this.instance.execute) {
-            return await this.instance.execute(inputs);
-        } else {
-            return {};
-        }
     }
 }

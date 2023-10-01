@@ -21,13 +21,20 @@ DataVizExample.CsvImportNode = class {
             this.upload("iris.csv");
         }
 
-        this.node_service.add_event_handler("upload", "exo-file-changed", (files) => {
+        this.node_service.page_add_event_handler("upload", "exo-file-changed", (files) => {
             for(let filename in files) {
                 this.filename = filename;
                 let f = files[filename];
                 f.arrayBuffer().then( buf => {
-                    this.custom_content = buf;
-                    this.load_custom_content();
+                    try {
+                        let decoder = new TextDecoder();
+                        this.custom_content = decoder.decode(buf);
+                        this.load_custom_content();
+                    } catch(ex) {
+                        this.custom_content = null;
+                        this.filename = '';
+                        this.node_service.set_status_error("Unable to load data from "+filename);
+                    }
                 });
             }
             this.update_status();
@@ -47,7 +54,7 @@ DataVizExample.CsvImportNode = class {
         if (this.filename) {
             this.node_service.set_status_info(this.filename);
         } else {
-            this.node_service.set_status_warning("No File Selected");
+            this.node_service.set_status_warning("{{no.file.selected}}");
         }
     }
 
@@ -63,37 +70,40 @@ DataVizExample.CsvImportNode = class {
     }
 
     load_custom_content() {
-        let decoder = new TextDecoder();
-        let txt = decoder.decode(this.custom_content);
-        this.imported_table = aq.fromCSV(txt);
-        this.imported_table.print();
-        this.node_service.request_execution();
+        if (this.custom_content) {
+            this.imported_table = aq.fromCSV(this.custom_content);
+            this.imported_table.print();
+            this.node_service.request_execution();
+        } else {
+            this.imported_table = null;
+            this.update_status();
+            this.node_service.request_execution();
+        }
     }
 
-    open(w,h) {
+    page_open() {
         this.is_open = true;
 
-
-
         if (this.load_custom) {
-            this.node_service.set_attributes("use_custom",{"checked": "true"});
-            this.node_service.set_attributes("upload_section",{"style": "display:block;"});
+            this.node_service.page_set_attributes("use_custom",{"checked": "true"});
+            this.node_service.page_set_attributes("upload_section",{"style": "display:block;"});
         } else {
-            this.node_service.set_attributes("use_iris",{"checked": "true"});
-            this.node_service.set_attributes("upload_section",{"style": "display:none;"});
+            this.node_service.page_set_attributes("use_iris",{"checked": "true"});
+            this.node_service.page_set_attributes("upload_section",{"style": "display:none;"});
         }
 
-        this.node_service.add_event_handler("use_custom","input",(evt) => {
-            this.node_service.set_attributes("upload_section",{"style":"display:block;"});
+        this.node_service.page_add_event_handler("use_custom","input",(evt) => {
+            this.node_service.page_set_attributes("upload_section",{"style":"display:block;"});
             this.load_custom = true;
             this.filename = "";
+            this.node_service.page_set_attributes("upload",{"filename":""});
             this.imported_table = null;
             this.update_status();
             this.node_service.request_execution();
         });
 
-        this.node_service.add_event_handler("use_iris","input", async (evt) => {
-            this.node_service.set_attributes("upload_section",{"style":"display:none;"});
+        this.node_service.page_add_event_handler("use_iris","input", async (evt) => {
+            this.node_service.page_set_attributes("upload_section",{"style":"display:none;"});
             this.load_custom = false;
             this.filename = "iris.csv";
             this.custom_content = null;
@@ -101,7 +111,11 @@ DataVizExample.CsvImportNode = class {
         });
     }
 
-    close() {
+    page_resize(w,h) {
+        console.log("resize",w,h);
+    }
+
+    page_close() {
         this.is_open = false;
     }
 

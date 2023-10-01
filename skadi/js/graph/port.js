@@ -29,12 +29,7 @@ class SkadiPort {
     }
     this.r = 5;
 
-    this.label = this.link_type_id;
     this.grp = null;
-  }
-
-  get_label() {
-    return this.label;
   }
 
   get_link_type() {

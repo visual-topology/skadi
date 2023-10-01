@@ -25,10 +25,10 @@ class SkadiExecutableNodeWrapper extends SkadiWrapper {
         }
     }
 
-    async execute(inputs, requested_outputs) {
+    async execute(inputs) {
         if (this.instance.execute) {
             try {
-                return await this.instance.execute(inputs, requested_outputs);
+                return await this.instance.execute(inputs);
             } catch(e) {
                 console.error(e);
             }

@@ -102,10 +102,8 @@ class SkadiNode extends SkadiCoreNode {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
           this.iframe.setAttribute("src",html_url);
-          this.iframe.setAttribute("width",""+window_width-20);
-          this.iframe.setAttribute("height",""+window_height-20);
           this.iframe.addEventListener("load", (evt) => {
-            this.wrapper.open(this.iframe.contentWindow, window_width, window_width);
+            this.wrapper.open(this.iframe.contentWindow);
           });
           elt.appendChild(this.iframe);
       },
@@ -113,8 +111,8 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.close();
       }, window_width, window_height,
       (w,h) => {
-          this.iframe.setAttribute("width",""+w-20);
-          this.iframe.setAttribute("height",""+h-20);
+          this.iframe.setAttribute("width",""+w-10);
+          this.iframe.setAttribute("height",""+h-10);
           this.wrapper.resize(w,h);
       });
 

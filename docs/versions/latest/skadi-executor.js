@@ -26,16 +26,6 @@ class SkadiExecutableNodeService extends SkadiNodeService {
     request_execution() {
         this.graph_executor.request_execution(this.node_id);
     }
-
-    set_executing(is_executing) {
-        this.wrapper.set_executing(is_executing);
-    }
-
-    raise_execution_failed(message, from_exn) {
-        let exn = new SkadiNodeExecutionFailed(this.node_id, message, from_exn);
-        throw(exn);
-    }
-
 }
 
 
@@ -61,10 +51,10 @@ class SkadiExecutableNodeWrapper extends SkadiWrapper {
         }
     }
 
-    async execute(inputs, requested_outputs) {
+    async execute(inputs) {
         if (this.instance.execute) {
             try {
-                return await this.instance.execute(inputs, requested_outputs);
+                return await this.instance.execute(inputs);
             } catch(e) {
                 console.error(e);
             }

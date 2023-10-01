@@ -80,6 +80,14 @@
         "url": {
           "description": "Provide the URL of a page to display this node's content",
           "type": "string"
+        },
+        "window_width": {
+          "description": "The default width of the page, in pixels",
+          "type": "integer"
+        },
+        "window_height": {
+          "description": "The default height of the page, in pixels",
+          "type": "integer"
         }
       }
     },

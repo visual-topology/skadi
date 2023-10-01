@@ -32,6 +32,7 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
       this.content = this.fo.append("div").attr("width", this.content_width + "px").attr("height", this.content_height + "px");
       if (this.open_callback) {
         this.open_callback(this.content.node());
+        this.resize(this.content_width,this.content_height,true);
       }
     }
   }

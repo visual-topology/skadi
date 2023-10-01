@@ -27,19 +27,19 @@ class SkadiNodeService {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    add_event_handler(element_id, event_type, callback, event_transform) {
+    page_add_event_handler(element_id, event_type, callback, event_transform) {
         this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
     }
 
-    set_attributes(element_id, attributes) {
+    page_set_attributes(element_id, attributes) {
         this.wrapper.set_attributes(element_id, attributes);
     }
 
-    send_message(message) {
+    page_send_message(message) {
         this.wrapper.send_message(message);
     }
 
-    set_message_handler(handler) {
+    page_set_message_handler(handler) {
         this.wrapper.set_message_handler(handler);
     }
 

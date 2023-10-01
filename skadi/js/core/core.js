@@ -234,11 +234,13 @@ class SkadiCore {
 
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
-        node.update_execution_state(state);
-        if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
-            let upstream_node_ids = this.network.get_upstream_nodes(node_id);
-            for (let idx in upstream_node_ids) {
-                this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+        if (node) {
+            node.update_execution_state(state);
+            if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
+                let upstream_node_ids = this.network.get_upstream_nodes(node_id);
+                for (let idx in upstream_node_ids) {
+                    this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+                }
             }
         }
     }

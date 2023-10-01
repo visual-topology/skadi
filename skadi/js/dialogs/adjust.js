@@ -94,12 +94,12 @@ function skadi_populate_adjust(design, node, elt, close_window) {
         node.update_position(node.x, node.y);
     });
     rotate_left_button.addEventListener("click",(evt) => {
-        node.set_rotation(node.get_rotation()-45);
+        node.set_rotation(node.get_rotation()-15);
         node.update_position(node.x, node.y);
         rotate_input.value = ""+node.get_rotation();
       });
     rotate_right_button.addEventListener("click",(evt) => {
-      node.set_rotation(node.get_rotation()+45);
+      node.set_rotation(node.get_rotation()+15);
       node.update_position(node.x, node.y);
       rotate_input.value = ""+node.get_rotation();
     });

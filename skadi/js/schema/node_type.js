@@ -14,7 +14,7 @@ class SkadiNodeType {
     this.package_id = package_type.get_id();
     this.enabled = schema["enabled"] !== false;
     let metadata = schema["metadata"] || { "name": nodeTypeId, "description":""};
-    let display = schema["display"] || { "corners": 4, "icon": "", "html": "" };
+    let display = schema["display"] || { "corners": 4, "icon": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
     this.page = schema["page"] || {};

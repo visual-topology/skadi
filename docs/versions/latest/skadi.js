@@ -53,10 +53,10 @@ let icon_edit_purple = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbm
 let icon_configuration_purple = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNCIKICAgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiCiAgIHdpZHRoPSIyNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnNCIKICAgc29kaXBvZGk6ZG9jbmFtZT0iY29uZmlndXJhdGlvbl9wdXJwbGUuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjIuMiAoMToxLjIuMisyMDIyMTIwNTE1NTArYjBhODQ4NjU0MSkiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczgiIC8+CiAgPHNvZGlwb2RpOm5hbWVkdmlldwogICAgIGlkPSJuYW1lZHZpZXc2IgogICAgIHBhZ2Vjb2xvcj0iI2ZmZmZmZiIKICAgICBib3JkZXJjb2xvcj0iIzY2NjY2NiIKICAgICBib3JkZXJvcGFjaXR5PSIxLjAiCiAgICAgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAuMCIKICAgICBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIgogICAgIGlua3NjYXBlOmRlc2tjb2xvcj0iI2QxZDFkMSIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2NhcGU6em9vbT0iMjcuOTE2NjY3IgogICAgIGlua3NjYXBlOmN4PSI4LjQxNzkxMDQiCiAgICAgaW5rc2NhcGU6Y3k9IjEyLjAxNzkxIgogICAgIGlua3NjYXBlOndpbmRvdy13aWR0aD0iMTUyOCIKICAgICBpbmtzY2FwZTp3aW5kb3ctaGVpZ2h0PSI4MzYiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjcyIgogICAgIGlua3NjYXBlOndpbmRvdy15PSIyNyIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2ZzQiIC8+CiAgPHBhdGgKICAgICBkPSJtMzcwLTgwLTE2LTEyOHEtMTMtNS0yNC41LTEyVDMwNy0yMzVsLTExOSA1MEw3OC0zNzVsMTAzLTc4cS0xLTctMS0xMy41di0yN3EwLTYuNSAxLTEzLjVMNzgtNTg1bDExMC0xOTAgMTE5IDUwcTExLTggMjMtMTV0MjQtMTJsMTYtMTI4aDIyMGwxNiAxMjhxMTMgNSAyNC41IDEydDIyLjUgMTVsMTE5LTUwIDExMCAxOTAtMTAzIDc4cTEgNyAxIDEzLjV2MjdxMCA2LjUtMiAxMy41bDEwMyA3OC0xMTAgMTkwLTExOC01MHEtMTEgOC0yMyAxNXQtMjQgMTJMNTkwLTgwSDM3MFptMTEyLTI2MHE1OCAwIDk5LTQxdDQxLTk5cTAtNTgtNDEtOTl0LTk5LTQxcS01OSAwLTk5LjUgNDFUMzQyLTQ4MHEwIDU4IDQwLjUgOTl0OTkuNSA0MVptMC04MHEtMjUgMC00Mi41LTE3LjVUNDIyLTQ4MHEwLTI1IDE3LjUtNDIuNVQ0ODItNTQwcTI1IDAgNDIuNSAxNy41VDU0Mi00ODBxMCAyNS0xNy41IDQyLjVUNDgyLTQyMFptLTItNjBabS00MCAzMjBoNzlsMTQtMTA2cTMxLTggNTcuNS0yMy41VDYzOS0zMjdsOTkgNDEgMzktNjgtODYtNjVxNS0xNCA3LTI5LjV0Mi0zMS41cTAtMTYtMi0zMS41dC03LTI5LjVsODYtNjUtMzktNjgtOTkgNDJxLTIyLTIzLTQ4LjUtMzguNVQ1MzMtNjk0bC0xMy0xMDZoLTc5bC0xNCAxMDZxLTMxIDgtNTcuNSAyMy41VDMyMS02MzNsLTk5LTQxLTM5IDY4IDg2IDY0cS01IDE1LTcgMzB0LTIgMzJxMCAxNiAyIDMxdDcgMzBsLTg2IDY1IDM5IDY4IDk5LTQycTIyIDIzIDQ4LjUgMzguNVQ0MjctMjY2bDEzIDEwNloiCiAgICAgaWQ9InBhdGgyIiAvPgogIDxwYXRoCiAgICAgc3R5bGU9ImZpbGw6IzgwMDA4MDtzdHJva2Utd2lkdGg6MC41MjM2NzMiCiAgICAgZD0ibSA5LjI1OTcwMTUsMjEuOTczMzcyIGMgMCwtMC4wNTAwNyAtMC4zOTczMzE1LC0zLjE4MjM0OCAtMC40MDQyMzU2LC0zLjE4NjcwMSAtMC4wMDQyNCwtMC4wMDI3IC0wLjExNjQwMTgsLTAuMDU0OTQgLTAuMjQ5MjU0LC0wLjExNjE1OCBDIDguNDczMzU5OCwxOC42MDkyOTkgOC4yMTM5NzgxLDE4LjQ2MTYgOC4wMjk4MDc5LDE4LjM0MjI5NCA3Ljg0NTYzNzYsMTguMjIyOTg3IDcuNjc5NjI0MiwxOC4xMjUzNzMgNy42NjA4ODg4LDE4LjEyNTM3MyBjIC0wLjAxODczNSwwIC0wLjY4NTQ3MjIsMC4yNzQyMDEgLTEuNDgxNjM3NSwwLjYwOTMzNiAtMS4xNDkzOTM4LDAuNDgzODIyIC0xLjQ1NjIxNjUsMC42MDAwMzUgLTEuNDg5NTM0OCwwLjU2NDE3OSAtMC4wODUyNjYsLTAuMDkxNzYgLTIuNzA0MjU3NywtNC42NTA3NzUgLTIuNjg3Mzg1OSwtNC42NzgwNzQgMC4wMDk2MiwtMC4wMTU1NyAwLjU4MjQ1NzQsLTAuNDU0NDU4IDEuMjcyOTY2NSwtMC45NzUzMDcgbCAxLjI1NTQ3MTIsLTAuOTQ3IEwgNC41MzA4NjE1LDEyIDQuNTMwOTU0NiwxMS4zMDE0OTMgMy4yNzUxMDczLDEwLjM1NDAzOCBDIDIuNTg0Mzk0MSw5LjgzMjkzNzIgMi4wMTE1MzU2LDkuMzk0MDc5NiAyLjAwMjA5MTMsOS4zNzg3OTg0IDEuOTg5ODc3OSw5LjM1OTAzNjggNC42MDUyNzA0LDQuNzgxNTMxMiA0LjY5NzgzNjQsNC42NjA2NTg2IGMgMC4wMDU4OCwtMC4wMDc2OCAwLjY2Nzk5MzUsMC4yNjI0MDIgMS40NzEzNTU3LDAuNjAwMTg3OCAwLjgwMzM2MjQsMC4zMzc3ODU4IDEuNDc0MjE3NiwwLjYxNDA3MTcgMS40OTA3ODk0LDAuNjEzOTY4MiAwLjAxNjU3MiwtMS4wNzVlLTQgMC4xOTk5NDE1LC0wLjEwNjc4MzIgMC40MDc0ODc4LC0wLjIzNzA2NjcgMC4yMDc1NDU5LC0wLjEzMDI4MzMgMC40NjgwMTcxLC0wLjI3Nzc1MDEgMC41Nzg4MjQxLC0wLjMyNzcwNCAwLjExMDgwNzMsLTAuMDQ5OTU0IDAuMjA0OTM0OSwtMC4wOTMyNDMgMC4yMDkxNzI1LC0wLjA5NjE5OSAwLjAwNjkyLC0wLjAwNDgzIDAuNDA0MjM1NiwtMy4xMzc0NzU1IDAuNDA0MjM1NiwtMy4xODcyMTYzIDAsLTAuMDExMzYyIDEuMjMzMTM0NSwtMC4wMjA2NTkgMi43NDAyOTg1LC0wLjAyMDY1OSAxLjUwNzE2NCwwIDIuNzQwMjk5LDAuMDA5MyAyLjc0MDI5OSwwLjAyMDY1OSAwLDAuMDUwMDczIDAuMzk3MzMxLDMuMTgyMzQ3MyAwLjQwNDIzNSwzLjE4NjcwMDQgMC4wMDQyLDAuMDAyNjcgMC4xMTY0MDIsMC4wNTQ5NDMgMC4yNDkyNTQsMC4xMTYxNTc0IDAuMTMyODUyLDAuMDYxMjE1IDAuMzkyMjM0LDAuMjA4OTEzNiAwLjU3NjQwNCwwLjMyODIxOTkgMC4xODQxNywwLjExOTMwNjUgMC4zNDk1MDMsMC4yMTcwOSAwLjM2NzQwNiwwLjIxNzI5NyAwLjAxNzksMi4xNWUtNCAwLjY5MDEzMiwtMC4yNzU3OTQzIDEuNDkzODQxLC0wLjYxMzMzNjUgMC44MDM3MSwtMC4zMzc1NDI0IDEuNDY1ODA3LC0wLjYwNzcxMTkgMS40NzEzMjYsLTAuNjAwMzc2NyAwLjA5ODMxLDAuMTMwNjQwMSAyLjcwNzUwMSw0LjY5NzUxMzEgMi42OTUyMDIsNC43MTc0MTM4IC0wLjAwOTYsMC4wMTU1MjYgLTAuNTgyMywwLjQ1NDUwNDUgLTEuMjcyNjc3LDAuOTc1NTA5MSBsIC0xLjI1NTIzMSwwLjk0NzI4IC0wLjAwNjEsMC42NTM3MzEgYyAtMC4wMDMzLDAuMzU5NTUyIC0wLjAwNzcsMC42NzMzMDcgLTAuMDA5NywwLjY5NzIzMyAtMC4wMDIsMC4wMjM5MyAwLjQ3MTk0MSwwLjQwMzg1NCAxLjA1MzEzNSwwLjg0NDI4NCAwLjU4MTE5NCwwLjQ0MDQzIDEuMTU0NzUsMC44NzYyMjggMS4yNzQ1NywwLjk2ODQzOSBsIDAuMjE3ODU0LDAuMTY3NjU2IC0xLjMzODk3OSwyLjMxMDQ0OCBjIC0wLjczNjQzOSwxLjI3MDc0NiAtMS4zNTE4MTgsMi4zMzIxNzQgLTEuMzY3NTA5LDIuMzU4NzI5IC0wLjAyMjEzLDAuMDM3NDUgLTAuMzQ1MjgzLC0wLjA4NjE0IC0xLjQ0MDA2OCwtMC41NTA3MzkgLTAuNzc2MzQ3LC0wLjMyOTQ2MSAtMS40Mzg2NzIsLTAuNjA2NjY3IC0xLjQ3MTgzMywtMC42MTYwMTMgLTAuMDM0NjksLTAuMDA5OCAtMC4yMjI5NjEsMC4wODUxMiAtMC40NDMzMDksMC4yMjM0MzkgLTAuMjEwNjU4LDAuMTMyMjM3IC0wLjQ3MzY3NSwwLjI4MTMwMiAtMC41ODQ0ODIsMC4zMzEyNTYgLTAuMTEwODA4LDAuMDQ5OTUgLTAuMjA0OTM1LDAuMDkzMjQgLTAuMjA5MTczLDAuMDk2MiAtMC4wMDY5LDAuMDA0OCAtMC40MDQyMzUsMy4xMzc0NzYgLTAuNDA0MjM1LDMuMTg3MjE3IDAsMC4wMTEzNiAtMS4yMzMxMzUsMC4wMjA2NiAtMi43NDAyOTksMC4wMjA2NiAtMS41MDcxNjQsMCAtMi43NDAyOTg1LC0wLjAwOTMgLTIuNzQwMjk4NSwtMC4wMjA2NiB6IG0gMy43NDIxMjY1LC0yLjA2NTkwOSBjIDAuMDExLC0wLjA2NDAzIDAuMDg0NDEsLTAuNjE2MTIgMC4xNjMxMzksLTEuMjI2ODY2IDAuMDc4NzMsLTAuNjEwNzQ2IDAuMTU1MDg0LC0xLjE1NjY1MyAwLjE2OTY4MywtMS4yMTMxMjYgMC4wMjM3NSwtMC4wOTE4OSAwLjA2MDQyLC0wLjExMzcwNCAwLjM0ODkzMiwtMC4yMDc2MjIgMC43MTU3ODEsLTAuMjMzMDAxIDEuNDk5MTU5LC0wLjY4NTQ1OCAyLjAyMzkxOCwtMS4xNjg5NTcgbCAwLjI2ODYxOSwtMC4yNDc0OTkgMS4wOTI1MzgsMC40NTMxNzQgYyAwLjYwMDg5NSwwLjI0OTI0NiAxLjE2MDI1MSwwLjQ4MDE1NCAxLjI0MzAxMiwwLjUxMzEyOSBsIDAuMTUwNDc0LDAuMDU5OTUgMC40OTIzNTgsLTAuODYzMDE1IGMgMC40MTg3MywtMC43MzM5NTggMC40ODQzMDksLTAuODY5MDY2IDAuNDM4NTQsLTAuOTAzNDgxIC0xLjM2OTA3NCwtMS4wMjk0NDQgLTIuMDczNjM4LC0xLjU3MjEzMSAtMi4wNzM2MzgsLTEuNTk3MjA4IDAsLTAuMDE3NCAwLjAzNiwtMC4xNzM5NSAwLjA4LC0wLjM0Nzg5NCAwLjA3MTU1LC0wLjI4Mjg0MiAwLjA4LC0wLjQwNTIxMyAwLjA4LC0xLjE1ODA1MiAwLC0wLjc1MjgzOSAtMC4wMDg1LC0wLjg3NTIxIC0wLjA4LC0xLjE1ODA1MiAtMC4wNDQsLTAuMTczOTQ0IC0wLjA4LC0wLjMyOTk4MyAtMC4wOCwtMC4zNDY3NTYgMCwtMC4wMjMxMSAxLjEwMzUyNCwtMC44NzM4MzgxIDIuMDczMjg5LC0xLjU5ODM0NTggMC4wNDYxOSwtMC4wMzQ1MDkgLTAuMDE4MjksLTAuMTY3NDY3MyAtMC40Mzc5MjgsLTAuOTAzMDIwNCAtMC40NTc0NjcsLTAuODAxODU3NiAtMC40OTc2NiwtMC44NjA0MzU4IC0wLjU3MTE5LC0wLjgzMjQ2MjYgLTAuMDQzNSwwLjAxNjU1IC0wLjU5Nzk2LDAuMjUwOTAzNSAtMS4yMzIxMjcsMC41MjA3ODYxIEwgMTUuOTk4NDE2LDguMTcyODQ1IDE1LjY3MDczMSw3Ljg4MzY0NjQgQyAxNS4wODg1NTEsNy4zNjk4NDM3IDE0LjM4ODk3OCw2Ljk2NjE4MzggMTMuNzAyNTkzLDYuNzQ4MDExNiAxMy41MzQ1MjUsNi42OTQ1OTAxIDEzLjM4MzI3OSw2LjYzODk5NTcgMTMuMzY2NDksNi42MjQ0Njg1IDEzLjM0MjUwMSw2LjYwMzcxMDcgMTMuMDI0NjI3LDQuMjAzODc5OCAxMy4wMjE2MjksNC4wMjA4OTU1IDEzLjAyMTA2LDMuOTg2MTYgMTIuNzk2MzUxLDMuOTc2MTE5NCAxMi4wMTk1MzMsMy45NzYxMTk0IGggLTEuMDAxMzYxIGwgLTAuMDIsMC4xMTY0MTc5IGMgLTAuMDExLDAuMDY0MDMgLTAuMDg0NDEsMC42MTYxMTk0IC0wLjE2MzEzOSwxLjIyNjg2NTcgLTAuMDc4NzMsMC42MTA3NDYzIC0wLjE1NTA4NCwxLjE1NjAxMzcgLTAuMTY5NjgzLDEuMjExNzA1OSAtMC4wMjM5NCwwLjA5MTMyOSAtMC4wNjUxOCwwLjExNDQ0MDYgLTAuNDIwNTc0LDAuMjM1NzAyOSBDIDkuNDY0Mjg1LDcuMDMzMTE5OCA4Ljc5MDAyODcsNy40MzcxODcgOC4yMDI5ODUxLDcuOTkwNDEzMSBMIDguMDIzODgwNiw4LjE1OTIwMDEgNi45MzEzNDMzLDcuNzA0NjM4MyBDIDYuMzMwNDQ3OCw3LjQ1NDYyOTMgNS43NzEwOTIzLDcuMjIzMTM3OCA1LjY4ODMzMTMsNy4xOTAyMTMgTCA1LjUzNzg1NjcsNy4xMzAzNDk5IDUuMDQ1NDk5MSw3Ljk5MzM2NDggYyAtMC40MjExNDEsMC43MzgxODQ4IC0wLjQ4NDQ2NTMsMC44Njg4Njc3IC0wLjQzNzc5NDksMC45MDM0ODE0IDIuMDUzODI5NywxLjUyMzI1MTggMi4wNzg3MDQ0LDEuNTQyOTY5OCAyLjA2MjAzMDUsMS42MzQ0OTY4IC0wLjAwODk3LDAuMDQ5MjUgLTAuMDQ2NDY4LDAuMjE4NTA4IC0wLjA4MzMyMywwLjM3NjEyIC0wLjA1NTQzMywwLjIzNzA2MSAtMC4wNjY4MjYsMC40Mjg4OTggLTAuMDY1OTUyLDEuMTEwNDQ3IDkuMzg1ZS00LDAuNzMwMTIxIDAuMDEwMTA5LDAuODU5ODcyIDAuMDgwNTk3LDEuMTQwMTQyIDAuMDQzNzQ3LDAuMTczOTQ0IDAuMDc5NTQsMC4zMzAyNjEgMC4wNzk1NCwwLjM0NzM3MiAwLDAuMDE3MTEgLTAuNDYzNDMyOCwwLjM4MDUxIC0xLjAyOTg1MDcsMC44MDc1NTQgLTAuNTY2NDE3OSwwLjQyNzA0NCAtMS4wNDQ0MTYsMC43ODk4MjkgLTEuMDYyMjE4LDAuODA2MTkgLTAuMDE4NiwwLjAxNzA5IDAuMTc2MzA2LDAuMzk1NTEyIDAuNDU4MjE3MywwLjg4OTY1MiAwLjQ2MjM0MDEsMC44MTA0IDAuNDk1Mjk0MywwLjg1ODExNyAwLjU3MjM4NjIsMC44Mjg4MDYgMC4wNDQ5OTEsLTAuMDE3MTEgMC41OTk1ODM0LC0wLjI1MTMzOSAxLjIzMjQyOCwtMC41MjA1MiBsIDEuMTUwNjI2NiwtMC40ODk0MTkgMC4zMjczODQsMC4yODg5MzIgYyAwLjU4MTg3MzIsMC41MTM1MzIgMS4yODE1ODQ2LDAuOTE3MjQgMS45Njc4MzY5LDEuMTM1MzY5IDAuMTY4MDY4LDAuMDUzNDIgMC4zMTkzMTQsMC4xMDkwMTYgMC4zMzYxMDMsMC4xMjM1NDMgMC4wMjM5OSwwLjAyMDc2IDAuMzQxODYzLDIuNDIwNTg5IDAuMzQ0ODYxLDIuNjAzNTczIDUuNjllLTQsMC4wMzQ3NCAwLjIyNTI3OCwwLjA0NDc4IDEuMDAyMDk2LDAuMDQ0NzggaCAxLjAwMTM2MSB6IgogICAgIGlkPSJwYXRoMzA2IgogICAgIHRyYW5zZm9ybT0ibWF0cml4KDQwLDAsMCw0MCwwLC05NjApIiAvPgogIDxwYXRoCiAgICAgc3R5bGU9ImZpbGw6IzgwMDA4MDtzdHJva2Utd2lkdGg6MC41MjM2NzMiCiAgICAgZD0iTSAxMS40MzI1ODgsMTUuNDM5MzgxIEMgMTAuNzAwNzUxLDE1LjMwNjkxOSAxMC4wNzIzMywxNC45NjUwOTkgOS41NDQ0Mjc2LDE0LjQxMjM0MyA5LjExMTg1MzQsMTMuOTU5NDA0IDguODc4MTIwMSwxMy41NjM0NDQgOC42OTc0NDExLDEyLjk3NzQ5MiA4LjYwNjczNjUsMTIuNjgzMzMyIDguNjAwMzcwNCwxMi42MTkyMjYgOC42MDAzNzA0LDEyIGMgMCwtMC42MTkxMTcgMC4wMDYzOCwtMC42ODMzNjkgMC4wOTcwMDMsLTAuOTc3MjYgMC4xOTExMzQyLC0wLjYxOTgzIDAuNDc5NDQxMiwtMS4wODUwMDYyIDAuOTYxOTIxLC0xLjU1MjAzNTQgMC42MTk5MzM2LC0wLjYwMDA4MTggMS4zMDkzNzc2LC0wLjg5NTMxNDkgMi4xODI5NzA2LC0wLjkzNDc5MDcgMC45Nzg3OSwtMC4wNDQyMyAxLjcyODYwNSwwLjE5OTIzODIgMi40MzU5ODUsMC43OTA5NzM2IDAuNzYzOTA3LDAuNjM5MDIxIDEuMTk3MjU3LDEuNTEwODE4NSAxLjIzOTcxMywyLjQ5NDAwODUgMC4wMjI2OCwwLjUyNTIxMSAtMC4wMjAzLDAuODUxNTk5IC0wLjE3MjEyOSwxLjMwNzE1MSAtMC4zNTEzNjksMS4wNTQyNTcgLTEuMzA2NTQ5LDEuOTU0MTM3IC0yLjM3ODY3LDIuMjQwOTU3IC0wLjMyMDU3MiwwLjA4NTc2IC0xLjIyMTM0NiwwLjEyNzA3MSAtMS41MzQ1NzYsMC4wNzAzOCB6IG0gMS4yNzMyMjgsLTIuMDcwMjk1IGMgMC4zMDY0NTMsLTAuMTUwODY2IDAuNjMzMjQ2LC0wLjQ5MzA2MyAwLjc0OTI3NywtMC43ODQ1OTUgMC4wNjgyLC0wLjE3MTM1NyAwLjA4MjkzLC0wLjI3NTE4NCAwLjA4MjkzLC0wLjU4NDQ5MSAwLC0wLjMwOTMwNyAtMC4wMTQ3MywtMC40MTMxMzQgLTAuMDgyOTMsLTAuNTg0NDkxIC0wLjExNjI2OCwtMC4yOTIxMjcgLTAuNDQyNzczLC0wLjYzMzcwNCAtMC43NTA1OTgsLTAuNzg1MjQ1IC0wLjIyNjM2MywtMC4xMTE0MzkgLTAuMjU2NCwtMC4xMTY4MzEgLTAuNjUwNzY0LC0wLjExNjgzMSAtMC4zOTYwMzIsMCAtMC40MjM2NDMsMC4wMDUgLTAuNjU1NTQ2LDAuMTE5MTg1IC0wLjMxMTY5OSwwLjE1MzQ0OSAtMC41NzY2ODUsMC40MTg3MTIgLTAuNzE5NjQxLDAuNzIwMzk0IC0wLjEwNDU0MywwLjIyMDYyIC0wLjExMTM4LDAuMjYwMzMzIC0wLjExMTM4LDAuNjQ2OTg4IDAsMC4zNzIwOTQgMC4wMDkzLDAuNDMxNzgxIDAuMDk2MTQsMC42MTcwNjEgMC4xMjgxNjYsMC4yNzM0NTkgMC4yODY4MywwLjQ2NDcwOCAwLjUxNzExLDAuNjIzMzA4IDAuMzA2OTI2LDAuMjExMzg4IDAuNTEwNjk0LDAuMjY3Mzc4IDAuOTI5MTI2LDAuMjU1Mjk4IDAuMzIyNTM5LC0wLjAwOTMgMC4zODUwMDUsLTAuMDIyNTcgMC41OTYyNzksLTAuMTI2NTgxIHoiCiAgICAgaWQ9InBhdGgzMDgiCiAgICAgdHJhbnNmb3JtPSJtYXRyaXgoNDAsMCwwLDQwLDAsLTk2MCkiIC8+Cjwvc3ZnPgo=';
 
 /* skadi/icons/rotate_left.svg*/
-let icon_rotate_left = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjRweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik03LjExIDguNTNMNS43IDcuMTFDNC44IDguMjcgNC4yNCA5LjYxIDQuMDcgMTFoMi4wMmMuMTQtLjg3LjQ5LTEuNzIgMS4wMi0yLjQ3ek02LjA5IDEzSDQuMDdjLjE3IDEuMzkuNzIgMi43MyAxLjYyIDMuODlsMS40MS0xLjQyYy0uNTItLjc1LS44Ny0xLjU5LTEuMDEtMi40N3ptMS4wMSA1LjMyYzEuMTYuOSAyLjUxIDEuNDQgMy45IDEuNjFWMTcuOWMtLjg3LS4xNS0xLjcxLS40OS0yLjQ2LTEuMDNMNy4xIDE4LjMyek0xMyA0LjA3VjFMOC40NSA1LjU1IDEzIDEwVjYuMDljMi44NC40OCA1IDIuOTQgNSA1Ljkxcy0yLjE2IDUuNDMtNSA1LjkxdjIuMDJjMy45NS0uNDkgNy0zLjg1IDctNy45M3MtMy4wNS03LjQ0LTctNy45M3oiLz48L3N2Zz4=';
+let icon_rotate_left = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9kaTpkb2NuYW1lPSJyb3RhdGVfbGVmdC5zdmciCiAgIGlua3NjYXBlOnZlcnNpb249IjEuMi4yICgxOjEuMi4yKzIwMjIxMjA1MTU1MCtiMGE4NDg2NTQxKSIKICAgeG1sbnM6aW5rc2NhcGU9Imh0dHA6Ly93d3cuaW5rc2NhcGUub3JnL25hbWVzcGFjZXMvaW5rc2NhcGUiCiAgIHhtbG5zOnNvZGlwb2RpPSJodHRwOi8vc29kaXBvZGkuc291cmNlZm9yZ2UubmV0L0RURC9zb2RpcG9kaS0wLmR0ZCIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB4bWxuczpzdmc9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcwogICAgIGlkPSJkZWZzMTAiIC8+CiAgPHNvZGlwb2RpOm5hbWVkdmlldwogICAgIGlkPSJuYW1lZHZpZXc4IgogICAgIHBhZ2Vjb2xvcj0iI2ZmZmZmZiIKICAgICBib3JkZXJjb2xvcj0iIzY2NjY2NiIKICAgICBib3JkZXJvcGFjaXR5PSIxLjAiCiAgICAgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAuMCIKICAgICBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIgogICAgIGlua3NjYXBlOmRlc2tjb2xvcj0iI2QxZDFkMSIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2NhcGU6em9vbT0iMzYuNDU4MzMzIgogICAgIGlua3NjYXBlOmN4PSI5LjI0MzQyODYiCiAgICAgaW5rc2NhcGU6Y3k9IjEyLjAxMzcxNCIKICAgICBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjE5MjAiCiAgICAgaW5rc2NhcGU6d2luZG93LWhlaWdodD0iMTA0MyIKICAgICBpbmtzY2FwZTp3aW5kb3cteD0iMCIKICAgICBpbmtzY2FwZTp3aW5kb3cteT0iMCIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2ZzYiIC8+CiAgPHBhdGgKICAgICBkPSJNMCAwaDI0djI0SDB6IgogICAgIGZpbGw9Im5vbmUiCiAgICAgaWQ9InBhdGgyIiAvPgogIDxwYXRoCiAgICAgZD0iTTcuMTEgOC41M0w1LjcgNy4xMUM0LjggOC4yNyA0LjI0IDkuNjEgNC4wNyAxMWgyLjAyYy4xNC0uODcuNDktMS43MiAxLjAyLTIuNDd6TTYuMDkgMTNINC4wN2MuMTcgMS4zOS43MiAyLjczIDEuNjIgMy44OWwxLjQxLTEuNDJjLS41Mi0uNzUtLjg3LTEuNTktMS4wMS0yLjQ3em0xLjAxIDUuMzJjMS4xNi45IDIuNTEgMS40NCAzLjkgMS42MVYxNy45Yy0uODctLjE1LTEuNzEtLjQ5LTIuNDYtMS4wM0w3LjEgMTguMzJ6TTEzIDQuMDdWMUw4LjQ1IDUuNTUgMTMgMTBWNi4wOWMyLjg0LjQ4IDUgMi45NCA1IDUuOTFzLTIuMTYgNS40My01IDUuOTF2Mi4wMmMzLjk1LS40OSA3LTMuODUgNy03Ljkzcy0zLjA1LTcuNDQtNy03LjkzeiIKICAgICBpZD0icGF0aDQiCiAgICAgc3R5bGU9ImZpbGw6IzgwMDA4MCIgLz4KPC9zdmc+Cg==';
 
 /* skadi/icons/rotate_right.svg*/
-let icon_rotate_right = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjRweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik03LjExIDguNTNMNS43IDcuMTFDNC44IDguMjcgNC4yNCA5LjYxIDQuMDcgMTFoMi4wMmMuMTQtLjg3LjQ5LTEuNzIgMS4wMi0yLjQ3ek02LjA5IDEzSDQuMDdjLjE3IDEuMzkuNzIgMi43MyAxLjYyIDMuODlsMS40MS0xLjQyYy0uNTItLjc1LS44Ny0xLjU5LTEuMDEtMi40N3ptMS4wMSA1LjMyYzEuMTYuOSAyLjUxIDEuNDQgMy45IDEuNjFWMTcuOWMtLjg3LS4xNS0xLjcxLS40OS0yLjQ2LTEuMDNMNy4xIDE4LjMyek0xMyA0LjA3VjFMOC40NSA1LjU1IDEzIDEwVjYuMDljMi44NC40OCA1IDIuOTQgNSA1Ljkxcy0yLjE2IDUuNDMtNSA1LjkxdjIuMDJjMy45NS0uNDkgNy0zLjg1IDctNy45M3MtMy4wNS03LjQ0LTctNy45M3oiLz48L3N2Zz4=';
+let icon_rotate_right = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9kaTpkb2NuYW1lPSJyb3RhdGVfcmlnaHQuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjIuMiAoMToxLjIuMisyMDIyMTIwNTE1NTArYjBhODQ4NjU0MSkiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczEwIiAvPgogIDxzb2RpcG9kaTpuYW1lZHZpZXcKICAgICBpZD0ibmFtZWR2aWV3OCIKICAgICBwYWdlY29sb3I9IiNmZmZmZmYiCiAgICAgYm9yZGVyY29sb3I9IiM2NjY2NjYiCiAgICAgYm9yZGVyb3BhY2l0eT0iMS4wIgogICAgIGlua3NjYXBlOnNob3dwYWdlc2hhZG93PSIyIgogICAgIGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIwLjAiCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNrZXJib2FyZD0iMCIKICAgICBpbmtzY2FwZTpkZXNrY29sb3I9IiNkMWQxZDEiCiAgICAgc2hvd2dyaWQ9ImZhbHNlIgogICAgIGlua3NjYXBlOnpvb209IjM2LjQ1ODMzMyIKICAgICBpbmtzY2FwZTpjeD0iOS4yNDM0Mjg2IgogICAgIGlua3NjYXBlOmN5PSIxMi4wMTM3MTQiCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxOTIwIgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwNDMiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LXk9IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LW1heGltaXplZD0iMSIKICAgICBpbmtzY2FwZTpjdXJyZW50LWxheWVyPSJzdmc2IiAvPgogIDxwYXRoCiAgICAgZD0iTTAgMGgyNHYyNEgweiIKICAgICBmaWxsPSJub25lIgogICAgIGlkPSJwYXRoMiIgLz4KICA8cGF0aAogICAgIGQ9Ik0gMTYuOTYsOC41MyAxOC4zNyw3LjExIEMgMTkuMjcsOC4yNyAxOS44Myw5LjYxIDIwLDExIEggMTcuOTggQyAxNy44NCwxMC4xMyAxNy40OSw5LjI4IDE2Ljk2LDguNTMgWiBNIDE3Ljk4LDEzIEggMjAgYyAtMC4xNywxLjM5IC0wLjcyLDIuNzMgLTEuNjIsMy44OSBsIC0xLjQxLC0xLjQyIGMgMC41MiwtMC43NSAwLjg3LC0xLjU5IDEuMDEsLTIuNDcgeiBtIC0xLjAxLDUuMzIgYyAtMS4xNiwwLjkgLTIuNTEsMS40NCAtMy45LDEuNjEgViAxNy45IGMgMC44NywtMC4xNSAxLjcxLC0wLjQ5IDIuNDYsLTEuMDMgeiBNIDExLjA3LDQuMDcgViAxIEwgMTUuNjIsNS41NSAxMS4wNywxMCBWIDYuMDkgYyAtMi44NCwwLjQ4IC01LDIuOTQgLTUsNS45MSAwLDIuOTcgMi4xNiw1LjQzIDUsNS45MSB2IDIuMDIgYyAtMy45NSwtMC40OSAtNywtMy44NSAtNywtNy45MyAwLC00LjA4IDMuMDUsLTcuNDQgNywtNy45MyB6IgogICAgIGlkPSJwYXRoNCIKICAgICBzdHlsZT0iZmlsbDojODAwMDgwIiAvPgo8L3N2Zz4K';
 
 
 /* skadi/js/common/geometry.js */
@@ -910,72 +910,6 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
     this.flow();
   }
 
-  /*
-  pack(horizontal) {
-    this.layout = "pack";
-    if (horizontal) {
-      let max_h = 0;
-      
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        if (sz.height > max_h) {
-          max_h = sz.height;
-        }    
-      }
-      let h = this.header_sz+2*this.padding+max_h;
-      if (h < this.min_height) {
-        h = this.min_height;
-      }
-      let x_pos = this.padding;
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        this.entries[idx].update_position(x_pos+sz.width/2,this.header_sz+this.padding+max_h/2);
-        x_pos += sz.width;
-        x_pos += this.padding;
-      }
-      let w = x_pos+this.padding;
-      if (w < this.min_width) {
-        let shift = (this.min_width - w);
-        w = this.min_width;
-        for(let idx=0; idx<this.entries.length; idx++) {
-          let sz = this.entries[idx].get_position();
-          this.entries[idx].update_position(sz.x+shift,sz.y);
-        }
-      }
-    } else { 
-      let max_w = 0;
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        if (sz.width > max_w) {
-          max_w = sz.width;
-        }    
-      }
-      let w = 2*this.padding+max_w;
-      if (w < this.min_width) {
-        w = this.min_width;
-      }
-      let y_pos = this.header_sz + this.padding;
-      for(let idx=0; idx<this.entries.length; idx++) {
-        let sz = this.entries[idx].get_size();
-        this.entries[idx].update_position(2*this.padding+w/2,y_pos+sz.height/2);
-        this.entries[idx].update_size(max_w,null);
-        y_pos += sz.height;
-      }
-      let h = y_pos+this.padding;
-      if (this.scrollbar) {
-        h = this.height;
-        w += this.scrollbar_width;
-      }
-    }
-    // don't reduce width as part of pack
-    if (w < this.width) {
-      w = this.width;
-    }
-    this.update_size(w,h);
-  }
-  */
-
-
   flow() {
       if (!this.entries) {
           return 0;
@@ -1033,6 +967,7 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
       this.content = this.fo.append("div").attr("width", this.content_width + "px").attr("height", this.content_height + "px");
       if (this.open_callback) {
         this.open_callback(this.content.node());
+        this.resize(this.content_width,this.content_height,true);
       }
     }
   }
@@ -1267,8 +1202,8 @@ class SkadiX3Drag {
   enable_drag_overlay() {
     let that = this;
     this.drag_overlay.style = "pointer-events:all;";
-    this.drag_overlay.setAttribute("width",2000);
-    this.drag_overlay.setAttribute("height", 2000);
+    this.drag_overlay.setAttribute("width","100%");
+    this.drag_overlay.setAttribute("height", "100%");
 
     this.drag_overlay.onmousemove = function(evt) {
       that.move(evt);
@@ -1499,6 +1434,14 @@ class SkadiX3 {
 Skadi.x3 = new SkadiX3();
 Skadi.x3.drag = function() { return new SkadiX3Drag(); }
 
+Skadi.$ = (id) => {
+    return document.getElementById(id);
+}
+
+Skadi.$$ = (selector) => {
+    return Skadi.x3.select(selector);
+}
+
 Skadi.x3.svg_tags = [
 	"a",
 	"altGlyph",
@@ -1702,18 +1645,23 @@ class TopologyStore {
         this.skadi = skadi;
     }
 
-    async getSaveLink() {
+    async get_save_link() {
        return "data:application/json;base64," + btoa(JSON.stringify(this.skadi.save()));
     }
 
-    get_example_links() {
-        return [];
-    }
-
-    async loadFrom(file) {
+    async load_from(file) {
         file.text().then(t => {
+            alert(t);
             this.skadi.load(JSON.parse(t),false);
         });
+    }
+
+    get_store_callback() {
+        return undefined;
+    }
+
+    get_restore_callback() {
+        return undefined;
     }
 }
 
@@ -1948,11 +1896,13 @@ class SkadiCore {
 
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
-        node.update_execution_state(state);
-        if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
-            let upstream_node_ids = this.network.get_upstream_nodes(node_id);
-            for (let idx in upstream_node_ids) {
-                this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+        if (node) {
+            node.update_execution_state(state);
+            if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
+                let upstream_node_ids = this.network.get_upstream_nodes(node_id);
+                for (let idx in upstream_node_ids) {
+                    this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+                }
             }
         }
     }
@@ -2640,18 +2590,35 @@ let skadi_download_html = `
             </div>
         </div>
     </div>
+    <div class="exo-row" style="visibility:hidden;" id="store_updates_row">
+        <div class="exo-2-cell">
+            {{store.label}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="button" id="store_updates_btn" value="{{store}}">
+        </div>
+    </div>
 </div>`
 
 function skadi_populate_save(design, elt) {
     elt.innerHTML = design.localise(skadi_download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
-    design.get_topology_store().getSaveLink().then(url => {
+    design.get_topology_store().get_save_link().then(url => {
         link.innerHTML = "Download";
         link.setAttribute("href", url);
         const filename = design.metadata.filename || "topology.json";
         link.setAttribute("download", filename);
     });
+
+    let store_cb = design.get_topology_store().get_store_callback();
+    if (store_cb) {
+        Skadi.$("store_updates_row").style.visibility = "visible";
+        Skadi.$("store_updates_btn").addEventListener("click", (e) =>{
+            store_cb();
+        });
+    }
+
 }
 
 /* skadi/js/dialogs/load.js */
@@ -2676,6 +2643,14 @@ let skadi_upload_html = `
             <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
         </div>
     </div>
+    <div class="exo-row" style="visibility:hidden;" id="restore_updates_row">
+        <div class="exo-2-cell">
+            {{restore.label}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="button" id="restore_updates_btn" value="{{restore}}">
+        </div>
+    </div>
 </div>`
 
 function skadi_populate_load(design, elt, close_fn) {
@@ -2683,10 +2658,17 @@ function skadi_populate_load(design, elt, close_fn) {
     let input = document.getElementById("skadi_designer_upload_file");
     input.addEventListener("change", async function() {
         let file = input.files[0];
-        await design.get_topology_store().loadFrom(file);
+        await design.get_topology_store().load_from(file);
         design.metadata.filename = file.name;
         close_fn();
     });
+    let restore_cb = design.get_topology_store().get_restore_callback();
+    if (restore_cb) {
+        Skadi.$("restore_updates_row").style.visibility = "visible";
+        Skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
+            restore_cb();
+        });
+    }
 }
 
 /* skadi/js/dialogs/clear.js */
@@ -2812,12 +2794,12 @@ function skadi_populate_adjust(design, node, elt, close_window) {
         node.update_position(node.x, node.y);
     });
     rotate_left_button.addEventListener("click",(evt) => {
-        node.set_rotation(node.get_rotation()-45);
+        node.set_rotation(node.get_rotation()-15);
         node.update_position(node.x, node.y);
         rotate_input.value = ""+node.get_rotation();
       });
     rotate_right_button.addEventListener("click",(evt) => {
-      node.set_rotation(node.get_rotation()+45);
+      node.set_rotation(node.get_rotation()+15);
       node.update_position(node.x, node.y);
       rotate_input.value = ""+node.get_rotation();
     });
@@ -4033,10 +4015,8 @@ class SkadiNode extends SkadiCoreNode {
           let html_url = this.node_type.get_html_url();
           this.iframe = document.createElement("iframe");
           this.iframe.setAttribute("src",html_url);
-          this.iframe.setAttribute("width",""+window_width-20);
-          this.iframe.setAttribute("height",""+window_height-20);
           this.iframe.addEventListener("load", (evt) => {
-            this.wrapper.open(this.iframe.contentWindow, window_width, window_width);
+            this.wrapper.open(this.iframe.contentWindow);
           });
           elt.appendChild(this.iframe);
       },
@@ -4044,8 +4024,8 @@ class SkadiNode extends SkadiCoreNode {
           this.wrapper.close();
       }, window_width, window_height,
       (w,h) => {
-          this.iframe.setAttribute("width",""+w-20);
-          this.iframe.setAttribute("height",""+h-20);
+          this.iframe.setAttribute("width",""+w-10);
+          this.iframe.setAttribute("height",""+h-10);
           this.wrapper.resize(w,h);
       });
 
@@ -5174,13 +5154,16 @@ class SkadiConfiguration extends SkadiCoreConfiguration {
       this.iframe = iframe;
       this.iframe.setAttribute("width",""+w-20);
       this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.open(iframe.contentWindow, w, h);
+      this.wrapper.open(iframe.contentWindow);
+      this.wrapper.resize(w-20, h-20);
   }
 
   resize(w,h) {
-      this.iframe.setAttribute("width",""+w-20);
-      this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.resize(w,h);
+      if (this.iframe) {
+          this.iframe.setAttribute("width", "" + w - 20);
+          this.iframe.setAttribute("height", "" + h - 20);
+          this.wrapper.resize(w, h);
+      }
   }
 
   close() {
@@ -5281,19 +5264,19 @@ class SkadiNodeService {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    add_event_handler(element_id, event_type, callback, event_transform) {
+    page_add_event_handler(element_id, event_type, callback, event_transform) {
         this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
     }
 
-    set_attributes(element_id, attributes) {
+    page_set_attributes(element_id, attributes) {
         this.wrapper.set_attributes(element_id, attributes);
     }
 
-    send_message(message) {
+    page_send_message(message) {
         this.wrapper.send_message(message);
     }
 
-    set_message_handler(handler) {
+    page_set_message_handler(handler) {
         this.wrapper.set_message_handler(handler);
     }
 
@@ -5421,9 +5404,9 @@ class SkadiWrapper {
             "element_id": element_id
         }
         if (this.l10n_utils) {
-            msg.attributes = attributes = {};
+            msg.attributes = {};
             for (let attribute_name in attributes) {
-                msg.attributes[attribute_name] = this.services.localise(attributes[attribute_name]);
+                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
             }
         } else {
             msg.attributes = attributes;
@@ -5465,7 +5448,7 @@ class SkadiWrapper {
         }
     }
 
-    open(w, width, height) {
+    open(w) {
         this.window = w;
         this.pending_messages = [];
         window.addEventListener("message", (event) => {
@@ -5473,9 +5456,9 @@ class SkadiWrapper {
                 this.recv_from_window(event.data);
             }
         });
-        if (this.instance.open) {
+        if (this.instance.page_open) {
             try {
-                this.instance.open(width, height);
+                this.instance.page_open();
             } catch(e) {
                 console.error(e);
             }
@@ -5492,9 +5475,9 @@ class SkadiWrapper {
     }
 
     resize(width,height) {
-        if (this.instance.resize) {
+        if (this.instance.page_resize) {
             try {
-                this.instance.resize(width, height);
+                this.instance.page_resize(width, height);
             } catch(e) {
                 console.error(e);
             }
@@ -5503,32 +5486,14 @@ class SkadiWrapper {
 
     close() {
         this.window = null;
-        if (this.instance.close) {
+        if (this.instance.page_close) {
             try {
-                this.instance.close();
+                this.instance.page_close();
             } catch(e) {
                 console.error(e);
             }
         }
         this.pending_messages = [];
-    }
-
-    reset_execution() {
-        if (this.instance.reset_execution) {
-            try {
-                this.instance.reset_execution();
-            } catch(e) {
-                console.error(e);
-            }
-        }
-    }
-
-    async execute(inputs) {
-        if (this.instance.execute) {
-            return await this.instance.execute(inputs);
-        } else {
-            return {};
-        }
     }
 }
 
@@ -5556,19 +5521,19 @@ class SkadiConfigurationService {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    add_event_handler(element_id, event_type, callback, event_transform) {
+    page_add_event_handler(element_id, event_type, callback, event_transform) {
         this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
     }
 
-    set_attributes(element_id, attributes) {
+    page_set_attributes(element_id, attributes) {
         this.wrapper.set_attributes(element_id, attributes);
     }
 
-    send_message(message) {
+    page_send_message(message) {
         this.wrapper.send_message(message);
     }
 
-    set_message_handler(handler) {
+    page_set_message_handler(handler) {
         this.wrapper.set_message_handler(handler);
     }
 
@@ -5616,7 +5581,7 @@ class SkadiNodeType {
     this.package_id = package_type.get_id();
     this.enabled = schema["enabled"] !== false;
     let metadata = schema["metadata"] || { "name": nodeTypeId, "description":""};
-    let display = schema["display"] || { "corners": 4, "icon": "", "html": "" };
+    let display = schema["display"] || { "corners": 4, "icon": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
     this.page = schema["page"] || {};
@@ -6440,10 +6405,14 @@ class SkadiViewApi extends SkadiApi {
      *
      * @param {string} topology_url - the topology to load
      */
-    async load_topology(topology_url) {
-        return await fetch(topology_url)
-            .then(response => response.json())
-            .then(topology => this.application.deserialise(topology, true));
+    async load_topology(topology) {
+        if (typeof topology === "string") {
+            return await fetch(topology)
+                .then(response => response.json())
+                .then(topology => this.load_topology_object(topology));
+        } else {
+            this.application.deserialise(topology, true);
+        }
     }
 
     add_node_event_handler(node_event_type, handler) {

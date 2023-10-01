@@ -61,8 +61,8 @@ class SkadiX3Drag {
   enable_drag_overlay() {
     let that = this;
     this.drag_overlay.style = "pointer-events:all;";
-    this.drag_overlay.setAttribute("width",2000);
-    this.drag_overlay.setAttribute("height", 2000);
+    this.drag_overlay.setAttribute("width","100%");
+    this.drag_overlay.setAttribute("height", "100%");
 
     this.drag_overlay.onmousemove = function(evt) {
       that.move(evt);
@@ -292,6 +292,14 @@ class SkadiX3 {
 
 Skadi.x3 = new SkadiX3();
 Skadi.x3.drag = function() { return new SkadiX3Drag(); }
+
+Skadi.$ = (id) => {
+    return document.getElementById(id);
+}
+
+Skadi.$$ = (selector) => {
+    return Skadi.x3.select(selector);
+}
 
 Skadi.x3.svg_tags = [
 	"a",

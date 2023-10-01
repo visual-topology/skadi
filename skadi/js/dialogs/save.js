@@ -30,16 +30,33 @@ let skadi_download_html = `
             </div>
         </div>
     </div>
+    <div class="exo-row" style="visibility:hidden;" id="store_updates_row">
+        <div class="exo-2-cell">
+            {{store.label}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="button" id="store_updates_btn" value="{{store}}">
+        </div>
+    </div>
 </div>`
 
 function skadi_populate_save(design, elt) {
     elt.innerHTML = design.localise(skadi_download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
-    design.get_topology_store().getSaveLink().then(url => {
+    design.get_topology_store().get_save_link().then(url => {
         link.innerHTML = "Download";
         link.setAttribute("href", url);
         const filename = design.metadata.filename || "topology.json";
         link.setAttribute("download", filename);
     });
+
+    let store_cb = design.get_topology_store().get_store_callback();
+    if (store_cb) {
+        Skadi.$("store_updates_row").style.visibility = "visible";
+        Skadi.$("store_updates_btn").addEventListener("click", (e) =>{
+            store_cb();
+        });
+    }
+
 }

@@ -16,11 +16,11 @@
     "node.description": "Node description",
     "node.orientation": "Node orientation",
     "node.adjust.tooltip": "Update the metadata associated with the node being edited",
-    "upload.topology": "Upload Topology",
-    "upload.topology.tooltip": "Upload a previously downloaded topology file to the designer",
+    "upload.topology": "Upload/Restore Topology",
+    "upload.topology.tooltip": "Restore or Upload the topology",
     "upload.file": "File",
-    "download.topology": "Download Topology",
-    "download.topology.tooltip": "Download a topology from the designer to a file",
+    "download.topology": "Download/Store Topology",
+    "download.topology.tooltip": "Store or Download the topology",
     "download.file": "File",
     "download": "Download",
     "node.menu.title": "Edit Node",
@@ -29,5 +29,9 @@
     "node.menu.open": "Open Node...",
     "node.menu.opentab": "Open Node in tab...",
     "about.tooltip": "About this service and packages",
-    "configuration.edit.tooltip": "Edit system and package configurations"
+    "configuration.edit.tooltip": "Edit system and package configurations",
+    "store.label": "Store updates on server",
+    "store": "Store",
+    "restore.label": "Restore version last stored on the server",
+    "restore": "restore"
 }

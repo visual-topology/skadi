@@ -25,6 +25,14 @@ let skadi_upload_html = `
             <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
         </div>
     </div>
+    <div class="exo-row" style="visibility:hidden;" id="restore_updates_row">
+        <div class="exo-2-cell">
+            {{restore.label}}:
+        </div>
+        <div class="exo-2-cell">
+            <input type="button" id="restore_updates_btn" value="{{restore}}">
+        </div>
+    </div>
 </div>`
 
 function skadi_populate_load(design, elt, close_fn) {
@@ -32,8 +40,15 @@ function skadi_populate_load(design, elt, close_fn) {
     let input = document.getElementById("skadi_designer_upload_file");
     input.addEventListener("change", async function() {
         let file = input.files[0];
-        await design.get_topology_store().loadFrom(file);
+        await design.get_topology_store().load_from(file);
         design.metadata.filename = file.name;
         close_fn();
     });
+    let restore_cb = design.get_topology_store().get_restore_callback();
+    if (restore_cb) {
+        Skadi.$("restore_updates_row").style.visibility = "visible";
+        Skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
+            restore_cb();
+        });
+    }
 }

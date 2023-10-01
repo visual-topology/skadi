@@ -50,7 +50,9 @@
                 "icon": "icons/csv_import.svg"
             },
             "page": {
-                "url": "nodes/csv_import_{language}.html"
+                "url": "nodes/csv_import_{language}.html",
+                "window_width": 500,
+                "window_height": 300
             },
             "classname": "DataVizExample.CsvImportNode",
             "dependencies": ["nodes/csv_import.js"]
@@ -148,7 +150,9 @@
                 "icon": "icons/table.svg"
             },
             "page": {
-                "url": "nodes/table_display.html"
+                "url": "nodes/table_display.html",
+                "window_width": 800,
+                "window_height": 800
             },
             "classname": "DataVizExample.TableDisplayNode",
             "dependencies": ["nodes/table_display.js"]
@@ -198,6 +202,7 @@
             "dependencies": ["nodes/2d_histogram_plot.js"]
         },
         "histogram_plot": {
+            "enabled": false,
             "metadata": {
                 "name": "Histogram Plot",
                 "description": "Draw a Histogram"

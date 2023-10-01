@@ -32,10 +32,14 @@ class SkadiViewApi extends SkadiApi {
      *
      * @param {string} topology_url - the topology to load
      */
-    async load_topology(topology_url) {
-        return await fetch(topology_url)
-            .then(response => response.json())
-            .then(topology => this.application.deserialise(topology, true));
+    async load_topology(topology) {
+        if (typeof topology === "string") {
+            return await fetch(topology)
+                .then(response => response.json())
+                .then(topology => this.load_topology_object(topology));
+        } else {
+            this.application.deserialise(topology, true);
+        }
     }
 
     add_node_event_handler(node_event_type, handler) {

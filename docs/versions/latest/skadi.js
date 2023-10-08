@@ -894,9 +894,9 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
     this.content_offset = 0;
   }
 
-  resize(content_width,content_height,is_final) {
+  resize() {
     this.flow();
-    return 1000;
+    return 1500;
   }
 
   add(entry) {
@@ -911,9 +911,9 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
   }
 
   flow() {
-      if (!this.entries) {
-          return 0;
-      }
+    if (!this.entries) {
+        return 0;
+    }
     let xc = this.padding;
     let yc = 40 + this.padding;
     let row_height = 0;
@@ -934,6 +934,8 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
         row_height = sz.height;
       }  
     }
+    console.log(""+yc);
+    return yc;
   }
 }
 
@@ -1651,7 +1653,6 @@ class TopologyStore {
 
     async load_from(file) {
         file.text().then(t => {
-            alert(t);
             this.skadi.load(JSON.parse(t),false);
         });
     }
@@ -3462,10 +3463,10 @@ class SkadiDesigner extends SkadiCore {
     }
 
     localisation_updated() {
-        this.help_btn.set_tooltip(this.localise("about.tooltip"));
-        this.clear_btn.set_tooltip(this.localise("clear.topology.tooltip"));
-        this.edit_btn.set_tooltip(this.localise("topology.metadata.editor.tooltip"));
-        this.configuration_btn.set_tooltip(this.localise("configuration.edit.tooltip"));
+        this.help_btn.set_tooltip(this.localise("{{about.tooltip}}"));
+        this.clear_btn.set_tooltip(this.localise("{{clear.topology.tooltip}}"));
+        this.edit_btn.set_tooltip(this.localise("{{topology.metadata.editor.tooltip}}"));
+        this.configuration_btn.set_tooltip(this.localise("{{configuration.edit.tooltip}}"));
     }
 
     toggle_pause() {
@@ -3894,6 +3895,9 @@ class SkadiDesigner extends SkadiCore {
         }
         for (let node_id in from_obj.nodes) {
             let node = SkadiNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            this.network.add_node(node);
+            node.draw();
+            node.create_instance();
             this.add_node(node, suppress_events);
         }
         for (let link_id in from_obj.links) {
@@ -4228,7 +4232,7 @@ class SkadiNode extends SkadiCoreNode {
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "node.menu.title");
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "{{node.menu.title}}");
         tm.open();
       };
 

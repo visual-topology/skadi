@@ -14,6 +14,7 @@ DataVizExample.Histogram2DPlotNode = class {
         this.width = null;
         this.height = null;
         this.dataset = null;
+        this.is_open = false;
         this.create_column_selector("x_axis", this.x_col);
         this.create_column_selector("y_axis", this.y_col);
         this.update_status();
@@ -96,15 +97,17 @@ DataVizExample.Histogram2DPlotNode = class {
     }
 
     draw() {
-        let msg = {
+        if (this.is_open) {
+            let msg = {
                 "dataset": this.dataset.toCSV(),
                 "x_col": this.x_col,
-                "y_col":this.y_col,
+                "y_col": this.y_col,
                 "width": this.width,
                 "height": this.height,
                 "theme": this.node_service.get_configuration().get_theme()
             }
-        this.node_service.page_send_message(msg);
+            this.node_service.page_send_message(msg);
+        }
     }
 
     clear() {
@@ -112,6 +115,10 @@ DataVizExample.Histogram2DPlotNode = class {
     }
 
     page_open() {
+        this.is_open = true;
+        if (this.valid()) {
+            this.draw();
+        }
     }
 
     page_resize(width,height) {
@@ -121,6 +128,7 @@ DataVizExample.Histogram2DPlotNode = class {
     }
 
     page_close() {
+        this.is_open = false;
         this.width = null;
         this.height = null;
     }

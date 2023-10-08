@@ -47,6 +47,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -74,6 +75,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -101,9 +103,11 @@
             },
             "input_ports": {
                 "data_in1": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 },
                 "data_in2": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -131,6 +135,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -158,6 +163,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -183,6 +189,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -201,10 +208,11 @@
         "scatter_plot": {
             "metadata": {
                 "name": "Scatter Plot",
-                "description": "Draw a Scatter Plot"
+                "description": "Plot points for each data item"
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -227,6 +235,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -244,11 +253,12 @@
         },
         "line_plot": {
             "metadata": {
-                "name": "Line Plot",
-                "description": "Draw a Line Plot"
+                "name": "Time Series Plot",
+                "description": "Plot lines for one or more time series"
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -271,6 +281,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },
@@ -293,6 +304,7 @@
             },
             "input_ports": {
                 "data_in": {
+                    "allow_multiple_connections": false,
                     "link_type": "dataviz:dataset"
                 }
             },

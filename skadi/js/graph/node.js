@@ -314,7 +314,7 @@ class SkadiNode extends SkadiCoreNode {
         let evloc = Skadi.x3.get_event_xy(e);
         let mx = evloc.x - 50;
         let my = evloc.y - 50;
-        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "node.menu.title");
+        let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, mx, my, "{{node.menu.title}}");
         tm.open();
       };
 

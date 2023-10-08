@@ -14,6 +14,7 @@ DataVizExample.HistogramPlotNode = class {
         this.dataset = null;
         this.width = null;
         this.height = null;
+        this.is_open = false;
 
         this.node_service.page_set_attributes("use_custom",{"value":""+this.use_custom_settings});
         this.node_service.page_add_event_handler("use_custom","change", (v) => {
@@ -27,14 +28,7 @@ DataVizExample.HistogramPlotNode = class {
         this.node_service.page_set_attributes("custom_band_width",{"value":""+this.custom_band_width});
         this.node_service.page_add_event_handler("custom_band_width", "change", (v) => {
             this.custom_band_width = Number.parseFloat(v);
-            if (this.valid()) {
-                this.draw();
-            }
-        });
-
-        this.node_service.page_set_attributes("custom_band_anchor",{"value":""+this.custom_band_anchor});
-        this.node_service.page_add_event_handler("custom_band_anchor", "change", (v) => {
-            this.custom_band_anchor = Number.parseFloat(v);
+            this.node_service.page_set_attributes("custom_band_width",{"value":""+this.custom_band_width});
             if (this.valid()) {
                 this.draw();
             }
@@ -56,9 +50,6 @@ DataVizExample.HistogramPlotNode = class {
 
     get custom_band_width() { return this.node_service.get_property("custom_band_width",1); }
     set custom_band_width(v) { this.node_service.set_property("custom_band_width",v); }
-
-    get custom_band_anchor() { return this.node_service.get_property("custom_band_anchor",0); }
-    set custom_band_anchor(v) { this.node_service.set_property("custom_band_anchor",v); }
 
     set_options(sel_id, names) {
         let options = [["",""]];
@@ -141,7 +132,6 @@ DataVizExample.HistogramPlotNode = class {
                 "height": this.height,
                 "use_custom_settings": this.use_custom_settings,
                 "custom_band_width": this.custom_band_width,
-                "custom_band_anchor": this.custom_band_anchor,
                 "theme": this.node_service.get_configuration().get_theme()
             };
         this.node_service.page_send_message(msg);
@@ -152,12 +142,15 @@ DataVizExample.HistogramPlotNode = class {
     }
 
     page_open() {
+        this.is_open = true;
         this.update_custom_controls();
+        if (this.valid()) {
+            this.draw();
+        }
     }
 
     update_custom_controls() {
         this.node_service.page_set_attributes("custom_band_width",{"disabled":""+!this.use_custom_settings});
-        this.node_service.page_set_attributes("custom_band_anchor",{"disabled":""+!this.use_custom_settings});
     }
 
     page_resize(width,height) {
@@ -167,6 +160,7 @@ DataVizExample.HistogramPlotNode = class {
     }
 
     page_close() {
+        this.is_open = false;
         this.width = null;
         this.height = null;
     }

@@ -16,6 +16,7 @@ DataVizExample.SampleRowsNode = class {
 
         this.node_service.page_add_event_handler("sample_size","change", v => {
             this.sample_size = Number.parseInt(v);
+            this.node_service.page_set_attributes("sample_size",{"value":""+this.sample_size});
             this.update_status();
             this.node_service.request_execution();
         });

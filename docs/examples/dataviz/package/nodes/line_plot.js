@@ -129,6 +129,9 @@ DataVizExample.LinePlotNode = class {
 
     page_open() {
         this.is_open = true;
+        if (this.valid()) {
+            this.draw();
+        }
     }
 
     page_resize(width,height) {

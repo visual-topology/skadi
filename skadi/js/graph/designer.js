@@ -167,10 +167,10 @@ class SkadiDesigner extends SkadiCore {
     }
 
     localisation_updated() {
-        this.help_btn.set_tooltip(this.localise("about.tooltip"));
-        this.clear_btn.set_tooltip(this.localise("clear.topology.tooltip"));
-        this.edit_btn.set_tooltip(this.localise("topology.metadata.editor.tooltip"));
-        this.configuration_btn.set_tooltip(this.localise("configuration.edit.tooltip"));
+        this.help_btn.set_tooltip(this.localise("{{about.tooltip}}"));
+        this.clear_btn.set_tooltip(this.localise("{{clear.topology.tooltip}}"));
+        this.edit_btn.set_tooltip(this.localise("{{topology.metadata.editor.tooltip}}"));
+        this.configuration_btn.set_tooltip(this.localise("{{configuration.edit.tooltip}}"));
     }
 
     toggle_pause() {
@@ -599,6 +599,9 @@ class SkadiDesigner extends SkadiCore {
         }
         for (let node_id in from_obj.nodes) {
             let node = SkadiNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            this.network.add_node(node);
+            node.draw();
+            node.create_instance();
             this.add_node(node, suppress_events);
         }
         for (let link_id in from_obj.links) {

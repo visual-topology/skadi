@@ -18,12 +18,14 @@ DataVizExample.CreateColumnNode = class {
 
         this.node_service.page_add_event_handler("column_name","change", v => {
             this.column_name = v;
+            this.node_service.page_set_attributes("column_name",{"value":this.column_name});
             this.update_status();
             this.node_service.request_execution();
         });
 
         this.node_service.page_add_event_handler("column_expression","change", v => {
             this.column_expression = v;
+            this.node_service.page_set_attributes("column_expression",{"value":this.column_expression});
             this.update_status();
             this.node_service.request_execution();
         });

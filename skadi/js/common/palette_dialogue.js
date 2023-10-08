@@ -25,9 +25,9 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
     this.content_offset = 0;
   }
 
-  resize(content_width,content_height,is_final) {
+  resize() {
     this.flow();
-    return 1000;
+    return 1500;
   }
 
   add(entry) {
@@ -42,9 +42,9 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
   }
 
   flow() {
-      if (!this.entries) {
-          return 0;
-      }
+    if (!this.entries) {
+        return 0;
+    }
     let xc = this.padding;
     let yc = 40 + this.padding;
     let row_height = 0;
@@ -65,5 +65,7 @@ class SkadiPaletteDialogue extends SkadiSvgDialogue {
         row_height = sz.height;
       }  
     }
+    console.log(""+yc);
+    return yc;
   }
 }

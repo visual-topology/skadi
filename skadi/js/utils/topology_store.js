@@ -17,7 +17,6 @@ class TopologyStore {
 
     async load_from(file) {
         file.text().then(t => {
-            alert(t);
             this.skadi.load(JSON.parse(t),false);
         });
     }

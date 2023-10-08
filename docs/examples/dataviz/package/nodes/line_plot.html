@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link href="https://visualtopology.github.io/exo/versions/latest/exo.css" rel="stylesheet" type="text/css">
+    <link href="https://visualtopology.github.io/exo/versions/latest/exo-icons.css" rel="stylesheet" type="text/css">
+    <script src="https://visualtopology.github.io/exo/versions/latest/exo.js" type="text/javascript"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.22.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.6.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.21.2"></script>
+
+    <script src="../../../../versions/latest/skadi-ui.js" type="text/javascript"></script>
+
+    <link href="chart_layout.css" rel="stylesheet" type="text/css">
+
+    <script>
+        skadiui.set_message_handler((msg) => {
+            let vizdiv = document.getElementById("vizdiv");
+            vizdiv.innerHTML = "";
+
+            let r = document.getElementById("vizdiv").getBoundingClientRect();
+            let h = r.height;
+            let w = r.width;
+
+            console.log("height="+h+",width="+w);
+
+            if (msg.dataset) {
+                let spec = {
+                    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                    "description": "A line plot.",
+                    "data": {"format": {"type": "csv"}, "values": msg.dataset},
+                    "mark": "line",
+                    "width": w,
+                    "height": h-40,
+                    "padding": 20,
+                    "autosize": {
+                      "type": "fit",
+                      "contains": "padding"
+                    },
+                    "encoding": {
+                        "x": {"field": msg.x_col, "type": "temporal"},
+                        "y": {"field": msg.y_col, "type": "quantitative"}
+                    }
+                }
+                if (msg.h_col) {
+                    spec["encoding"]["color"] = {"field": msg.h_col, "type": "nominal"};
+                }
+                vegaEmbed(vizdiv, spec, {"theme": msg.theme, "defaultStyle":false,"actions":{"export":true, "source":false, "compiled":false, "editor":false}});
+            } else {
+                vizdiv.innerHTML = "";
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="flexroot">
+        <div class="exo-row">
+            <div class="exo-2-cell">
+                <exo-select id="x_axis" label="X-Axis">
+                </exo-select>
+            </div>
+            <div class="exo-2-cell">
+                <exo-select id="y_axis" label="Y-Axis">
+                </exo-select>
+            </div>
+            <div class="exo-2-cell">
+                <exo-select id="hue" label="Hue">
+                </exo-select>
+            </div>
+        </div>
+        <div id="vizdiv">
+        </div>
+    </div>
+</body>
+</html>

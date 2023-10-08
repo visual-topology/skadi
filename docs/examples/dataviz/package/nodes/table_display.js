@@ -16,15 +16,39 @@ DataVizExample.TableDisplayNode = class {
         this.refresh();
     }
 
+    export_table() {
+        if (this.dataset) {
+            let col_json = JSON.parse(this.dataset.toJSON({ schema: false }));
+            let columns = [];
+            for (let column in col_json) {
+                columns.push(column);
+            }
+            let data = [];
+            if (columns.length > 0) {
+                let row_count = col_json[columns[0]].length;
+                for(let idx=0; idx<row_count; idx++) {
+                    let row = [];
+                    columns.forEach(column => {
+                        row.push(col_json[column][idx]);
+                    });
+                    data.push(row);
+                }
+            }
+            return { "columns":columns, "data":data };
+        } else {
+            return {};
+        }
+    }
+
     refresh() {
         if (this.dataset) {
             this.node_service.set_status_info(""+this.dataset.numRows()+" Rows");
             if (this.is_open) {
-                this.node_service.page_send_message({"html":this.dataset.toHTML({"limit":1e6})});
+                this.node_service.page_send_message(this.export_table());
             }
         } else {
             if (this.is_open) {
-                this.node_service.page_send_message({"html":""});
+                this.node_service.page_send_message({});
             }
             this.node_service.set_status_warning("Waiting for input data");
         }

@@ -64,39 +64,40 @@
 </head>
 
 <body>
+    <div id="flexroot">
+        <div class="exo-row">
+            <div class="exo-2-cell">
+                <exo-select id="x_axis" label="X-Axis">
+                </exo-select>
+            </div>
+            <div class="exo-2-cell">
+                <exo-select id="hue" label="Hue">
+                </exo-select>
+            </div>
+        </div>
+        <div class="exo-row">
+            <div class="exo-tree" role="tree">
+                <div is="exo-tree" label="More Settings...">
+                    <div class="exo-row">
+                        <div class="exo-2-cell">
+                            <exo-checkbox id="use_custom" label="Manual" value="false">
+                            </exo-checkbox>
+                        </div>
+                        <div class="exo-2-cell">
+                            <exo-number step="0.1" id="custom_band_anchor" value="0" label="Band Start">
+                            </exo-number>
+                        </div>
+                        <div class="exo-2-cell">
+                            <exo-number step="0.01" id="custom_band_width" value="1" label="Band Width">
+                            </exo-number>
+                        </div>
+                    </div>
 
-<div class="exo-row">
-    <div class="exo-2-cell">
-        <exo-select id="x_axis" label="X-Axis">
-        </exo-select>
-    </div>
-    <div class="exo-2-cell">
-        <exo-select id="hue" label="Hue">
-        </exo-select>
-    </div>
-</div>
-<div class="exo-row">
-    <div class="exo-tree" role="tree">
-        <div is="exo-tree" label="More Settings...">
-            <div class="exo-row">
-                <div class="exo-2-cell">
-                    <exo-checkbox id="use_custom" label="Manual" value="false">
-                    </exo-checkbox>
-                </div>
-                <div class="exo-2-cell">
-                    <exo-number step="0.1" id="custom_band_anchor" value="0" label="Band Start">
-                    </exo-number>
-                </div>
-                <div class="exo-2-cell">
-                    <exo-number step="0.01" id="custom_band_width" value="1" label="Band Width">
-                    </exo-number>
                 </div>
             </div>
-
+        </div>
+        <div id="vizdiv">
         </div>
     </div>
-</div>
-<div id="vizdiv">
-</div>
 </body>
 </html>

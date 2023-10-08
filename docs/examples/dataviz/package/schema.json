@@ -17,27 +17,10 @@
         }
     },
     "dependencies": [ "configuration.js","nodes/aq_utils.js" ],
-    "l10n": {
-        "languages": {
-            "en": {
-                "name": "English",
-                "bundle_url": "l10n/en.json"
-            },
-            "ja": {
-                "name": "日本語",
-                "bundle_url": "l10n/ja.json"
-            },
-            "es": {
-                "name": "Español",
-                "bundle_url": "l10n/es.json"
-            }
-        },
-        "default_language":"en"
-    },
     "node_types": {
         "csv_import": {
             "metadata": {
-                "name": "{{csv.reader.name}}",
+                "name": "CSV Reader",
                 "description": "Select a CSV file and load it into a dataset"
             },
             "output_ports": {
@@ -50,7 +33,7 @@
                 "icon": "icons/csv_import.svg"
             },
             "page": {
-                "url": "nodes/csv_import_{language}.html",
+                "url": "nodes/csv_import.html",
                 "window_width": 500,
                 "window_height": 300
             },
@@ -58,7 +41,6 @@
             "dependencies": ["nodes/csv_import.js"]
         },
         "sample_rows": {
-            "enabled": false,
             "metadata": {
                 "name": "Sample",
                 "description": "Select a sample from the input dataset"
@@ -78,13 +60,14 @@
                 "icon": "icons/filter_random.svg"
             },
             "page": {
-                "url": "nodes/sample_rows.html"
+                "url": "nodes/sample_rows.html",
+                "window_width": 500,
+                "window_height": 300
             },
             "classname": "DataVizExample.SampleRowsNode",
             "dependencies": ["nodes/sample_rows.js"]
         },
         "select_rows": {
-            "enabled": false,
             "metadata": {
                 "name": "Select Rows",
                 "description": "Select Rows by Category or Numeric Range"
@@ -101,16 +84,74 @@
             },
             "display": {
                 "corners": 7,
-                "icon": "icons/filter_criteria.svg"
+                "icon": "icons/select_rows.svg"
             },
             "page": {
-                "url": "nodes/select_rows.html"
+                "url": "nodes/select_rows.html",
+                "window_width": 600,
+                "window_height": 600
             },
             "classname": "DataVizExample.SelectRowsNode",
             "dependencies": ["nodes/select_rows.js"]
         },
+        "join_rows": {
+            "metadata": {
+                "name": "Join Rows",
+                "description": "Join rows from multiple inputs"
+            },
+            "input_ports": {
+                "data_in1": {
+                    "link_type": "dataviz:dataset"
+                },
+                "data_in2": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/join_rows.svg"
+            },
+            "page": {
+                "url": "nodes/join_rows.html",
+                "window_width": 600,
+                "window_height": 600
+            },
+            "classname": "DataVizExample.JoinRowsNode",
+            "dependencies": ["nodes/join_rows.js"]
+        },
+         "select_columns": {
+            "metadata": {
+                "name": "Select Columns",
+                "description": "Select a subset of columns"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/select_columns.svg"
+            },
+            "page": {
+                "url": "nodes/select_columns.html",
+                "window_width": 600,
+                "window_height": 600
+            },
+            "classname": "DataVizExample.SelectColumnsNode",
+            "dependencies": ["nodes/select_columns.js"]
+        },
         "create_column": {
-            "enabled": false,
             "metadata": {
                 "name": "Create Column",
                 "description": "Create a new column"
@@ -179,6 +220,50 @@
             "classname": "DataVizExample.ScatterPlotNode",
             "dependencies": ["nodes/scatter_plot.js"]
         },
+        "bar_chart": {
+            "metadata": {
+                "name": "Bar Chart",
+                "description": "Draw a Bar Chart"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 5,
+                "icon": "icons/bar.svg"
+            },
+            "page": {
+                "window_width": 600,
+                "window_height": 600,
+                "url": "nodes/bar_chart.html"
+            },
+            "classname": "DataVizExample.BarChartNode",
+            "dependencies": ["nodes/bar_chart.js"]
+        },
+        "line_plot": {
+            "metadata": {
+                "name": "Line Plot",
+                "description": "Draw a Line Plot"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 5,
+                "icon": "icons/line.svg"
+            },
+            "page": {
+                "window_width": 600,
+                "window_height": 600,
+                "url": "nodes/line_plot.html"
+            },
+            "classname": "DataVizExample.LinePlotNode",
+            "dependencies": ["nodes/line_plot.js"]
+        },
         "2d_histogram_plot": {
             "metadata": {
                 "name": "2D Histogram Plot",
@@ -202,7 +287,6 @@
             "dependencies": ["nodes/2d_histogram_plot.js"]
         },
         "histogram_plot": {
-            "enabled": false,
             "metadata": {
                 "name": "Histogram Plot",
                 "description": "Draw a Histogram"

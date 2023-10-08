@@ -471,6 +471,9 @@ class SkadiDesigner extends SkadiCore {
         let id = node_id || this.next_id("nl");
 
         let node = new SkadiNode(this, node_type, id, x, y, true, metadata, {});
+        this.network.add_node(node);
+        node.draw();
+
         node.create_instance();
         this.add_node(node, suppress_event);
 
@@ -479,8 +482,6 @@ class SkadiDesigner extends SkadiCore {
     }
 
      add_node(node, suppress_event) {
-        this.network.add_node(node);
-        node.draw();
         if (!suppress_event) {
             this.fire_node_event("add", node);
         }

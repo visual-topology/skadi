@@ -11,16 +11,9 @@ DataVizExample.SelectRowsNode = class {
 
     constructor(node_service) {
         this.node_service = node_service;
-        this.elt = null;
         this.dataset = null;
-
         this.input_column_names = [];
         this.input_column_values = [];
-        this.column_name_control = null;
-        this.column_value_control = null;
-        this.column_value_min_control = null;
-        this.column_value_max_control = null;
-        this.reset_button = null;
         this.column_isnumeric = undefined;
         this.column_iscategorical = undefined;
         this.is_reset_execution = false;
@@ -30,8 +23,8 @@ DataVizExample.SelectRowsNode = class {
     get column_name() { return this.node_service.get_property("column_name",""); }
     set column_name(v) { this.node_service.set_property("column_name",v); }
 
-    get column_names() { return this.node_service.get_property("column_names",[]); }
-    set column_names(v) { this.node_service.set_property("column_names",v); }
+    get column_value() { return this.node_service.get_property("column_value",[]); }
+    set column_value(v) { this.node_service.set_property("column_value",v); }
 
     get min_value() { return this.node_service.get_property("min_value",null); }
     set min_value(v) { this.node_service.set_property("min_value",v); }
@@ -93,32 +86,27 @@ DataVizExample.SelectRowsNode = class {
     }
 
     refresh_controls() {
-        if (!this.elt) {
-            return;
-        }
-        let value_selector = this.elt.getElementById("value_selector");
-        let range_selector = this.elt.getElementById("range_selector");
         if (this.column_isnumeric) {
-            value_selector.setAttribute("style","display:none;");
-            range_selector.setAttribute("style","display:flex;");
-            this.column_value_min_control.setAttribute("value",""+this.min_value);
-            this.column_value_max_control.setAttribute("value",""+this.max_value);
+            this.node_service.page_set_attributes("value_selector",{"style":"display:none;"});
+            this.node_service.page_set_attributes("range_selector",{"style":"display:flex;"});
+            this.node_service.page_set_attributes("min_value",{"value":""+this.min_value});
+            this.node_service.page_set_attributes("max_value",{"value":""+this.max_value});
         } else if (this.column_iscategorical) {
-            value_selector.setAttribute("style","display:flex;");
-            range_selector.setAttribute("style","display:none;");
-            this.set_options(this.column_value_control, this.input_column_values);
+            this.node_service.page_set_attributes("value_selector",{"style":"display:flex;"});
+            this.node_service.page_set_attributes("range_selector",{"style":"display:none;"});
+            this.set_options("column_values", this.input_column_values, this.column_value);
         } else {
-            value_selector.setAttribute("style","display:none;");
-            range_selector.setAttribute("style","display:none;");
+            this.node_service.page_set_attributes("value_selector",{"style":"display:none;"});
+            this.node_service.page_set_attributes("range_selector",{"style":"display:none;"});
         }
-        this.set_options(this.column_name_control, this.input_column_names);
+        this.set_options("column_name", this.input_column_names, this.column_name);
     }
 
-    set_options(sel, names) {
+    set_options(sel, names, value) {
         let options = [["",""]];
         names.forEach(name => options.push([name,name]));
         const s = JSON.stringify(options);
-        sel.setAttribute("options", s);
+        this.node_service.page_set_attributes(sel,{"options":s,"value":value});
     }
 
     valid() {
@@ -139,41 +127,35 @@ DataVizExample.SelectRowsNode = class {
         return false;
     }
 
-    open(elt) {
-        this.elt = elt;
-        this.column_name_control = this.elt.getElementById("column_name");
-        this.column_name_control.setAttribute("value",""+this.column_name);
-        this.column_value_control = this.elt.getElementById("column_values");
-        this.column_value_min_control = this.elt.getElementById("min_value");
-        this.column_value_max_control = this.elt.getElementById("max_value");
-        this.reset_button = this.elt.getElementById("reset");
+    page_open() {
+        this.node_service.page_set_attributes("column_name",{"value":""+this.column_name});
 
-        this.column_name_control.addEventListener("change", e => {
-            this.column_name = e.target.value;
+        this.node_service.page_add_event_handler("column_name","change", v => {
+            this.column_name = v;
             this.column_changed();
             this.refresh_controls();
             this.node_service.request_execution();
         });
 
-        this.column_value_control.addEventListener("change", e => {
-            this.column_values = [e.target.value];
+        this.node_service.page_add_event_handler("column_values","change", v => {
+            this.column_value = v;
             this.update_status();
             this.node_service.request_execution();
         });
 
-        this.column_value_min_control.addEventListener("change", e => {
-            this.min_value = Number.parseFloat(e.target.value);
+        this.node_service.page_add_event_handler("min_value","change", v => {
+            this.min_value = Number.parseFloat(v);
             this.update_status();
             this.node_service.request_execution();
         });
 
-        this.column_value_max_control.addEventListener("change", e => {
-            this.max_value = Number.parseFloat(e.target.value);
+        this.node_service.page_add_event_handler("max_value","change", v => {
+            this.max_value = Number.parseFloat(v);
             this.update_status();
             this.node_service.request_execution();
         });
 
-        this.reset_button.addEventListener("click", e => {
+        this.node_service.page_add_event_handler("reset","click", v => {
             this.min_value = null;
             this.max_value = null;
             this.collect_input_column_values(); // this should load the min_value/max_value from data
@@ -185,15 +167,9 @@ DataVizExample.SelectRowsNode = class {
         this.refresh_controls();
     }
 
-    close() {
-        this.elt = null;
-        this.column_name_control = null;
-        this.column_value_control = null;
-        this.column_value_min_control = null;
-        this.column_value_max_control = null;
+    page_close() {
+
     }
-
-
 
     reset_execution() {
         this.dataset = null;
@@ -210,7 +186,7 @@ DataVizExample.SelectRowsNode = class {
                 if (this.column_isnumeric) {
                     return {"data_out": this.dataset.filter(aq.escape(r => this.min_value <= r[this.column_name] && this.max_value >= r[this.column_name]))};
                 } else {
-                    return {"data_out": this.dataset.filter(aq.escape(r => this.column_values.includes(String(r[this.column_name]))))};
+                    return {"data_out": this.dataset.filter(aq.escape(r => r[this.column_name] === this.column_value))};
                 }
             }
         }

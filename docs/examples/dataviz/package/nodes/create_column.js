@@ -11,10 +11,22 @@ DataVizExample.CreateColumnNode = class {
 
     constructor(node_service) {
         this.node_service = node_service;
-        this.elt = null;
-        this.column_name_control = null;
-        this.column_expression_control = null;
         this.update_status();
+        this.node_service.page_set_attributes("column_name",{"value":this.column_name});
+
+        this.node_service.page_set_attributes("column_expression",{"value":this.column_expression});
+
+        this.node_service.page_add_event_handler("column_name","change", v => {
+            this.column_name = v;
+            this.update_status();
+            this.node_service.request_execution();
+        });
+
+        this.node_service.page_add_event_handler("column_expression","change", v => {
+            this.column_expression = v;
+            this.update_status();
+            this.node_service.request_execution();
+        });
     }
 
     get column_name() { return this.node_service.get_property("column_name",""); }
@@ -24,38 +36,11 @@ DataVizExample.CreateColumnNode = class {
     set column_expression(v) { this.node_service.set_property("column_expression",v); }
 
     update_status() {
-        if (this.column_name && this.column_expression) {
+        if (this.column_name !== "" && this.column_expression !== "") {
             this.node_service.set_status_info(""+this.column_name);
         } else {
             this.node_service.set_status_warning("Configure Settings");
         }
-    }
-
-    open(elt) {
-        this.elt = elt;
-        this.column_name_control = elt.getElementById("column_name");
-        this.column_name_control.setAttribute("value",this.column_name);
-
-        this.column_expression_control = elt.getElementById("column_expression");
-        this.column_expression_control.setAttribute("value",this.column_expression);
-
-        this.column_name_control.addEventListener("change", e => {
-            this.column_name = e.target.value;
-            this.update_status();
-            this.node_service.request_execution();
-        });
-
-        this.column_expression_control.addEventListener("change", e => {
-            this.column_expression = e.target.value;
-            this.update_status();
-            this.node_service.request_execution();
-        });
-    }
-
-    close() {
-        this.elt = null;
-        this.column_name_control = null;
-        this.column_expression_control = null;
     }
 
     async execute(inputs) {
@@ -70,6 +55,5 @@ DataVizExample.CreateColumnNode = class {
         } else {
             return {};
         }
-
     }
 }

@@ -215,8 +215,8 @@ class SkadiCore {
         y = Math.round(y / GRID_SNAP) * GRID_SNAP;
         let id = node_id || this.next_id("nl");
         let node = new SkadiCoreNode(this, node_type, id, x, y, true, metadata, {});
-        node.create_instance();
         this.add_node(node, suppress_event);
+        node.create_instance();
         return id;
     }
 

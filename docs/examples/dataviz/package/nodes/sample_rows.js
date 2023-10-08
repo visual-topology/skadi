@@ -11,9 +11,14 @@ DataVizExample.SampleRowsNode = class {
 
     constructor(node_service) {
         this.node_service = node_service;
-        this.elt = null;
-        this.sample_size_control = null;
         this.update_status();
+        this.node_service.page_set_attributes("sample_size",{"value":""+this.sample_size});
+
+        this.node_service.page_add_event_handler("sample_size","change", v => {
+            this.sample_size = Number.parseInt(v);
+            this.update_status();
+            this.node_service.request_execution();
+        });
     }
 
     get sample_size() { return this.node_service.get_property("sample_size",100); }
@@ -21,23 +26,6 @@ DataVizExample.SampleRowsNode = class {
 
     update_status() {
         this.node_service.set_status_info(""+this.sample_size);
-    }
-
-    open(elt) {
-        this.elt = elt;
-        this.sample_size_control = elt.getElementById("sample_size");
-        this.sample_size_control.setAttribute("value",""+this.sample_size);
-
-        this.sample_size_control.addEventListener("change", e => {
-            this.sample_size = Number.parseInt(e.target.value);
-            this.update_status();
-            this.node_service.request_execution();
-        });
-    }
-
-    close() {
-        this.elt = null;
-        this.sample_size_control = null;
     }
 
     async execute(inputs) {

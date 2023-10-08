@@ -12,7 +12,6 @@ DataVizExample.CsvImportNode = class {
     constructor(node_service) {
         this.node_service = node_service;
         this.imported_table = null;
-        this.is_open = false;
         this.update_status();
 
         if (this.load_custom) {
@@ -54,7 +53,7 @@ DataVizExample.CsvImportNode = class {
         if (this.filename) {
             this.node_service.set_status_info(this.filename);
         } else {
-            this.node_service.set_status_warning("{{no.file.selected}}");
+            this.node_service.set_status_warning("No file selected");
         }
     }
 
@@ -72,7 +71,6 @@ DataVizExample.CsvImportNode = class {
     load_custom_content() {
         if (this.custom_content) {
             this.imported_table = aq.fromCSV(this.custom_content);
-            this.imported_table.print();
             this.node_service.request_execution();
         } else {
             this.imported_table = null;

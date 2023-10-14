@@ -7,7 +7,8 @@
 
 class SkadiPaletteEntry {
 
-  constructor(design, node_type) {
+  constructor(palette, design, node_type) {
+    this.palette = palette;
     this.design = design;
     this.node_type = node_type;
     this.node = null;
@@ -17,21 +18,12 @@ class SkadiPaletteEntry {
     this.overlay_y = 0;
     this.width = 220;
     this.height = 180;
+    this.x = 110;
+    this.y = 90;
     this.metadata = {
       "name": this.node_type.get_name(),
       "description": this.node_type.get_description()
     };
-  }
-
-  update_position(x,y) {
-    this.node.update_position(x, y);
-  }
-
-  update_size(w,h) {
-  }
-
-  get_position(w,h) {
-    return this.node.get_position();
   }
 
   get_size(w,h) {
@@ -39,7 +31,7 @@ class SkadiPaletteEntry {
   }
 
   draw(grp) {
-    this.node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 0, 0, false, this.metadata);
+    this.node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), this.x, this.y, false, this.metadata);
     this.node.draw(grp);
     
     this.overlay_grp = this.design.get_skadi_svg_dialogue_group();
@@ -58,14 +50,16 @@ class SkadiPaletteEntry {
         this.overlay_y = evloc.y;
         this.overlay_node.update_position(this.overlay_x, this.overlay_y);
       },
-      () => {
+      (evloc) => {
         if (this.overlay_node) {
           this.overlay_node.remove();
           this.overlay_node = null;
-          let tx = this.overlay_x - this.design.offset_x;
-          let ty = this.overlay_y - this.design.offset_y;
-          let cc = this.design.to_canvas_coords(tx,ty);
-          this.design.create_node(null,this.node_type, cc.x, cc.y,this.metadata);
+          if (!this.palette.intersects_window(evloc.x,evloc.y)) {
+              let tx = this.overlay_x - this.design.offset_x;
+              let ty = this.overlay_y - this.design.offset_y;
+              let cc = this.design.to_canvas_coords(tx,ty);
+              this.design.create_node(null,this.node_type, cc.x, cc.y,this.metadata);
+          }
         }
       });
     
@@ -88,6 +82,10 @@ class SkadiPaletteEntry {
 
   get_group() {
     return this.node.get_group();
+  }
+
+  get_id() {
+    return this.node_type.get_id();
   }
 }
 

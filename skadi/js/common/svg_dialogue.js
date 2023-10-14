@@ -50,15 +50,6 @@ class SkadiSvgDialogue {
 
     this.compute_content_size();
 
-    if (scrollable) {
-      this.scrollbar_width = 30;
-      this.scrollbar = new SkadiScrollbar(this.width - (this.scrollbar_width + 10) / 2, this.height / 2 - this.padding, this.scrollbar_width, this.content_height, 0.0, 1.0, function (f1, f2) {
-        that.scroll(f1, f2);
-      });
-    } else {
-      this.scrollbar = null;
-    }
-
     this.compute_content_size();
 
     this.autoClose = autoClose;
@@ -138,25 +129,10 @@ class SkadiSvgDialogue {
     if (this.content_height < 0) {
       this.content_height = 0;
     }
-    if (this.scrollbar) {
-      this.content_width -= this.scrollbar_width+10;
-    }
+
     if (this.resize_handler) {
       this.content_depth = this.resize_handler(this.content_width, this.content_depth, false);
     }
-
-    if (this.scrollbar) {
-      let content_fraction = this.content_height/this.content_depth;
-      if (content_fraction>1.0) {
-        content_fraction = 1.0;
-      }
-      this.scrollbar.set_fractions(this.scrollbar.get_fraction_start(),content_fraction);
-    }
-  }
-
-  scroll(fraction_start,fraction_coverage) {
-    this.content_offset = -1 * this.content_depth * fraction_start;
-    this.content_grp.attr("transform","translate(0,"+this.content_offset+")");
   }
 
   open() {
@@ -224,12 +200,8 @@ class SkadiSvgDialogue {
 
       this.header.call(drag);
     }
-    // this.dial.transition().duration(500).style("opacity", "0.8");
 
     this.closebtn.draw(this.grp);
-    if (this.scrollbar) {
-      this.scrollbar.draw(this.grp);
-    }
 
     this.drawCallback(this.content_grp);
 
@@ -348,10 +320,6 @@ class SkadiSvgDialogue {
     if (this.resize_handler) {
       this.resize_handler(this.content_width,this.content_height,is_final);
     }
-    if (this.scrollbar) {
-      this.scrollbar.update_position(this.width-this.header_sz/2,this.height/2);
-      this.scrollbar.update_size(this.header_sz*0.75,this.content_height);
-    }
     this.update_connector();
   }
 
@@ -385,7 +353,9 @@ class SkadiSvgDialogue {
   get_position() {
     return {
       "x": this.x,
-      "y": this.y
+      "y": this.y,
+      "w": this.width,
+      "h": this.height
     };
   }
 
@@ -399,6 +369,5 @@ class SkadiSvgDialogue {
   }
 
   pack() {
-
   }
 }

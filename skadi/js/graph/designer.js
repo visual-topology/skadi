@@ -280,6 +280,7 @@ class SkadiDesigner extends SkadiCore {
                     close_callback();
                 }
             }, true, null, open_callback, resize_callback);
+        ifd.open();
         ifd.set_parent_node(node);
         this.windows[key] = ifd;
     }
@@ -353,6 +354,7 @@ class SkadiDesigner extends SkadiCore {
             }, true, null, (elt) => {
                skadi_populate_about(this, elt);
                }, null);
+           this.about_dialogue.open();
         }
     }
 
@@ -363,6 +365,7 @@ class SkadiDesigner extends SkadiCore {
             }, true, null, (elt) => {
                skadi_populate_save(this, elt);
                }, null);
+           this.save_dialogue.open();
         }
     }
 
@@ -375,6 +378,7 @@ class SkadiDesigner extends SkadiCore {
                         this.load_dialogue.close();
                     });
                }, null);
+           this.load_dialogue.open();
         }
     }
 
@@ -387,6 +391,7 @@ class SkadiDesigner extends SkadiCore {
                         this.clear_dialogue.close();
                     });
                }, null);
+           this.clear_dialogue.open();
         }
     }
 
@@ -401,6 +406,7 @@ class SkadiDesigner extends SkadiCore {
                         this.design_metadata_dialogue.close();
                });
            }, null);
+           this.design_metadata_dialogue.open();
         }
     }
 
@@ -415,6 +421,7 @@ class SkadiDesigner extends SkadiCore {
                         this.configuration_dialogue.close();
                });
            }, null);
+           this.configuration_dialogue.open();
         }
     }
 
@@ -453,6 +460,7 @@ class SkadiDesigner extends SkadiCore {
 
                 this.windows[id] = new SkadiFrameDialogue(id, this, title, 100, 100, window_width, window_height,
                     close_callback, true, null, open_callback, resize_callback);
+                this.windows[id].open();
             }
         }
     }

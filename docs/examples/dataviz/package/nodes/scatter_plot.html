@@ -45,7 +45,11 @@
                     },
                     "encoding": {
                         "x": {"field": msg.x_col, "type": "quantitative"},
-                        "y": {"field": msg.y_col, "type": "quantitative"}
+                        "y": {"field": msg.y_col, "type": "quantitative"},
+                        "tooltip": [
+                            {"field": msg.x_col, "type": "quantitative"},
+                            {"field": msg.y_col, "type": "quantitative"}
+                        ]
                     }
                 }
                 if (msg.h_col) {

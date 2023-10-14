@@ -45,7 +45,8 @@
                     },
                     "encoding": {
                         "x": {"field": msg.x_col, "type": "nominal"},
-                        "y": {"aggregate":"count"}
+                        "y": {"aggregate":"count"},
+                        "tooltip": {"aggregate":"count"}
                     }
                 }
                 if (msg.h_col) {
@@ -68,6 +69,14 @@
             <div class="exo-2-cell">
                 <exo-select id="hue" label="Hue">
                 </exo-select>
+            </div>
+            <div class="exo-2-cell">
+                <div is="exo-modal" label="aaa" rounded="small" border-color="dark-gray"
+                            button-text="Labels...">
+                    <h4>Labels</h4>
+                    <exo-text label="Title" id="test1"></exo-text>
+                    <exo-text label="X-Axis" id="test2"></exo-text>
+                </div>
             </div>
         </div>
         <div id="vizdiv">

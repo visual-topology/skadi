@@ -904,8 +904,7 @@ let palette_html = `<div>
     <div class="exo-2-cell">
         <exo-text id="palette_filter" label="Filter By">
     </div>
-    <div class="exo-2-cell">
-        <exo-number label="Page" id="page_control" min="1" value="1" max="10">
+    <div id="page_buttons">
     </div>
 </div>
 <div id="palette_content">
@@ -922,6 +921,7 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
           this.show(elt);
         },
         function(width,height,is_final) {
+            this.current_page = 1;
             this.refresh_view(height);
         });
 
@@ -929,7 +929,8 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
     this.entry_tiles = {};
     this.current_page = 1;
     this.palette_controls = null;
-    this.page_control = null;
+    this.page_button_container = null;
+    this.page_buttons = {};
   }
 
   add(entry) {
@@ -939,11 +940,7 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
   show(elt) {
       elt.innerHTML = palette_html;
       this.palette_controls = document.getElementById("palette_controls");
-      this.page_control = document.getElementById("page_control");
-      this.page_control.addEventListener("change", (v) => {
-        this.current_page = Number.parseInt(v.target.value);
-        this.draw_page();
-      });
+      this.page_button_container = document.getElementById("page_buttons");
       this.content_elt = document.getElementById("palette_content");
       if (this.entries) {
           let elt_sel = new SkadiX3Selection([this.content_elt]);
@@ -980,13 +977,29 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
       }
       this.page_size = cols*rows;
       this.page_count = Math.ceil(this.entries.length / this.page_size);
-      this.page_control.setAttribute("max",""+this.page_count);
-      console.log(""+this.page_count);
+
+      for(let page_nr=1; page_nr <= this.page_count; page_nr+=1) {
+          if (!(page_nr in this.page_buttons)) {
+              let page_btn = document.createElement("input");
+              page_btn.setAttribute("type", "button");
+               page_btn.setAttribute("class", "palette_page_button");
+              page_btn.setAttribute("value", "" + page_nr);
+              page_btn.addEventListener("click", this.make_page_callback(page_nr));
+              this.page_buttons[page_nr] = new SkadiX3Selection([page_btn]);
+              this.page_button_container.appendChild(page_btn);
+          }
+      }
       if (this.current_page > this.page_count) {
         this.current_page = this.page_count;
-        this.page_control.setAttribute("value",this.current_page);
       }
       this.draw_page();
+   }
+
+   make_page_callback(page_nr) {
+      return () => {
+          this.current_page = page_nr;
+          this.draw_page();
+      }
    }
 
    draw_page() {
@@ -998,6 +1011,20 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
                 this.entry_tiles[entry_id].style("display","none");
             } else {
                 this.entry_tiles[entry_id].style("display","inline-block");
+            }
+        }
+        for(let page_nr in this.page_buttons) {
+            console.log(page_nr,this.page_count);
+            let page_btn = this.page_buttons[page_nr];
+            if (page_nr > this.page_count) {
+                page_btn.style("display","none");
+            } else {
+                if (page_nr == this.current_page) {
+                    page_btn.attr("class", "palette_page_button selected_palette_page_button");
+                } else {
+                    page_btn.attr("class", "palette_page_button");
+                }
+               page_btn.style("display","inline-block");
             }
         }
    }

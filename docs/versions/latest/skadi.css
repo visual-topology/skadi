@@ -71,6 +71,14 @@ body {
     overflow:clip;
 }
 
+.palette_page_button {
+    margin-right: 5px;
+    padding: 5px;
+}
+
+.selected_palette_page_button {
+    background-color: yellow;
+}
 
 
 

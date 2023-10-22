@@ -214,12 +214,8 @@ class SkadiGraphExecutor {
                 console.error(reject_reason.stack);
             }
         } else {
-            if (outputs === undefined || outputs === null) {
-                this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_FAILED);
-            } else {
-                this.skadi.update_execution_state(node_id, SkadiApi.EXECUTION_STATE_EXECUTED);
-                this.node_outputs[node_id] = outputs;
-            }
+            this.skadi.update_execution_state(node_id, SkadiApi.EXECUTION_STATE_EXECUTED);
+            this.node_outputs[node_id] = outputs;
         }
     }
 

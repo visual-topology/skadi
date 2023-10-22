@@ -75,7 +75,6 @@ class SkadiCoreNode {
         return this.id;
     }
 
-
     update_metadata(new_metadata) {
         for (let key in new_metadata) {
             this.metadata[key] = new_metadata[key];
@@ -104,6 +103,9 @@ class SkadiCoreNode {
     }
 
     remove() {
+        if (this.wrapper) {
+            this.wrapper.remove();
+        }
     }
 
     serialise() {

@@ -14,7 +14,6 @@ class SkadiWrapper {
         this.instance = null;
         this.window = null;
         this.event_handlers = [];
-        this.attribute_map = {}; //  element_id => attribute_name => attribute_value
         this.message_handler = null;
         this.pending_messages = [];
     }
@@ -71,12 +70,6 @@ class SkadiWrapper {
     }
 
     set_attributes(element_id, attributes) {
-        if (!(element_id in this.attribute_map)) {
-            this.attribute_map[element_id] = {};
-        }
-        for(let key in attributes) {
-            this.attribute_map[element_id][key] = attributes[key];
-        }
         this.send_set_attributes(element_id, attributes);
     }
 
@@ -133,6 +126,8 @@ class SkadiWrapper {
     open(w) {
         this.window = w;
         this.pending_messages = [];
+        this.message_handler = null;
+        this.event_handlers = [];
         window.addEventListener("message", (event) => {
             if (event.source == this.window) {
                 this.recv_from_window(event.data);
@@ -144,15 +139,6 @@ class SkadiWrapper {
             } catch(e) {
                 console.error(e);
             }
-        }
-        for(var element_id in this.attribute_map) {
-            this.send_set_attributes(element_id, this.attribute_map[element_id]);
-        }
-        for(var idx=0; idx<this.event_handlers.length; idx++) {
-            let element_id = this.event_handlers[idx][0];
-            let event_type = this.event_handlers[idx][1];
-            let event_transform = this.event_handlers[idx][3];
-            this.send_add_event_handler(element_id, event_type, event_transform);
         }
     }
 
@@ -175,6 +161,18 @@ class SkadiWrapper {
                 console.error(e);
             }
         }
+        this.message_handler = null;
+        this.event_handlers = [];
         this.pending_messages = [];
+    }
+
+    remove() {
+        if (this.instance.remove) {
+            try {
+                this.instance.remove();
+            } catch(e) {
+                console.error(e);
+            }
+        }
     }
 }

@@ -352,7 +352,6 @@ class SkadiNode extends SkadiCoreNode {
   }
 
   set_drag_handlers(start_drag_cb, drag_cb, end_drag_cb) {
-
     let drag = Skadi.x3.drag();
     drag
       .on("start", () => {
@@ -372,12 +371,16 @@ class SkadiNode extends SkadiCoreNode {
         }
         this.dragged = true;
       })
-      .on("end", () => {
+      .on("end", (x,y) => {
         if (end_drag_cb) {
-          end_drag_cb();
+          let evloc = {"x":x,"y":y};
+          end_drag_cb(evloc);
         }
       });
     this.grp.call(drag);
+    this.grp.on("mousedown",function(evt) {
+      drag.initial_move(evt);
+    });
   }
 
   update_class() {

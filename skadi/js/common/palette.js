@@ -15,7 +15,7 @@ class SkadiPalette {
     for (let idx in nodeTypes) {
       let tid = nodeTypes[idx];
       let type = this.design.get_schema().get_node_type(tid);
-      let entry = new SkadiPaletteEntry(design, type);
+      let entry = new SkadiPaletteEntry(this, design, type);
       this.allitems.push(entry);
     }
     this.id = id;
@@ -26,12 +26,21 @@ class SkadiPalette {
   open() {
     let x = 100;
     let y = 200;
-    this.dial = new SkadiPaletteDialogue("node_palette", this.design, "Palette", x, y, 500, 500, this.closecb, function(){},true, false, true);
+    this.dial = new skadi.PaletteDialogue("node_palette", this.design, "Palette", x, y, 500, 500, this.closecb, function(){},true, false, true);
 
     for(let idx=0; idx<this.allitems.length; idx++) {
       this.dial.add(this.allitems[idx]);
     }
     this.dial.open();
-    this.dial.flow();
+  }
+
+  intersects_window(x,y) {
+    if (this.dial) {
+        let pos = this.dial.get_position();
+        if (x > pos.x && x < (pos.x+pos.w) && y > pos.y && y < (pos.y+pos.h)) {
+            return true;
+        }
+    }
+    return false;
   }
 }

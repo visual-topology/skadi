@@ -20,7 +20,6 @@ class SkadiFrameDialogue extends SkadiSvgDialogue {
     this.url = url;
     this.open_callback = open_callback;
     this.resize_callback = resize_callback;
-    this.open();
   }
 
   draw(grp) {

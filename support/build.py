@@ -82,8 +82,8 @@ with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/common/palette_entry.js")
     of.add("skadi/js/common/scrollbar.js")
     of.add("skadi/js/common/svg_dialogue.js")
-    of.add("skadi/js/common/palette_dialogue.js")
     of.add("skadi/js/common/iframe_dialogue.js")
+    of.add("skadi/js/common/palette_dialogue.js")
     of.add("skadi/js/common/text_menu_dialogue.js")
     of.add("skadi/js/common/tooltip.js")
     of.add("skadi/js/common/x3.js")
@@ -160,6 +160,9 @@ with Output("docs/examples/dataviz/app/application.html", comment_paths=False) a
     of.add("skadi/html/application.html", subs= {
         "<!-- include dependencies needed by packages here -->": '<script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>'
     })
+
+with Output("docs/versions/latest/skadi-about.html", comment_paths=False) as of:
+    of.add("skadi/html/skadi-about.html")
 
 print("Building: skadi-ui.js")
 

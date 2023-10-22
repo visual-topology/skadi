@@ -16,11 +16,6 @@ DataVizExample.JoinRowsNode = class {
         this.input_column_names1 = [];
         this.input_column_names2 = [];
         this.common_columns = [];
-        this.node_service.page_set_attributes("join_column_names",{"value":JSON.stringify(this.join_column_names)});
-         this.node_service.page_add_event_handler("join_column_names","change", v => {
-            this.join_column_names = JSON.parse(v);
-            this.node_service.request_execution();
-        });
     }
 
     get join_column_names() { return this.node_service.get_property("join_column_names",[]); }
@@ -59,6 +54,14 @@ DataVizExample.JoinRowsNode = class {
             }
         });
         return valid_columns;
+    }
+
+    page_open() {
+        this.node_service.page_set_attributes("join_column_names",{"value":JSON.stringify(this.join_column_names)});
+        this.node_service.page_add_event_handler("join_column_names","change", v => {
+            this.join_column_names = JSON.parse(v);
+            this.node_service.request_execution();
+        });
     }
 
 

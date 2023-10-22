@@ -20,21 +20,22 @@
     <link href="chart_layout.css" rel="stylesheet" type="text/css">
 
     <script>
+        var dataset = undefined;
+
         skadiui.set_message_handler((msg) => {
             let vizdiv = document.getElementById("vizdiv");
             vizdiv.innerHTML = "";
 
-            let r = document.getElementById("vizdiv").getBoundingClientRect();
-            let h = r.height;
-            let w = r.width;
-
-            console.log("height="+h+",width="+w);
-
             if (msg.dataset) {
+                dataset = msg.dataset;
+            } else if ("x_col" in msg) {
+                let r = vizdiv.getBoundingClientRect();
+                let h = r.height;
+                let w = r.width;
                 let spec = {
                     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
                     "description": "A scatterplot.",
-                    "data": {"format": {"type": "csv"}, "values": msg.dataset},
+                    "data": {"format": {"type": "csv"}, "values": dataset},
                     "mark": "bar",
                     "width": w,
                     "height": h-40,
@@ -45,15 +46,23 @@
                     },
                     "encoding": {
                         "x": {"field": msg.x_col, "type": "nominal"},
-                        "y": {"aggregate":"count"}
+                        "y": {"aggregate":"count"},
+                        "tooltip": {"aggregate":"count"}
                     }
+                }
+                if (msg.title) {
+                    spec["title"] =  { "text": msg.title };
+                }
+                if (msg.x_axis_label) {
+                    spec.encoding.x.title = msg.x_axis_label;
+                }
+                 if (msg.y_axis_label) {
+                    spec.encoding.y.title = msg.y_axis_label;
                 }
                 if (msg.h_col) {
                     spec["encoding"]["color"] = {"field": msg.h_col, "type": "nominal"};
                 }
                 vegaEmbed(vizdiv, spec, {"theme": msg.theme, "defaultStyle":false,"actions":{"export":true, "source":false, "compiled":false, "editor":false}});
-            } else {
-                vizdiv.innerHTML = "";
             }
         });
     </script>
@@ -68,6 +77,17 @@
             <div class="exo-2-cell">
                 <exo-select id="hue" label="Hue">
                 </exo-select>
+            </div>
+            <div class="exo-1-cell">
+                <div is="exo-modal" button-label="Labels" rounded="small" border-color="dark-gray" button-bg-color="light-gray"
+                            id="edit_labels" button-text="Edit...">
+                    <div style="padding:30px;">
+                        <h4>Labels</h4>
+                        <div class="exo-2-cell"><exo-text label="Title" id="title_label" full_width="true"></exo-text></div>
+                        <div class="exo-2-cell"><exo-text label="X-Axis" id="x_axis_label" full_width="true"></exo-text></div>
+                        <div class="exo-2-cell"><exo-text label="Y-Axis" id="y_axis_label" full_width="true"></exo-text></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="vizdiv">

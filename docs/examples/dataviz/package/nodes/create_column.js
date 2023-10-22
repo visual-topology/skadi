@@ -12,6 +12,24 @@ DataVizExample.CreateColumnNode = class {
     constructor(node_service) {
         this.node_service = node_service;
         this.update_status();
+
+    }
+
+    get column_name() { return this.node_service.get_property("column_name",""); }
+    set column_name(v) { this.node_service.set_property("column_name",v); }
+
+    get column_expression() { return this.node_service.get_property("column_expression",""); }
+    set column_expression(v) { this.node_service.set_property("column_expression",v); }
+
+    update_status() {
+        if (this.column_name !== "" && this.column_expression !== "") {
+            this.node_service.set_status_info(""+this.column_name);
+        } else {
+            this.node_service.set_status_warning("Configure Settings");
+        }
+    }
+
+    page_open() {
         this.node_service.page_set_attributes("column_name",{"value":this.column_name});
 
         this.node_service.page_set_attributes("column_expression",{"value":this.column_expression});
@@ -29,20 +47,6 @@ DataVizExample.CreateColumnNode = class {
             this.update_status();
             this.node_service.request_execution();
         });
-    }
-
-    get column_name() { return this.node_service.get_property("column_name",""); }
-    set column_name(v) { this.node_service.set_property("column_name",v); }
-
-    get column_expression() { return this.node_service.get_property("column_expression",""); }
-    set column_expression(v) { this.node_service.set_property("column_expression",v); }
-
-    update_status() {
-        if (this.column_name !== "" && this.column_expression !== "") {
-            this.node_service.set_status_info(""+this.column_name);
-        } else {
-            this.node_service.set_status_warning("Configure Settings");
-        }
     }
 
     async execute(inputs) {

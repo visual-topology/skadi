@@ -20,24 +20,7 @@ DataVizExample.CsvImportNode = class {
             this.upload("iris.csv");
         }
 
-        this.node_service.page_add_event_handler("upload", "exo-file-changed", (files) => {
-            for(let filename in files) {
-                this.filename = filename;
-                let f = files[filename];
-                f.arrayBuffer().then( buf => {
-                    try {
-                        let decoder = new TextDecoder();
-                        this.custom_content = decoder.decode(buf);
-                        this.load_custom_content();
-                    } catch(ex) {
-                        this.custom_content = null;
-                        this.filename = '';
-                        this.node_service.set_status_error("Unable to load data from "+filename);
-                    }
-                });
-            }
-            this.update_status();
-        }, "(event) => event.detail");
+
     }
 
     get load_custom() { return this.node_service.get_property("load_custom",false) }
@@ -107,6 +90,25 @@ DataVizExample.CsvImportNode = class {
             this.custom_content = null;
             await this.upload("iris.csv");
         });
+
+        this.node_service.page_add_event_handler("upload", "exo-file-changed", (files) => {
+            for(let filename in files) {
+                this.filename = filename;
+                let f = files[filename];
+                f.arrayBuffer().then( buf => {
+                    try {
+                        let decoder = new TextDecoder();
+                        this.custom_content = decoder.decode(buf);
+                        this.load_custom_content();
+                    } catch(ex) {
+                        this.custom_content = null;
+                        this.filename = '';
+                        this.node_service.set_status_error("Unable to load data from "+filename);
+                    }
+                });
+            }
+            this.update_status();
+        }, "(event) => event.detail");
     }
 
     page_resize(w,h) {

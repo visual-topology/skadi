@@ -904,8 +904,10 @@ let palette_html = `<div>
     <div class="exo-2-cell">
         <exo-text id="palette_filter" label="Filter By">
     </div>
-    <div id="page_buttons">
-    </div>
+    <div style="margin-top:10px;">
+        Pages:
+        <div id="page_buttons"></div>
+     </div>
 </div>
 <div id="palette_content">
 </div>
@@ -922,62 +924,103 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
         },
         function(width,height,is_final) {
             this.current_page = 1;
-            this.refresh_view(height);
+            this.page_height = height;
+            this.refresh_view();
         });
 
+    this.all_entries = [];
     this.entries = [];
     this.entry_tiles = {};
     this.current_page = 1;
     this.palette_controls = null;
     this.page_button_container = null;
     this.page_buttons = {};
+    this.palette_filter = null;
+    this.filter_text = "";
   }
 
   add(entry) {
-    this.entries.push(entry);
+    this.all_entries.push(entry);
   }
 
   show(elt) {
       elt.innerHTML = palette_html;
-      this.palette_controls = document.getElementById("palette_controls");
-      this.page_button_container = document.getElementById("page_buttons");
-      this.content_elt = document.getElementById("palette_content");
-      if (this.entries) {
-          let elt_sel = new SkadiX3Selection([this.content_elt]);
-          for(let idx=0; idx<this.entries.length; idx++) {
-              let entry = this.entries[idx];
-              let sz = entry.get_size();
-
-              let tile = elt_sel.append("div");
-              let svg = tile.append("svg")
-                    .attr("width",sz.width)
-                    .attr("height", sz.height);
-
-              let group = svg.append("g").attr("id", "viewport");
-              entry.draw(group);
-              this.entry_tiles[entry.get_id()] = tile;
-          }
-      }
+      this.palette_controls = Skadi.$("palette_controls");
+      this.page_button_container = Skadi.$("page_buttons");
+      this.content_elt = Skadi.$("palette_content");
+      this.palette_filter = Skadi.$("palette_filter");
+      this.palette_filter.addEventListener("change", (evt) => {
+        this.filter_text = evt.target.value;
+        this.refresh_view();
+      });
    }
 
-   refresh_view(total_height) {
+   has_tile(entry) {
+    return (entry.get_id() in this.entry_tiles);
+   }
+
+   get_tile(entry) {
+     if (entry.get_id() in this.entry_tiles) {
+        return this.entry_tiles[entry.get_id()];
+     }
+     let sz = entry.get_size();
+
+     let elt_sel = new SkadiX3Selection([this.content_elt]);
+     let tile = elt_sel.append("div");
+     let svg = tile.append("svg")
+            .attr("width",sz.width)
+            .attr("height", sz.height);
+
+     let group = svg.append("g").attr("id", "viewport");
+     entry.draw(group);
+     this.entry_tiles[entry.get_id()] = tile;
+     return tile;
+   }
+
+    matches(entry) {
+        if (!this.filter_text) {
+            return true;
+        }
+        let search_keys = ["name","description"];
+        let matched = false;
+        search_keys.forEach(key => {
+            if (entry.metadata[key].toLowerCase().includes(this.filter_text.toLowerCase())) {
+                matched = true;
+            }
+        });
+        return matched;
+    }
+
+   refresh_view() {
       let r = this.content_elt.getBoundingClientRect();
       let w = r.width;
       r = this.palette_controls.getBoundingClientRect();
-      let h = total_height - r.height;
-      let entry = this.entries[0];
-      let sz = entry.get_size();
-      let cols = Math.floor(w / sz.width);
-      let rows = Math.floor(h / sz.height);
-      if (cols < 1) {
-        cols = 1;
+      let h = this.page_height - r.height;
+      this.entries = [];
+      this.all_entries.forEach(entry => {
+         if (this.matches(entry)) {
+            this.entries.push(entry);
+         }
+      });
+      if (this.entries.length) {
+          let entry = this.entries[0];
+          let sz = entry.get_size();
+          let cols = Math.floor(w / sz.width);
+          let rows = Math.floor(h / sz.height);
+          if (cols < 1) {
+            cols = 1;
+          }
+          if (rows < 1) {
+            rows = 1;
+          }
+          this.page_size = cols*rows;
+          this.page_count = Math.ceil(this.entries.length / this.page_size);
+          this.current_page = 1;
+      } else {
+        this.page_size = 0;
+        this.page_count = 0;
+        this.current_page = 0;
       }
-      if (rows < 1) {
-        rows = 1;
-      }
-      this.page_size = cols*rows;
-      this.page_count = Math.ceil(this.entries.length / this.page_size);
-
       for(let page_nr=1; page_nr <= this.page_count; page_nr+=1) {
           if (!(page_nr in this.page_buttons)) {
               let page_btn = document.createElement("input");
@@ -1005,12 +1048,20 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
    draw_page() {
         let page_start = (this.current_page-1)*this.page_size;
         let page_end = page_start + this.page_size;
+        this.all_entries.forEach(entry => {
+            if (!this.entries.includes(entry)) {
+                if (this.has_tile(entry)) {
+                    let tile = this.get_tile(entry);
+                    tile.style("display","none");
+                }
+             }
+        });
         for(let idx=0; idx<this.entries.length; idx++) {
-            let entry_id = this.entries[idx].get_id();
+            let tile = this.get_tile(this.entries[idx]);
             if (idx < page_start || idx >= page_end) {
-                this.entry_tiles[entry_id].style("display","none");
+                tile.style("display","none");
             } else {
-                this.entry_tiles[entry_id].style("display","inline-block");
+                tile.style("display","inline-block");
             }
         }
         for(let page_nr in this.page_buttons) {
@@ -2212,7 +2263,6 @@ class SkadiCoreNode {
         return this.id;
     }
 
-
     update_metadata(new_metadata) {
         for (let key in new_metadata) {
             this.metadata[key] = new_metadata[key];
@@ -2241,6 +2291,9 @@ class SkadiCoreNode {
     }
 
     remove() {
+        if (this.wrapper) {
+            this.wrapper.remove();
+        }
     }
 
     serialise() {
@@ -5398,7 +5451,6 @@ class SkadiWrapper {
         this.instance = null;
         this.window = null;
         this.event_handlers = [];
-        this.attribute_map = {}; //  element_id => attribute_name => attribute_value
         this.message_handler = null;
         this.pending_messages = [];
     }
@@ -5455,12 +5507,6 @@ class SkadiWrapper {
     }
 
     set_attributes(element_id, attributes) {
-        if (!(element_id in this.attribute_map)) {
-            this.attribute_map[element_id] = {};
-        }
-        for(let key in attributes) {
-            this.attribute_map[element_id][key] = attributes[key];
-        }
         this.send_set_attributes(element_id, attributes);
     }
 
@@ -5517,6 +5563,8 @@ class SkadiWrapper {
     open(w) {
         this.window = w;
         this.pending_messages = [];
+        this.message_handler = null;
+        this.event_handlers = [];
         window.addEventListener("message", (event) => {
             if (event.source == this.window) {
                 this.recv_from_window(event.data);
@@ -5528,15 +5576,6 @@ class SkadiWrapper {
             } catch(e) {
                 console.error(e);
             }
-        }
-        for(var element_id in this.attribute_map) {
-            this.send_set_attributes(element_id, this.attribute_map[element_id]);
-        }
-        for(var idx=0; idx<this.event_handlers.length; idx++) {
-            let element_id = this.event_handlers[idx][0];
-            let event_type = this.event_handlers[idx][1];
-            let event_transform = this.event_handlers[idx][3];
-            this.send_add_event_handler(element_id, event_type, event_transform);
         }
     }
 
@@ -5559,7 +5598,19 @@ class SkadiWrapper {
                 console.error(e);
             }
         }
+        this.message_handler = null;
+        this.event_handlers = [];
         this.pending_messages = [];
+    }
+
+    remove() {
+        if (this.instance.remove) {
+            try {
+                this.instance.remove();
+            } catch(e) {
+                console.error(e);
+            }
+        }
     }
 }
 

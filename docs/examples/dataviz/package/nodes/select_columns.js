@@ -14,14 +14,7 @@ DataVizExample.SelectColumnsNode = class {
         this.elt = null;
         this.dataset = null;
         this.input_column_names = [];
-
         this.update_status();
-        this.node_service.page_set_attributes("column_names",{"value":JSON.stringify(this.column_names)});
-         this.node_service.page_add_event_handler("column_names","change", v => {
-            this.column_names = JSON.parse(v);
-            this.update_status();
-            this.node_service.request_execution();
-        });
     }
 
     get column_names() { return this.node_service.get_property("column_names",[]); }
@@ -59,6 +52,12 @@ DataVizExample.SelectColumnsNode = class {
     }
 
     page_open() {
+        this.node_service.page_set_attributes("column_names",{"value":JSON.stringify(this.column_names)});
+        this.node_service.page_add_event_handler("column_names","change", v => {
+            this.column_names = JSON.parse(v);
+            this.update_status();
+            this.node_service.request_execution();
+        });
     }
 
     page_close() {

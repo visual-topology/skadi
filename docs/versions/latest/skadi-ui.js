@@ -27,7 +27,6 @@ class SkadiUI {
     }
 
     handle_message(msg) {
-        console.log("[SkadiUI] recv "+JSON.stringify(msg));
         let type = msg["type"];
         switch(type) {
             case "set_attributes":
@@ -98,17 +97,14 @@ class SkadiUI {
     }
 
     send_to_network(msg) {
-        console.log("[SkadiUI] send_to_network: "+JSON.stringify(msg));
-        console.log(window.location.origin);
         this.parent_window.postMessage(msg,"*");
     }
 
-    send_message(content) {
+    page_send_message(content) {
         let msg = {
             "type": "message",
             "content": content
         };
-        console.log("[SkadiUI] send "+JSON.stringify(msg));
         this.send_to_network(msg);
     }
 }

@@ -96,7 +96,7 @@ class SkadiGraphLink {
     has_value() {
         if (this.from_node_id in this.executor.node_outputs) {
             let outputs = this.executor.node_outputs[this.from_node_id];
-            if (this.from_port in outputs) {
+            if (outputs && this.from_port in outputs) {
                 return true;
             }
         }
@@ -106,7 +106,7 @@ class SkadiGraphLink {
     get_value() {
         if (this.from_node_id in this.executor.node_outputs) {
             let outputs = this.executor.node_outputs[this.from_node_id];
-            if (this.from_port in outputs) {
+            if (outputs && this.from_port in outputs) {
                 return outputs[this.from_port];
             }
         }

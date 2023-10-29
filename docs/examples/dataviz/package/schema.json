@@ -40,6 +40,33 @@
             "classname": "DataVizExample.CsvImportNode",
             "dependencies": ["nodes/csv_import.js"]
         },
+        "data_retyper": {
+            "metadata": {
+                "name": "Data Retyper",
+                "description": "Inspect and change the column types"
+            },
+            "input_ports": {
+                "data_in": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "output_ports": {
+                "data_out": {
+                    "link_type": "dataviz:dataset"
+                }
+            },
+            "display": {
+                "corners": 7,
+                "icon": "icons/data_retyper.svg"
+            },
+            "page": {
+                "url": "nodes/data_retyper.html",
+                "window_width": 800,
+                "window_height": 800
+            },
+            "classname": "DataVizExample.DataRetyperNode",
+            "dependencies": ["nodes/data_retyper.js"]
+        },
         "sample_rows": {
             "metadata": {
                 "name": "Sample",

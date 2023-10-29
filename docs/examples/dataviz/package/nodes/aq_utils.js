@@ -65,24 +65,28 @@ DataVizExample.AqUtils = class {
         return processed_expr;
     }
 
-    analyse(column_name, value_count_limit) {
+    get_column_type(column_name) {
         let all_values = this.table.values(column_name);
-        let count_numeric = 0;
-        let numeric_min = null;
-        let numeric_max = null;
-        let value_counts = {};
-        let uncounted = 0;
         for (const value of all_values) {
             if (typeof value === 'number') {
-                count_numeric += 1;
-                if (numeric_min == null || value < numeric_min) {
-                    numeric_min = value;
-                }
-                if (numeric_max == null || value > numeric_max) {
-                    numeric_max = value;
-                }
-            } else {
-                if (!(value in value_counts)) {
+                return "number";
+            } else if (typeof value === 'string') {
+                return "string";
+            } else if (value instanceof Date) {
+                return "date";
+            }
+        }
+        return "unknown";
+    }
+
+    analyse(column_name, value_count_limit) {
+        let type = this.get_column_type(column_name);
+        let all_values = this.table.values(column_name);
+        if (type === "string") {
+            let uncounted = 0;
+            let value_counts = {};
+            for (const value of all_values) {
+                if (typeof value === "string" && !(value in value_counts)) {
                     if (value_count_limit === undefined || value_count_limit > 0) {
                         value_counts[value] = 1;
                         if (value_count_limit) {
@@ -95,15 +99,79 @@ DataVizExample.AqUtils = class {
                     value_counts[value] = value_counts[value]+1;
                 }
             }
+            return {
+                "value_counts": value_counts,
+                "uncounted": uncounted
+            }
+        } else if (type === "number") {
+            let numeric_min = null;
+            let numeric_max = null;
+            for (const value of all_values) {
+                if (typeof value === 'number') {
+                    if (numeric_min == null || value < numeric_min) {
+                        numeric_min = value;
+                    }
+                    if (numeric_max == null || value > numeric_max) {
+                        numeric_max = value;
+                    }
+                }
+            }
+            return {
+                "range": {
+                    "min": numeric_min,
+                    "max": numeric_max
+                }
+            }
+        } else if (type === "date") {
+            let date_min = null;
+            let date_max = null;
+            for (const value of all_values) {
+                if (value instanceof Date) {
+                    if (numeric_date == null || value < date_min) {
+                        date_min = value;
+                    }
+                    if (numeric_date == null || value > date_max) {
+                        date_max = value;
+                    }
+                }
+            }
+            return {
+                "range": {
+                    "min": date_min.toISOString(),
+                    "max": date_max.toISOString()
+                }
+            }
         }
-        return {
-            "fraction_numeric": count_numeric/this.table.numRows(),
-            "range": {
-                "min": numeric_min,
-                "max": numeric_max
-            },
-            "value_counts": value_counts,
-            "uncounted": uncounted
-        };
     }
 }
+
+function parse_custom_date(s, fmt) {
+    try {
+        let year = null;
+        let month = 1;
+        let day = 1;
+        for(let idx=0; idx < fmt.length; idx++) {
+            if (fmt.slice(idx,idx+4) == 'YYYY') {
+                year = Number.parseInt(s.slice(idx,idx+4));
+                idx += 4;
+            } else if (fmt.slice(idx,idx+2) == 'MM') {
+                month = Number.parseInt(s.slice(idx,idx+2));
+                idx += 2;
+            } else if (fmt.slice(idx,idx+2) == 'DD') {
+                day = Number.parseInt(s.slice(idx,idx+2));
+                idx += 1;
+            } else if (fmt.charAt(idx) === s.charAt(idx)) {
+                idx += 1;
+            } else {
+                return null;
+            }
+        }
+        if (year && month && day) {
+            return new Date(year,month-1,day);
+        }
+    } catch(ex) {
+        return null;
+    }
+}
+
+aq.addFunction("parse_date_custom",(s,fmt) => parse_custom_date(s,fmt));

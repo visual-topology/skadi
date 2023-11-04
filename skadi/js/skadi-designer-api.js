@@ -25,18 +25,21 @@ class SkadiDesignerApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-        node_factory, configuration_factory) {
+    async init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        node_factory, configuration_factory, executor) {
         topology_store = topology_store || new TopologyStore(this);
         this.design = new SkadiDesigner(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
             node_factory, configuration_factory);
         this.set_instance(this.design);
         super.init();
+        if (executor) {
+            executor.bind(this.design);
+        }
+        await this.handle_load_topology_from();
     }
 
-    load(from_obj, supress_events) {
-        this.design.clear(supress_events);
-        this.design.deserialise(from_obj ,supress_events);
+    create_configuration(package_type) {
+        return new SkadiConfiguration(this.instance,package_type,{});
     }
 
     save() {

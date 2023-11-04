@@ -16,7 +16,7 @@
             "url": "configuration.html"
         }
     },
-    "dependencies": [ "configuration.js","nodes/aq_utils.js", "nodes/chart.js" ],
+    "dependencies": [ "https://cdn.jsdelivr.net/npm/arquero@latest", "configuration.js","nodes/aq_utils.js", "nodes/chart.js" ],
     "node_types": {
         "csv_import": {
             "metadata": {

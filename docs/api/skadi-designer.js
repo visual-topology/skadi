@@ -1654,16 +1654,16 @@ class ResourceLoader {
                 break;
             }
         }
-
+        console.log("js_load:"+resource);
     }
 
     async load(resource) {
         // start new load
         this.loading_resources[resource] = true;
-        if (resource.endsWith(".js")) {
-            await this.js_load(resource);
-        } else if (resource.endsWith(".css")) {
+        if (resource.endsWith(".css")) {
             await this.css_load(resource);
+        } else  {
+            await this.js_load(resource);
         }
     }
 
@@ -1679,11 +1679,8 @@ class ResourceLoader {
             if (resource in this.loading_resources || resource in this.loaded_resources) {
                 /* resource already loaded or failed to load */
             } else {
-                load_tasks.push(await this.load(resource));
+                await this.load(resource);
             }
-        }
-        if (load_tasks.length > 0) {
-            await Promise.all(load_tasks);
         }
         let results = {};
         for(let idx=0; idx<resource_list.length; idx++) {
@@ -1917,10 +1914,10 @@ class SkadiCore {
     fire_link_event(link_event_type, link) {
         let link_id = link.get_id();
         let link_type = link.get_link_type().get_id();
-        let from_node_id = link.get_from_port().get_node().get_id();
-        let from_port_name = link.get_from_port().get_port_name();
-        let to_node_id = link.get_to_port().get_node().get_id();
-        let to_port_name = link.get_to_port().get_port_name();
+        let from_node_id = link.get_from_node().get_id();
+        let from_port_name = link.get_from_port_name();
+        let to_node_id = link.get_to_node().get_id();
+        let to_port_name = link.get_to_port_name();
         if (link_event_type in this.link_event_handlers) {
             let callbacks = this.link_event_handlers[link_event_type];
             for (let idx = 0; idx < callbacks.length; idx++) {
@@ -5853,7 +5850,7 @@ class SkadiPackageType {
     this.metadata = obj["metadata"];
     this.display = obj["display"];
     this.l10n = obj["l10n"];
-    this.base_url = url.split("/").slice(0,-1).join("/");
+    this.base_url = url;
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }
@@ -5898,15 +5895,8 @@ class SkadiPackageType {
   }
 
   get_resource_url(url) {
-    if (url.startsWith("http")  || url.startsWith("/")) {
-        return url;
-    }
-    let resource_url = this.base_url;
-    if (resource_url.length>0) {
-      resource_url += "/";
-    }
-    resource_url += url;
-    return resource_url;
+    let resource_url =  new URL(url,this.base_url);
+    return String(resource_url);
   }
 
   get_qualified_id(id) {
@@ -6122,150 +6112,6 @@ class SkadiSchema {
 
 
 
-/* skadi/js/view/application.js */
-
-skadi_application_statuses = {};
-skadi_application_status_areas = {};
-
-class SkadiApplication extends SkadiCore {
-
-    constructor(l10n_utils, schema, element_id, node_factory, configuration_factory) {
-        super(l10n_utils, schema, element_id, null, node_factory, configuration_factory);
-    }
-
-    open_display() {
-        let configuration_list = this.network.get_configuration_list();
-        configuration_list.map(package_id => {
-            let configuration = this.get_network().get_configuration(package_id);
-            this.embed_configuration(package_id,configuration);
-        });
-        let node_list = this.get_network().get_node_list();
-        node_list.map(node_id => {
-            let node = this.get_network().get_node(node_id);
-            this.embed_node(node_id,node);
-        });
-    }
-
-    embed_configuration(package_id,configuration) {
-        let l10n_utils = configuration.get_package_type().get_l10n_utils();
-
-        let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
-            .append("ul").append("li").attr("role","treeitem");
-        let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
-        let label = li.append("label").text(configuration.get_package_type().get_metadata().name);
-        
-        skadi_application_status_areas[package_id] = label.append("span");
-        skadi_application_status_areas[package_id].attr("class","status_label");
-        
-        let div = li.append("div");
-
-        if (l10n_utils) {
-            let select_elt = l10n_utils.create_language_select();
-            div.node().appendChild(select_elt);   
-        }
-
-        let url = configuration.get_url();
-        if (url) {
-            let content_div = div.append("div");
-            input.node().addEventListener("change",this.create_configuration_openclose_callback(content_div,configuration));
-        }
-
-        if (!url && !l10n_utils) {
-            input.attr("disabled","disabled");
-        }        
-
-        this.div.append("hr");
-        if (package_id in skadi_application_statuses) {
-            let status = skadi_application_statuses[package_id];
-            this.update_status_area(package_id, status.state, status.status_message);
-        }
-    }
-
-    embed_node(node_id,node) {
-        let li = this.div.append("div").attr("class","exo-tree").attr("role","tree")
-            .append("ul").append("li").attr("role","treeitem");
-        let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
-        let label = li.append("label").text(node.get_metadata().name);
-        let div = li.append("div");
-
-        let url = node.get_type().get_html_url();
-        if (url) {
-            input.node().addEventListener("change",this.create_node_openclose_callback(div,node));
-        }
-
-        skadi_application_status_areas[node_id] = label.append("span");
-        skadi_application_status_areas[node_id].attr("class","status_label");
-        
-        this.div.append("hr");
-        if (node_id in skadi_application_statuses) {
-            let status = skadi_application_statuses[node_id];
-            this.update_status_area(node_id, status.state, status.status_message);
-        }
-    }
-
-    create_configuration_openclose_callback(div,configuration) {
-        return (evt) => {
-            if (evt.target.checked) {
-                // open the configuration in an iframe
-                let url = configuration.get_url();
-                let iframe = div.append("iframe").attr("class", "skadi_iframe")
-                    .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
-                iframe.addEventListener("load", (ev) => {
-                    configuration.get_wrapper().open(iframe.contentWindow,null,null);
-                });
-            } else {
-                // close the configuration
-                configuration.get_wrapper().close();
-                div.html("");
-            }
-        }
-    }
-
-
-    create_node_openclose_callback(div,node) {
-        return (evt) => {
-            if (evt.target.checked) {
-                // open the node in an iframe
-                let url = node.get_type().get_html_url();
-                let iframe = div.append("iframe").attr("class", "skadi_iframe")
-                    .attr("src", url).attr("width", "100%").attr("height","500px").attr("target","_new").node();
-                iframe.addEventListener("load", (ev) => {
-                    node.get_wrapper().open(iframe.contentWindow,null,null);
-                });
-            } else {
-                // close the node
-                node.get_wrapper().close();
-                div.html("");
-            }
-        }
-    }
-
-    update_node_status(id, state, status_message) {
-        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
-        this.update_status_area(id, state, status_message);
-        super.update_node_status(id, state, status_message);
-    }
-
-    update_configuration_status(id, state, status_message) {
-        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
-        this.update_status_area(id, state, status_message);
-        super.update_configuration_status(id, state, status_message);
-    }
-
-    update_status_area(id, state, status_message) {
-        if (id in skadi_application_status_areas) {
-            let area = skadi_application_status_areas[id];
-            area.node().innerHTML = "";
-            area.text(status_message);
-            let status_icon = skadi_create_icon_for_status_state(state);
-            if (status_icon) {
-                area.node().appendChild(status_icon);
-            }
-        }
-    }
-
-}
-
 /* skadi/js/skadi-api.js */
 
 class SkadiApi {
@@ -6275,8 +6121,8 @@ class SkadiApi {
         this.instance = null; // designer or application
     }
 
-    async load_l10n(api_base_url) {
-        this.l10n_utils = new SkadiL10NUtils("api",api_base_url+"/l10n");
+    async load_l10n(l10n_base_url) {
+        this.l10n_utils = new SkadiL10NUtils("api", l10n_base_url);
         await this.l10n_utils.initialise();
     }
 
@@ -6309,11 +6155,20 @@ class SkadiApi {
         for(let package_id in this.schema.package_types) {
             let package_type = this.schema.package_types[package_id];
             if (package_type.get_configuration_classname()) {
-                let conf = new SkadiConfiguration(this.instance,package_type,{});
+                let conf = this.create_configuration(package_type);
                 conf.create_instance();
                 this.instance.add_configuration(conf);
             }
         }
+    }
+
+    create_configuration(package_type) {
+        return new SkadiCoreConfiguration(this.instance,package_type,{});
+    }
+
+    load(from_obj, supress_events) {
+        this.instance.clear(supress_events);
+        this.instance.deserialise(from_obj ,supress_events);
     }
 
     get_schema() {
@@ -6322,10 +6177,6 @@ class SkadiApi {
 
     get_l10n_utils() {
         return this.l10n_utils;
-    }
-
-    set_graph_executor(executor) {
-        this.instance.set_graph_executor(executor);
     }
 
     get_network() {
@@ -6352,6 +6203,26 @@ class SkadiApi {
         return "0.0.1"; // placeholder substituted with actual version by the build.py script
     }
 
+    async handle_load_topology_from() {
+        let url_params = new URLSearchParams(window.location.search);
+        // check for a topology to load
+        let topology_url = url_params.get("load_topology_from");
+        if (topology_url) {
+            let topology_origin = new URL(topology_url,window.location).origin;
+            if (topology_origin != window.location.origin) {
+                console.error("unable to load topology from different origin:"+topology_origin);
+            } else {
+                await fetch(topology_url).then(r => r.text()).then(txt => {
+                    try {
+                        let obj = JSON.parse(txt);
+                        this.load(obj);
+                    } catch (ex) {
+                        console.error("load_topology_from failed:" + ex);
+                    }
+                });
+            }
+        }
+    }
 }
 
 SkadiApi.STATUS_STATE_INFO = "info";
@@ -6393,18 +6264,21 @@ class SkadiDesignerApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-        node_factory, configuration_factory) {
+    async init(element_id, canvas_width, canvas_height, is_acyclic, topology_store,
+        node_factory, configuration_factory, executor) {
         topology_store = topology_store || new TopologyStore(this);
         this.design = new SkadiDesigner(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
             node_factory, configuration_factory);
         this.set_instance(this.design);
         super.init();
+        if (executor) {
+            executor.bind(this.design);
+        }
+        await this.handle_load_topology_from();
     }
 
-    load(from_obj, supress_events) {
-        this.design.clear(supress_events);
-        this.design.deserialise(from_obj ,supress_events);
+    create_configuration(package_type) {
+        return new SkadiConfiguration(this.instance,package_type,{});
     }
 
     save() {
@@ -6493,114 +6367,130 @@ SkadiApi.DEFAULT_CANVAS_HEIGHT = 2000;
 
 
 
-/* skadi/js/skadi-view-api.js */
-
-class SkadiViewApi extends SkadiApi {
-
-    /**
-     * Create a skadi application view
-     */
-    constructor() {
-        super();    
-    }
-
-    /**
-     * Initialise skadi application view
-     *
-     * @param {string} element_id - the name of the document element into which skadi will be loaded
-     * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
-     * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
-     */
-    init(element_id, node_factory, configuration_factory) {
-        this.application = new SkadiApplication(this.l10n_utils, this.schema, element_id, node_factory, configuration_factory);
-        this.set_instance(this.application);
-        super.init();
-    }
-
-    /**
-     * Load topology into skadi
-     *
-     * @param {string} topology_url - the topology to load
-     */
-    async load_topology(topology) {
-        if (typeof topology === "string") {
-            return await fetch(topology)
-                .then(response => response.json())
-                .then(topology => this.load_topology_object(topology));
-        } else {
-            this.application.deserialise(topology, true);
-        }
-    }
-
-    add_node_event_handler(node_event_type, handler) {
-    }
-
-    add_link_event_handler(link_event_type, handler) {
-    }
-
-    add_design_event_handler(design_event_type, handler) {
-    }
-
-    open() {
-        this.application.open_display();
-    }
-}
-
-
-
-
-
-
 /* skadi/js/start-skadi.js */
 
 let skadi_api_home_url = document.currentScript.src.split("/").slice(0,-1).join("/");
 
+ /**
+  * function to create a skadi graphical editor widget in a web page
+  *
+  * @param {string} element_id - the id of the document element into which skadi will be loaded
+  * @param {string} title_id - the id of the document heading element
+  * @param {string} heading_id - the id of the document title element
+  * @param {Object} options - various options to customise skadi
+  */
+function launch_skadi_designer(container_id, title_id, heading_id, options) {
+    let url_params = new URLSearchParams(window.location.search);
+    // check for a configuration to load
+    let load_url = "app-configuration.json";
+    let configure_from_url = url_params.get("configure_from");
+    if (configure_from_url) {
+        let configure_from_url_origin = new URL(configure_from_url,window.location).origin;
+        if (configure_from_url_origin != window.location.origin) {
+            console.error("unable to configure skadi from different origin:"+configure_from_url_origin);
+        } else {
+            load_url = configure_from_url;
+        }
+    }
+    window.addEventListener("load",(evt) => {
+        fetch(load_url).then(r => r.json()).then(load_obj => {
+            if (load_obj.title) {
+                document.getElementById(title_id).appendChild(document.createTextNode(load_obj.title));
+                document.getElementById(heading_id).appendChild(document.createTextNode(load_obj.title));
+            }
+            let schema_urls = load_obj.schemas.map(schema_url => String(new URL(schema_url,new URL(load_url,window.location))));
+            return start_skadi_designer(container_id, options, schema_urls, new SkadiGraphExecutor())
+            }).then(skadi => {
+                setTimeout(() => {
+                    document.getElementById("splash_screen").setAttribute("display","false");
+                },2000);
+            });
+    });
+}
 
  /**
   * Asynchronous function to create a skadi graphical editor widget
   *
   * @param {string} element_id - the name of the document element into which skadi will be loaded
+  * @param {Object} options - various options to customise skadi
   * @param {array} schema_urls - an array containing the URLs of one or more schema files to load
-  * @param {Object} canvas_width - the width of the canvas area
+  * @param {SkadiGraphExecutor} - an executor instance for the graph or null if no executor is needed
+  * @param {Number} canvas_width - the width of the canvas area
   * @param {Number} canvas_height - the height of the canvas area
   * @param {Boolean} is_acyclic - true iff the graph must be acyclic
   * @param {Object} topology_store - optional, object implementing the TopologyStore interface
   * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using classname from the schema
   * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
-async function start_skadi_designer(element_id, schema_urls, canvas_width, canvas_height, is_acyclic, topology_store, node_factory, configuration_factory) {
+async function start_skadi_designer(element_id, options, schema_urls, executor, canvas_width, canvas_height, is_acyclic, topology_store, node_factory, configuration_factory) {
 
     if (is_acyclic == undefined || is_acyclic == null) {
         is_acyclic = true;
     }
 
     let skadi_instance = new SkadiDesignerApi();
-    await skadi_instance.load_l10n(skadi_api_home_url);
+    await skadi_instance.load_l10n(options.l10n_url || skadi_api_home_url+"/l10n");
     await skadi_instance.load_schema(schema_urls);
-    skadi_instance.init(element_id || "canvas_container_id",
+    await skadi_instance.init(element_id || "canvas_container_id",
         canvas_width || SkadiApi.DEFAULT_CANVAS_WIDTH, 
         canvas_height || SkadiApi.DEFAULT_CANVAS_HEIGHT, 
-        is_acyclic, topology_store, node_factory, configuration_factory);
+        is_acyclic, topology_store, node_factory, configuration_factory, executor);
+
     return skadi_instance;
 }
 
  /**
-  * Asynchronous function to create a skadi graphical editor widget
+  * function to create a skadi application widget in a web page
+  *
+  * @param {string} container_id - the id of the document element into which skadi will be loaded
+  * @param {string} title_id - the id of the document heading element
+  * @param {string} heading_id - the id of the document title element
+  * @param {Object} options - various options to customise skadi
+  */
+function launch_skadi_application(container_id, title_id, heading_id, options) {
+    let url_params = new URLSearchParams(window.location.search);
+    // check for a configuration to load
+    let load_url = "app-configuration.json";
+    let configure_from_url = url_params.get("configure_from");
+    if (configure_from_url) {
+        let configure_from_url_origin = new URL(configure_from_url,window.location).origin;
+        if (configure_from_url_origin != window.location.origin) {
+            console.error("unable to configure skadi from different origin:"+configure_from_url_origin);
+        } else {
+            load_url = configure_from_url;
+        }
+    }
+    window.addEventListener("load",(evt) => {
+        fetch(load_url).then(r => r.json()).then(o => {
+            if (o.title) {
+                document.getElementById(title_id).appendChild(document.createTextNode(o.title));
+                document.getElementById(heading_id).appendChild(document.createTextNode(o.title));
+            }
+            let schema_urls = o.schemas.map(schema_url => String(new URL(schema_url,new URL(load_url,window.location))));
+            start_skadi_application(container_id, options, schema_urls, new SkadiGraphExecutor()).then(skadi => {
+                setTimeout(() => {
+                    document.getElementById("splash_screen").setAttribute("display","false");
+                },2000);
+            });
+        });
+    });
+}
+
+ /**
+  * Asynchronous function to create a skadi application widget
   *
   * @param {string} element_id - the name of the document element into which skadi will be loaded
+  * @param {Object} options - various options to customise skadi
   * @param {array} schema_urls - an array containing the URLs of one or more schema files to load
-  * @param {array} topology_url - url for a topology to load
+  * @param {SkadiGraphExecutor} - an executor instance for the graph or null if no executor is needed
   * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using classname from the schema
   * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
-async function start_skadi_application(element_id, schema_urls, topology_url, node_factory, configuration_factory) {
+async function start_skadi_application(element_id, options, schema_urls, executor, node_factory, configuration_factory) {
     let skadi_instance = new SkadiViewApi();
-    await skadi_instance.load_l10n(skadi_api_home_url);
+    await skadi_instance.load_l10n(options.l10n_url || skadi_api_home_url+"/l10n");
     await skadi_instance.load_schema(schema_urls);
-    skadi_instance.init(element_id, node_factory, configuration_factory);
-    if (topology_url) {
-        await skadi_instance.load_topology(topology_url);
-    }
+    await skadi_instance.init(element_id, node_factory, configuration_factory, executor);
     skadi_instance.open();
     return skadi_instance;
 }

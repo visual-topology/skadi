@@ -161,10 +161,10 @@ class SkadiCore {
     fire_link_event(link_event_type, link) {
         let link_id = link.get_id();
         let link_type = link.get_link_type().get_id();
-        let from_node_id = link.get_from_port().get_node().get_id();
-        let from_port_name = link.get_from_port().get_port_name();
-        let to_node_id = link.get_to_port().get_node().get_id();
-        let to_port_name = link.get_to_port().get_port_name();
+        let from_node_id = link.get_from_node().get_id();
+        let from_port_name = link.get_from_port_name();
+        let to_node_id = link.get_to_node().get_id();
+        let to_port_name = link.get_to_port_name();
         if (link_event_type in this.link_event_handlers) {
             let callbacks = this.link_event_handlers[link_event_type];
             for (let idx = 0; idx < callbacks.length; idx++) {

@@ -73,9 +73,9 @@ class Output:
         self.of.close()
         self.of = None
 
-print("Building: skadi.js")
+print("Building: skadi-designer.js")
 
-with Output("docs/versions/latest/skadi.js") as of:
+with Output("docs/api/skadi-designer.js") as of:
     of.add("skadi/js/common/icons.js")
     of.add("skadi/js/common/geometry.js")
     of.add("skadi/js/common/palette.js")
@@ -120,16 +120,44 @@ with Output("docs/versions/latest/skadi.js") as of:
     of.add("skadi/js/schema/package_type.js")
     of.add("skadi/js/schema/port_type.js")
     of.add("skadi/js/schema/schema.js")
-    of.add("skadi/js/view/application.js")
     of.add("skadi/js/skadi-api.js")
     of.add("skadi/js/skadi-designer-api.js")
+    of.add("skadi/js/start-skadi.js")
+    of.add("skadi/js/utils/l10n_utils.js")
+
+print("Building: skadi-application.js")
+
+with Output("docs/api/skadi-application.js") as of:
+    of.add("skadi/js/common/icons.js")
+    of.add("skadi/js/common/x3.js")
+    of.add("skadi/js/utils/resource_loader.js")
+    of.add("skadi/js/utils/icon_utils.js")
+    of.add("skadi/js/services/status_states.js")
+    of.add("skadi/js/utils/topology_store.js")
+    of.add("skadi/js/core/core.js")
+    of.add("skadi/js/core/core_node.js")
+    of.add("skadi/js/core/core_link.js")
+    of.add("skadi/js/core/core_configuration.js")
+    of.add("skadi/js/core/network.js")
+    of.add("skadi/js/base/configuration_base.js")
+    of.add("skadi/js/base/node_base.js")
+    of.add("skadi/js/services/node_service.js")
+    of.add("skadi/js/services/wrapper.js")
+    of.add("skadi/js/services/configuration_service.js")
+    of.add("skadi/js/schema/node_type.js")
+    of.add("skadi/js/schema/link_type.js")
+    of.add("skadi/js/schema/package_type.js")
+    of.add("skadi/js/schema/port_type.js")
+    of.add("skadi/js/schema/schema.js")
+    of.add("skadi/js/app/application.js")
+    of.add("skadi/js/skadi-api.js")
     of.add("skadi/js/skadi-view-api.js")
     of.add("skadi/js/start-skadi.js")
-    of.add("skadi/js/utils/l10n_utils.js")    
+    of.add("skadi/js/utils/l10n_utils.js")
 
-print("Building: skadi.css")
+print("Building: skadi-designer.css")
 
-with Output("docs/versions/latest/skadi.css") as of:
+with Output("docs/api/skadi-designer.css") as of:
     of.add("skadi/css/controls.css")
     of.add("skadi/css/designer.css")
     of.add("skadi/css/dialogue.css")
@@ -137,12 +165,14 @@ with Output("docs/versions/latest/skadi.css") as of:
     of.add("skadi/css/node.css")
     of.add("skadi/css/port.css")
 
-with Output("docs/versions/latest/skadi-application.css") as of:
+print("Building: skadi-application.css")
+
+with Output("docs/api/skadi-application.css") as of:
     of.add("skadi/css/application.css")
 
 print("Building: skadi-executor.js")
 
-with Output("docs/versions/latest/skadi-executor.js") as of:
+with Output("docs/api/skadi-executor.js") as of:
     of.add("skadi-executor/js/node_execution_states.js")
     of.add("skadi-executor/js/executable_node_service.js")
     of.add("skadi-executor/js/executable_node_wrapper.js")
@@ -151,30 +181,29 @@ with Output("docs/versions/latest/skadi-executor.js") as of:
     of.add("skadi-executor/js/graph_executor.js")
     of.add("skadi-executor/js/node_execution_failed.js")
 
-with Output("docs/examples/dataviz/app/index.html", comment_paths=False) as of:
-    of.add("skadi/html/index.html", subs= {
-        "<!-- include dependencies needed by packages here -->": '<script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>'
-    })
+print("Copying: skadi-designer.html")
 
-with Output("docs/examples/dataviz/app/application.html", comment_paths=False) as of:
-    of.add("skadi/html/application.html", subs= {
-        "<!-- include dependencies needed by packages here -->": '<script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>'
-    })
+with Output("docs/api/skadi-designer.html", comment_paths=False) as of:
+    of.add("skadi/html/skadi-designer.html")
 
-with Output("docs/versions/latest/skadi-about.html", comment_paths=False) as of:
+print("Copying: skadi-application.html")
+
+with Output("docs/api/skadi-application.html", comment_paths=False) as of:
+    of.add("skadi/html/skadi-application.html")
+
+print("Copying: skadi-about.html")
+
+with Output("docs/api/skadi-about.html", comment_paths=False) as of:
     of.add("skadi/html/skadi-about.html")
 
-print("Building: skadi-ui.js")
+print("Copying: skadi-ui.js")
 
-with Output("docs/versions/latest/skadi-ui.js") as of:
+with Output("docs/api/skadi-ui.js") as of:
     of.add("skadi-ui/js/skadi-ui.js")
 
-print("Building: index.html")
+print("Copying: l10n")
 
-with Output("docs/versions/latest/index.html", comment_paths=False) as of:
-    of.add("skadi/html/index.html")
-
-target_l10n = os.path.join(repo_dir,"docs/versions/latest/l10n")
+target_l10n = os.path.join(repo_dir,"docs/api/l10n")
 if os.path.exists(target_l10n):
     shutil.rmtree(target_l10n)
 source_l10n = os.path.join(repo_dir,"skadi/l10n")

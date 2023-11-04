@@ -21,25 +21,14 @@ class SkadiViewApi extends SkadiApi {
      * @param {Function} node_factory - optional, a function to construct node instances given a service object, rather than using backend=>classname from the schema
      * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using backend=>classname from the schema
      */
-    init(element_id, node_factory, configuration_factory) {
+    async init(element_id, node_factory, configuration_factory, executor) {
         this.application = new SkadiApplication(this.l10n_utils, this.schema, element_id, node_factory, configuration_factory);
         this.set_instance(this.application);
         super.init();
-    }
-
-    /**
-     * Load topology into skadi
-     *
-     * @param {string} topology_url - the topology to load
-     */
-    async load_topology(topology) {
-        if (typeof topology === "string") {
-            return await fetch(topology)
-                .then(response => response.json())
-                .then(topology => this.load_topology_object(topology));
-        } else {
-            this.application.deserialise(topology, true);
+        if (executor) {
+            executor.bind(this.application);
         }
+        await this.handle_load_topology_from();
     }
 
     add_node_event_handler(node_event_type, handler) {

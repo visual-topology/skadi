@@ -35,16 +35,16 @@ class ResourceLoader {
                 break;
             }
         }
-
+        console.log("js_load:"+resource);
     }
 
     async load(resource) {
         // start new load
         this.loading_resources[resource] = true;
-        if (resource.endsWith(".js")) {
-            await this.js_load(resource);
-        } else if (resource.endsWith(".css")) {
+        if (resource.endsWith(".css")) {
             await this.css_load(resource);
+        } else  {
+            await this.js_load(resource);
         }
     }
 
@@ -60,11 +60,8 @@ class ResourceLoader {
             if (resource in this.loading_resources || resource in this.loaded_resources) {
                 /* resource already loaded or failed to load */
             } else {
-                load_tasks.push(await this.load(resource));
+                await this.load(resource);
             }
-        }
-        if (load_tasks.length > 0) {
-            await Promise.all(load_tasks);
         }
         let results = {};
         for(let idx=0; idx<resource_list.length; idx++) {

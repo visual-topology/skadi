@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 
+<!-- the head allows this page to be loaded standalone to test the layout, but is ignored by skadi -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -15,10 +16,9 @@
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.6.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.21.2"></script>
 
-    <script src="../../../../versions/latest/skadi-ui.js" type="text/javascript"></script>
+    <script src="../../../skadi-ui.js" type="text/javascript"></script>
 
     <link href="chart_layout.css" rel="stylesheet" type="text/css">
-
     <script>
         var dataset = undefined;
 
@@ -34,20 +34,28 @@
                 let w = r.width;
                 let spec = {
                     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-                    "description": "A scatterplot.",
+                    "description": "A 2D Histogram.",
                     "data": {"format": {"type": "csv"}, "values": dataset},
-                    "mark": "bar",
+                    "mark": "rect",
                     "width": w,
-                    "height": h-40,
+                    "height": h - 40,
                     "padding": 20,
                     "autosize": {
                       "type": "fit",
                       "contains": "padding"
                     },
                     "encoding": {
-                        "x": {"field": msg.x_col, "type": "nominal"},
-                        "y": {"aggregate":"count"},
-                        "tooltip": {"aggregate":"count"}
+                        "x": {"field": msg.x_col, "type": "quantitative", "bin": {"maxbins": 50}},
+                        "y": {"field": msg.y_col, "type": "quantitative", "bin": {"maxbins": 50}},
+                        "color": {
+                            "aggregate": "count",
+                            "type": "quantitative"
+                        }
+                    },
+                    "config": {
+                        "view": {
+                            "stroke": "transparent"
+                        }
                     }
                 }
                 if (msg.title) {
@@ -58,9 +66,6 @@
                 }
                  if (msg.y_axis_label) {
                     spec.encoding.y.title = msg.y_axis_label;
-                }
-                if (msg.h_col) {
-                    spec["encoding"]["color"] = {"field": msg.h_col, "type": "nominal"};
                 }
                 vegaEmbed(vizdiv, spec, {"theme": msg.theme, "defaultStyle":false,"actions":{"export":true, "source":false, "compiled":false, "editor":false}});
             }
@@ -75,7 +80,7 @@
                 </exo-select>
             </div>
             <div class="exo-2-cell">
-                <exo-select id="hue" label="Hue">
+                <exo-select id="y_axis" label="Y-Axis">
                 </exo-select>
             </div>
             <div class="exo-1-cell">
@@ -95,3 +100,4 @@
     </div>
 </body>
 </html>
+

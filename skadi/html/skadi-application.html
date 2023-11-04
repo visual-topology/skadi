@@ -10,21 +10,15 @@
         <link href="https://visualtopology.github.io/exo/versions/latest/exo-icons.css" rel="stylesheet" type="text/css">
         <script src="https://visualtopology.github.io/exo/versions/latest/exo.js"></script>
 
-        <!-- include dependencies needed by packages here -->
-
-        <script src="../../../versions/latest/skadi.js" type="application/ecmascript" charset="utf-8"></script>
-        <script src="../../../versions/latest/skadi-executor.js" type="application/ecmascript" charset="utf-8"></script>
-        <link rel="styleSheet" href="../../../versions/latest/skadi.css" type="text/css">
+        <script src="skadi-application.js" type="application/ecmascript" charset="utf-8"></script>
+        <script src="skadi-executor.js" type="application/ecmascript" charset="utf-8"></script>
+        <link rel="styleSheet" href="skadi-application.css" type="text/css">
+        <script>
+            launch_skadi_application("skadi_container","title","heading",{});
+        </script>
     </head>
 
-    <body onload="fetch('skadi-designer.json').then(r => r.json()).then(o => {
-        if (o.title) {
-            document.getElementById('title').appendChild(document.createTextNode(o.title));
-            document.getElementById('heading').appendChild(document.createTextNode(o.title));
-        }
-        return start_skadi_designer(
-             'skadi_container', o.schemas, o.canvas_width, o.canvas_height)
-        }).then(skadi => new SkadiGraphExecutor(skadi));">
+    <body>
         <div id="splash_screen" is="exo-modal" display="true"
              bg-color="light-gray" border-color="dark-purple" style="width:50%; height:50%;">
             <h1>
@@ -40,7 +34,6 @@
         <div id="skadi_container" class="skadi_container">
         </div>
     </body>
-
 
     <script>
         window.addEventListener("load", (evt) => {

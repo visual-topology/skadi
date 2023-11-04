@@ -7,9 +7,13 @@
 
 class SkadiGraphExecutor {
 
-    constructor(skadi) {
+    constructor() {
+
+    }
+
+    bind(skadi) {
+
         this.skadi = skadi;
-        this.skadi.set_graph_executor(this);
 
         this.nodes = {}; // node-id => node-instance
         this.links = {}; // link-id => GraphLink
@@ -66,6 +70,7 @@ class SkadiGraphExecutor {
             this.add_link(link_id,link.get_from_node().get_id(),link.get_from_port_name(),link.get_to_node().get_id(), link.get_to_port_name());
         });
 
+        this.skadi.set_graph_executor(this);
         this.paused = false;
         this.dispatch();
     }

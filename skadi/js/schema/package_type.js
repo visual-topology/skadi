@@ -12,7 +12,7 @@ class SkadiPackageType {
     this.metadata = obj["metadata"];
     this.display = obj["display"];
     this.l10n = obj["l10n"];
-    this.base_url = url.split("/").slice(0,-1).join("/");
+    this.base_url = url;
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }
@@ -57,15 +57,8 @@ class SkadiPackageType {
   }
 
   get_resource_url(url) {
-    if (url.startsWith("http")  || url.startsWith("/")) {
-        return url;
-    }
-    let resource_url = this.base_url;
-    if (resource_url.length>0) {
-      resource_url += "/";
-    }
-    resource_url += url;
-    return resource_url;
+    let resource_url =  new URL(url,this.base_url);
+    return String(resource_url);
   }
 
   get_qualified_id(id) {

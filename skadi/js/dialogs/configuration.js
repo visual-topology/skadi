@@ -5,25 +5,27 @@
      Licensed under the Open Software License version 3.0
 */
 
-let skadi_configuration_header_html = `
+var skadi = skadi || {};
+
+skadi.configuration_header_html = `
 <h1>Package Configurations</h1>
 `
 
-let skadi_status_divs = {};
+skadi.status_divs = {};
 
-let skadi_configuration_status = {};
+skadi.configuration_status = {};
 
-function skadi_update_configuration_status_div(package_id) {
+skadi.update_configuration_status_div = function(package_id) {
     let message = "";
-    let status_state = SkadiStatusStates.clear;
-    if (package_id in skadi_configuration_status) {
-        status_state = skadi_configuration_status[package_id].state;
-        message = skadi_configuration_status[package_id].message;
+    let status_state = skadi.StatusStates.clear;
+    if (package_id in skadi.configuration_status) {
+        status_state = skadi.configuration_status[package_id].state;
+        message = skadi.configuration_status[package_id].message;
     }
-    if (package_id in skadi_status_divs) {
-        let status_div = skadi_status_divs[package_id];
+    if (package_id in skadi.status_divs) {
+        let status_div = skadi.status_divs[package_id];
         status_div.innerHTML = "";
-        let status_icon = skadi_create_icon_for_status_state(status_state);
+        let status_icon = skadi.create_icon_for_status_state(status_state);
         if (status_icon) {
             status_div.appendChild(status_icon);
         }
@@ -36,23 +38,21 @@ function skadi_update_configuration_status_div(package_id) {
     }
 }
 
-function skadi_close_configuration() {
-    this.skadi_status_divs = {};
+skadi.close_configuration = function() {
+    skadi.status_divs = {};
 }
 
-function skadi_update_configuration_status(package_id, state, message) {
-    skadi_configuration_status[package_id] = {
+skadi.update_configuration_status = function(package_id, state, message) {
+    skadi.configuration_status[package_id] = {
         "state": state,
         "message": message
     }
-    skadi_update_configuration_status_div(package_id);
+    skadi.update_configuration_status_div(package_id);
 }
 
-
-
-function skadi_populate_configuration(design, elt, close_window) {
+skadi.populate_configuration = function(design, elt, close_window) {
     let header_div = document.createElement("div");
-    header_div.innerHTML = skadi_configuration_header_html;
+    header_div.innerHTML = skadi.configuration_header_html;
     elt.appendChild(header_div);
     {
         let select = design.get_l10n_utils().create_language_select();
@@ -61,7 +61,7 @@ function skadi_populate_configuration(design, elt, close_window) {
 
         let lang_cell = document.createElement("div");
         lang_cell.setAttribute("class","exo-2-cell");
-        lang_cell.appendChild(document.createTextNode("Skadi Language"));
+        lang_cell.appendChild(document.createTextNode("System Language"));
         row.appendChild(lang_cell);
 
         let l10n_cell = document.createElement("div");
@@ -159,8 +159,8 @@ function skadi_populate_configuration(design, elt, close_window) {
 
             status_row.appendChild(status_cell);
 
-            skadi_status_divs[package_id] = status_cell;
-            skadi_update_configuration_status_div(package_id);
+            skadi.status_divs[package_id] = status_cell;
+            skadi.update_configuration_status_div(package_id);
 
             elt.appendChild(status_row);
             

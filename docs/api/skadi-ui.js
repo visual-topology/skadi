@@ -7,7 +7,9 @@
 
 /* skadi-ui/js/skadi-ui.js */
 
-class SkadiUI {
+var skadi = skadi || {};
+
+skadi.UI = class {
 
     constructor() {
         this.message_handler = null;
@@ -109,7 +111,7 @@ class SkadiUI {
     }
 }
 
-let skadiui = new SkadiUI();
+skadi.ui = new skadi.UI();
 
-window.addEventListener("message", (event) => skadiui.handle_message(event.data));
+window.addEventListener("message", (event) => skadi.ui.handle_message(event.data));
 

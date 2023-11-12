@@ -15,7 +15,6 @@
         <script src="../js/common/geometry.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/common/palette.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/common/palette_entry.js" type="application/ecmascript" charset="utf-8"></script>
-        <script src="../js/common/scrollbar.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/common/svg_dialogue.js") type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/common/iframe_dialogue.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/common/palette_dialogue.js" type="application/ecmascript" charset="utf-8"></script>
@@ -57,14 +56,12 @@
         <script src="../js/schema/schema.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/skadi-api.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/skadi-designer-api.js" type="application/ecmascript" charset="utf-8"></script>
-        <script src="../js/start-skadi.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../js/utils/l10n_utils.js" type="application/ecmascript" charset="utf-8"></script>
 
         <!-- skadi-executor.js -->
         <script src="../../skadi-executor/js/node_execution_states.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../../skadi-executor/js/executable_node_service.js "type="application/ecmascript" charset="utf-8"></script>
         <script src="../../skadi-executor/js/executable_node_wrapper.js "type="application/ecmascript" charset="utf-8"></script>
-        <script src="../../skadi-executor/js/executable_node_base.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../../skadi-executor/js/graph_link.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../../skadi-executor/js/graph_executor.js" type="application/ecmascript" charset="utf-8"></script>
         <script src="../../skadi-executor/js/node_execution_failed.js" type="application/ecmascript" charset="utf-8"></script>
@@ -78,20 +75,11 @@
         <link rel="styleSheet" href="../css/port.css" type="text/css">
 
         <script>
-            launch_skadi_designer("skadi_container","title","heading",{"l10n_url":"../l10n"});
+            skadi.launch_designer("skadi_container","title","heading",{"l10n_url":"../l10n"});
         </script>
     </head>
 
     <body onload="">
-        <div id="splash_screen" is="exo-modal" display="true"
-             bg-color="light-gray" border-color="dark-purple" style="width:50%; height:50%;">
-            <h1>
-                Skadi
-            </h1>
-            <p>
-                Loading...
-            </p>
-        </div>
         <h1 id="heading">
             Skadi -
         </h1>

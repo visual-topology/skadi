@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiApi {
+var skadi = skadi || {};
+
+skadi.Api = class {
 
     constructor() {
         this.schema = null;
@@ -13,7 +15,7 @@ class SkadiApi {
     }
 
     async load_l10n(l10n_base_url) {
-        this.l10n_utils = new SkadiL10NUtils("api", l10n_base_url);
+        this.l10n_utils = new skadi.L10NUtils("api", l10n_base_url);
         await this.l10n_utils.initialise();
     }
 
@@ -33,7 +35,7 @@ class SkadiApi {
                 .then(schema_config => schema.loadPackage(url, schema_config));
         }
 
-        this.schema = new SkadiSchema();
+        this.schema = new skadi.Schema();
         let packages = [];
         for (let idx = 0; idx < package_urls.length; idx++) {
             packages.push(await loadPackageFromUrl(package_urls[idx],this.schema));
@@ -54,7 +56,7 @@ class SkadiApi {
     }
 
     create_configuration(package_type) {
-        return new SkadiCoreConfiguration(this.instance,package_type,{});
+        return new skadi.CoreConfiguration(this.instance,package_type,{});
     }
 
     load(from_obj, supress_events) {
@@ -116,18 +118,19 @@ class SkadiApi {
     }
 }
 
-SkadiApi.STATUS_STATE_INFO = "info";
-SkadiApi.STATUS_STATE_WARNING = "warning";
-SkadiApi.STATUS_STATE_ERROR = "error";
-SkadiApi.STATUS_STATE_CLEAR = "";
+skadi.Api.STATUS_STATE_INFO = "info";
+skadi.Api.STATUS_STATE_WARNING = "warning";
+skadi.Api.STATUS_STATE_ERROR = "error";
+skadi.Api.STATUS_STATE_CLEAR = "";
 
-SkadiApi.EXECUTION_STATE_PENDING = "pending";
-SkadiApi.EXECUTION_STATE_EXECUTING = "executing";
-SkadiApi.EXECUTION_STATE_EXECUTED = "executed";
-SkadiApi.EXECUTION_STATE_FAILED = "failed";
-SkadiApi.EXECUTION_STATE_CLEAR = "";
+skadi.Api.EXECUTION_STATE_PENDING = "pending";
+skadi.Api.EXECUTION_STATE_EXECUTING = "executing";
+skadi.Api.EXECUTION_STATE_EXECUTED = "executed";
+skadi.Api.EXECUTION_STATE_FAILED = "failed";
+skadi.Api.EXECUTION_STATE_CLEAR = "";
 
-SkadiApi.DEFAULT_CANVAS_WIDTH = 4000;
-SkadiApi.DEFAULT_CANVAS_HEIGHT = 2000;
+skadi.Api.DEFAULT_CANVAS_WIDTH = 4000;
+skadi.Api.DEFAULT_CANVAS_HEIGHT = 2000;
+skadi.VERSION = "0.0.1"
 
 

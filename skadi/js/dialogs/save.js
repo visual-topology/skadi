@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let skadi_download_html = `
+var skadi = skadi || {};
+
+skadi.download_html = `
 <span aria-describedby="edit-metadata-tooltip">
     {{download.topology}}
 </span>
@@ -40,8 +42,8 @@ let skadi_download_html = `
     </div>
 </div>`
 
-function skadi_populate_save(design, elt) {
-    elt.innerHTML = design.localise(skadi_download_html);
+skadi.populate_save = function(design, elt) {
+    elt.innerHTML = design.localise(skadi.download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
     design.get_topology_store().get_save_link().then(url => {
@@ -53,8 +55,8 @@ function skadi_populate_save(design, elt) {
 
     let store_cb = design.get_topology_store().get_store_callback();
     if (store_cb) {
-        Skadi.$("store_updates_row").style.visibility = "visible";
-        Skadi.$("store_updates_btn").addEventListener("click", (e) =>{
+         skadi.$("store_updates_row").style.visibility = "visible";
+         skadi.$("store_updates_btn").addEventListener("click", (e) =>{
             store_cb();
         });
     }

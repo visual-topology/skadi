@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class ResourceLoader {
+var skadi = skadi || {};
+
+skadi.ResourceLoader = class {
 
     constructor(js_parent, css_parent) {
         this.loading_resources = {}; // resource_name -> true

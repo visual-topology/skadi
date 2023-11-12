@@ -7,7 +7,7 @@
 
 /* skadi-executor/js/node_execution_states.js */
 
-class SkadiNodeExecutionStates {
+skadi.NodeExecutionStates = class {
     static pending = "pending";
     static executing = "executing";
     static executed = "executed";
@@ -16,7 +16,9 @@ class SkadiNodeExecutionStates {
 
 /* skadi-executor/js/executable_node_service.js */
 
-class SkadiExecutableNodeService extends SkadiNodeService {
+var skadi = skadi || {};
+
+skadi.ExecutableNodeService = class extends skadi.NodeService {
 
     constructor(node, graph_executor) {
         super(node);
@@ -31,7 +33,9 @@ class SkadiExecutableNodeService extends SkadiNodeService {
 
 /* skadi-executor/js/executable_node_wrapper.js */
 
-class SkadiExecutableNodeWrapper extends SkadiWrapper {
+var skadi = skadi || {};
+
+skadi.ExecutableNodeWrapper = class extends skadi.Wrapper {
 
     constructor(node, services) {
         super(node, services);
@@ -62,27 +66,11 @@ class SkadiExecutableNodeWrapper extends SkadiWrapper {
     }
 }
 
-/* skadi-executor/js/executable_node_base.js */
-
-class SkadiExecutableNodeBase extends SkadiNodeBase {
-
-    constructor(node_service) {
-        super(node_service);
-    }
-
-    reset_execution() {
-    }
-
-    async execute(inputs) {
-
-    }
-
-}
-
-
 /* skadi-executor/js/graph_link.js */
 
-class SkadiGraphLink {
+var skadi = skadi || {};
+
+skadi.GraphLink = class {
 
     constructor(executor, from_node_id, from_port, to_node_id, to_port) {
         this.executor = executor;
@@ -117,7 +105,9 @@ class SkadiGraphLink {
 
 /* skadi-executor/js/graph_executor.js */
 
-class SkadiGraphExecutor {
+var skadi = skadi || {};
+
+skadi.GraphExecutor = class {
 
     constructor() {
 
@@ -196,8 +186,8 @@ class SkadiGraphExecutor {
     }
 
     create_node_service(node) {
-        let service = new SkadiExecutableNodeService(node, this);
-        let wrapper = new SkadiExecutableNodeWrapper(node, service);
+        let service = new skadi.ExecutableNodeService(node, this);
+        let wrapper = new skadi.ExecutableNodeWrapper(node, service);
         service.set_wrapper(wrapper);
         return service;
     }
@@ -248,7 +238,7 @@ class SkadiGraphExecutor {
             return;
         }
         let node = this.nodes[node_id];
-        this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_PENDING);
+        this.skadi.update_execution_state(node_id,skadi.Api.EXECUTION_STATE_PENDING);
         node.get_wrapper().reset_execution();
     }
 
@@ -310,7 +300,7 @@ class SkadiGraphExecutor {
             }
         }
 
-        this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_EXECUTING);
+        this.skadi.update_execution_state(node_id,skadi.Api.EXECUTION_STATE_EXECUTING);
 
         node.get_wrapper().execute(inputs).then(
             (outputs) => this.executed(node_id, outputs),
@@ -325,13 +315,13 @@ class SkadiGraphExecutor {
         }
         delete this.executing_nodes[node_id];
         if (reject_reason) {
-            this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_FAILED);
+            this.skadi.update_execution_state(node_id,skadi.Api.EXECUTION_STATE_FAILED);
             console.error("Execution of "+node_id+" failed with reason: "+ reject_reason);
             if (reject_reason.stack) {
                 console.error(reject_reason.stack);
             }
         } else {
-            this.skadi.update_execution_state(node_id, SkadiApi.EXECUTION_STATE_EXECUTED);
+            this.skadi.update_execution_state(node_id, skadi.Api.EXECUTION_STATE_EXECUTED);
             this.node_outputs[node_id] = outputs;
         }
     }
@@ -346,7 +336,7 @@ class SkadiGraphExecutor {
     }
 
     add_link(link_id,from_node_id,from_port,to_node_id,to_port) {
-        let link = new SkadiGraphLink(this,from_node_id,from_port,to_node_id,to_port);
+        let link = new skadi.GraphLink(this,from_node_id,from_port,to_node_id,to_port);
         this.links[link_id] = link;
 
         if (!(from_port in this.out_links[from_node_id])) {
@@ -396,7 +386,7 @@ class SkadiGraphExecutor {
 
 /* skadi-executor/js/node_execution_failed.js */
 
-class SkadiNodeExecutionFailed extends Error {
+skadi.NodeExecutionFailed = class extends Error {
 
     constructor(node_id, message, from_exn) {
         super(message);

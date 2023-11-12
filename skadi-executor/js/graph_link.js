@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiGraphLink {
+var skadi = skadi || {};
+
+skadi.GraphLink = class {
 
     constructor(executor, from_node_id, from_port, to_node_id, to_port) {
         this.executor = executor;

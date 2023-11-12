@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiFrameDialogue extends SkadiSvgDialogue {
+var skadi = skadi || {};
+
+skadi.FrameDialogue = class extends skadi.SvgDialogue {
 
   constructor(id, design, title, x, y, content_width, content_height, close_handler, can_resize, url, open_callback, resize_callback) {
     super(id, design, title, x, y, content_width, content_height, close_handler,

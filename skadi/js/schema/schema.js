@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiSchemaError extends Error {
+var skadi = skadi || {};
+
+skadi.SchemaError = class extends Error {
 
     constructor(message) {
         super(message)
@@ -15,13 +17,13 @@ class SkadiSchemaError extends Error {
 }
 
 
-class SkadiSchema {
+skadi.Schema = class {
 
     constructor() {
         this.package_types = {};
         this.node_types = {};
         this.link_types = {};
-        this.rl = new ResourceLoader();
+        this.rl = new skadi.ResourceLoader();
     }
 
     async loadPackage(url,obj) {
@@ -33,10 +35,10 @@ class SkadiSchema {
 
         let executor = obj["executor"]
         if (executor != "javascript") {
-            throw new SkadiSchemaError("Invalid value for schema executor: found \""+executor+"\", expecting \"javascript\"");
+            throw new skadi.SchemaError("Invalid value for schema executor: found \""+executor+"\", expecting \"javascript\"");
         }
 
-        let package_type = new SkadiPackageType(id, url, obj);
+        let package_type = new skadi.PackageType(id, url, obj);
         await package_type.load_l10n("");
         this.package_types[package_type.get_id()] = package_type;
 
@@ -69,13 +71,13 @@ class SkadiSchema {
         /* raise an error if any resources failed to load */
 
         if (failed_resources.length > 0) {
-            throw new SkadiSchemaError("Unable to load package resources: "+JSON.stringify(failed_resources))
+            throw new skadi.SchemaError("Unable to load package resources: "+JSON.stringify(failed_resources))
         }
 
         let node_types = obj["node_types"];
         for(let node_id in node_types) {
             let nt = node_types[node_id];
-            let node_type = new SkadiNodeType(node_id, package_type, nt);
+            let node_type = new skadi.NodeType(node_id, package_type, nt);
             if (node_type.is_enabled()) {
                 this.node_types[node_type.get_id()] = node_type;
             }
@@ -84,7 +86,7 @@ class SkadiSchema {
         let link_types = obj["link_types"];
         for(let link_id in link_types) {
             let lt = link_types[link_id];
-            let link_type = new SkadiLinkType(link_id, package_type, lt);
+            let link_type = new skadi.LinkType(link_id, package_type, lt);
             this.link_types[link_type.get_id()] = link_type;
         }
 

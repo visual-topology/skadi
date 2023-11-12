@@ -27,9 +27,6 @@ DataVizExample.Configuration = class {
         });
     }
 
-    page_resize(width, height) {
-    }
-
     page_close() {
     }
 

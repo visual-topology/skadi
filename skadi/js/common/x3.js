@@ -5,9 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-var Skadi = Skadi || {};
+var skadi = skadi || {};
 
-class SkadiX3Drag {
+skadi.X3Drag = class {
 
   constructor() {
     this.callbacks = {};
@@ -43,7 +43,7 @@ class SkadiX3Drag {
       that.initial_mouseup(evt);
     }
 
-    let pos = Skadi.x3.get_event_xy(evt);
+    let pos =  skadi.x3.get_event_xy(evt);
     this.start_pos = pos;
   }
 
@@ -93,7 +93,7 @@ class SkadiX3Drag {
     }
     evt.preventDefault();
     evt.stopPropagation();
-    let pos = Skadi.x3.get_event_xy(evt);
+    let pos =  skadi.x3.get_event_xy(evt);
     if ("drag" in this.callbacks) {
       this.callbacks["drag"](pos.x,pos.y);
     }
@@ -111,7 +111,7 @@ class SkadiX3Drag {
         this.start_cb();
         this.start_pos = null;
       }
-      let pos = Skadi.x3.get_event_xy(evt);
+      let pos =  skadi.x3.get_event_xy(evt);
       evt.preventDefault();
       evt.stopPropagation();
       if ("end" in this.callbacks) {
@@ -129,7 +129,7 @@ class SkadiX3Drag {
   }
 }
 
-class SkadiX3Selection {
+skadi.X3Selection = class {
   
   constructor(elts) {
     this.svg_xmlns = "http://www.w3.org/2000/svg";
@@ -156,11 +156,11 @@ class SkadiX3Selection {
   }
 
   is_svg(tag) {
-    return Skadi.x3.svg_tags.includes(tag);
+    return  skadi.x3.svg_tags.includes(tag);
   }
 
   append(tag) {
-    let newSelection = new SkadiX3Selection([]);
+    let newSelection = new skadi.X3Selection([]);
     for(let idx=0; idx<this.elts.length; idx++) {
       let n;
       if (this.is_svg(tag)) {
@@ -254,14 +254,14 @@ class SkadiX3Selection {
     }
 }
 
-class SkadiX3 {
+skadi.X3 = class {
 
   constructor() {
   }
 
   select(selector) {
     let elts = document.querySelectorAll(selector);
-    return new SkadiX3Selection(elts);
+    return new skadi.X3Selection(elts);
   }
 
   get_node_pos(elt) {
@@ -290,18 +290,18 @@ class SkadiX3 {
 
 }
 
-Skadi.x3 = new SkadiX3();
-Skadi.x3.drag = function() { return new SkadiX3Drag(); }
+skadi.x3 = new skadi.X3();
+skadi.x3.drag = function() { return new skadi.X3Drag(); }
 
-Skadi.$ = (id) => {
+skadi.$ = (id) => {
     return document.getElementById(id);
 }
 
-Skadi.$$ = (selector) => {
-    return Skadi.x3.select(selector);
+skadi.$$ = (selector) => {
+    return skadi.x3.select(selector);
 }
 
-Skadi.x3.svg_tags = [
+skadi.x3.svg_tags = [
 	"a",
 	"altGlyph",
 	"altGlyphDef",

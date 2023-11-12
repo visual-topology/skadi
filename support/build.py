@@ -7,8 +7,6 @@
 import os
 import shutil
 
-current_version = "0.0.1"
-
 header_comment = """/*   Skadi - A visual modelling tool for constructing and executing directed graphs.
 
      Copyright (C) 2022-2023 Visual Topology Ltd
@@ -54,7 +52,7 @@ class Output:
     def add(self, input_path, subs={}):
         fq_input_path = os.path.join(repo_dir, input_path)
         with open(fq_input_path, "r") as f:
-            r = f.read().replace("${SKADI-VERSION}",current_version)
+            r = f.read()
             for (original,replacement) in subs.items():
                 r = r.replace(original,replacement)
             if self.output_path.endswith(".js"):
@@ -80,7 +78,6 @@ with Output("docs/api/skadi-designer.js") as of:
     of.add("skadi/js/common/geometry.js")
     of.add("skadi/js/common/palette.js")
     of.add("skadi/js/common/palette_entry.js")
-    of.add("skadi/js/common/scrollbar.js")
     of.add("skadi/js/common/svg_dialogue.js")
     of.add("skadi/js/common/iframe_dialogue.js")
     of.add("skadi/js/common/palette_dialogue.js")
@@ -122,7 +119,6 @@ with Output("docs/api/skadi-designer.js") as of:
     of.add("skadi/js/schema/schema.js")
     of.add("skadi/js/skadi-api.js")
     of.add("skadi/js/skadi-designer-api.js")
-    of.add("skadi/js/start-skadi.js")
     of.add("skadi/js/utils/l10n_utils.js")
 
 print("Building: skadi-application.js")
@@ -152,7 +148,6 @@ with Output("docs/api/skadi-application.js") as of:
     of.add("skadi/js/app/application.js")
     of.add("skadi/js/skadi-api.js")
     of.add("skadi/js/skadi-view-api.js")
-    of.add("skadi/js/start-skadi.js")
     of.add("skadi/js/utils/l10n_utils.js")
 
 print("Building: skadi-designer.css")
@@ -176,7 +171,6 @@ with Output("docs/api/skadi-executor.js") as of:
     of.add("skadi-executor/js/node_execution_states.js")
     of.add("skadi-executor/js/executable_node_service.js")
     of.add("skadi-executor/js/executable_node_wrapper.js")
-    of.add("skadi-executor/js/executable_node_base.js")
     of.add("skadi-executor/js/graph_link.js")
     of.add("skadi-executor/js/graph_executor.js")
     of.add("skadi-executor/js/node_execution_failed.js")

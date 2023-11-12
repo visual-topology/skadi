@@ -38,15 +38,42 @@ DataVizExample.Histogram2DPlotNode = class extends DataVizExample.ChartNode {
 
     draw() {
         super.upload();
+        let spec = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "description": "A 2D Histogram.",
+            "data": {"format": {"type": "csv"}},
+            "mark": "rect",
+            "padding": 20,
+            "autosize": {
+              "type": "fit",
+              "contains": "padding"
+            },
+            "encoding": {
+                "x": {"field": this.x_axis, "type": "quantitative", "bin": {"maxbins": 50}},
+                "y": {"field": this.y_axis, "type": "quantitative", "bin": {"maxbins": 50}},
+                "color": {
+                    "aggregate": "count",
+                    "type": "quantitative"
+                }
+            },
+            "config": {
+                "view": {
+                    "stroke": "transparent"
+                }
+            }
+        }
+        if (this.title_label) {
+            spec["title"] =  { "text": this.title_label };
+        }
+        if (this.x_axis_label) {
+            spec.encoding.x.title = this.x_axis_label;
+        }
+         if (this.y_axis_label) {
+            spec.encoding.y.title = this.y_axis_label;
+        }
         let msg = {
-            "x_col": this.x_axis,
-            "y_col": this.y_axis,
-            "width": this.width,
-            "height": this.height,
             "theme": this.node_service.get_configuration().get_theme(),
-            "title": this.title_label,
-            "x_axis_label": this.x_axis_label,
-            "y_axis_label": this.y_axis_label
+            "spec": spec
         }
         this.node_service.page_send_message(msg);
     }

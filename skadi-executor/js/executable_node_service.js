@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiExecutableNodeService extends SkadiNodeService {
+var skadi = skadi || {};
+
+skadi.ExecutableNodeService = class extends skadi.NodeService {
 
     constructor(node, graph_executor) {
         super(node);

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiTextMenuDialogue extends SkadiSvgDialogue {
+var skadi = skadi || {};
+
+skadi.TextMenuDialogue = class extends skadi.SvgDialogue {
 
     constructor(design, items, closeHandler, owner, x, y, title) {
         super(owner.get_id() + "text_menu", design, design.localise(title), x, y, 100, 500, closeHandler, null, false, true, false,
@@ -20,7 +22,7 @@ class SkadiTextMenuDialogue extends SkadiSvgDialogue {
         for (let i = 0; i < this.items.length; i++) {
             let item = this.items[i];
             let cb = this.create_cb(item.get_handler());
-            let t = new SkadiTextButton(this.font_size, design.localise(item.get_label()), cb);
+            let t = new skadi.TextButton(this.font_size, design.localise(item.get_label()), cb);
             t.set_class("menuitem");
             this.entries.push(t);
         }
@@ -67,7 +69,7 @@ class SkadiTextMenuDialogue extends SkadiSvgDialogue {
     }
 }
 
-SkadiTextMenuDialogue.MenuItem = class {
+skadi.TextMenuDialogue.MenuItem = class {
 
     constructor(label, handler) {
         this.label = label;

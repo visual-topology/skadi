@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiNetwork {
+var skadi = skadi || {};
+
+skadi.Network = class {
 
     constructor() {
         this.nodes = {};

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiStatusStates {
+var skadi = skadi || {};
+
+skadi.StatusStates = class {
     static get info() { return "info" };
     static get warning() { return "warning" };
     static get error() { return "error" };

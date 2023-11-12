@@ -5,17 +5,19 @@
      Licensed under the Open Software License version 3.0
 */
 
-function skadi_create_icon_for_status_state(status_state) {
+var skadi = skadi || {};
+
+skadi.create_icon_for_status_state = function(status_state) {
     let status_icon_url = null;
 
     switch(status_state) {
-        case SkadiStatusStates.info:
+        case skadi.StatusStates.info:
             status_icon_url = icon_status_info;
             break;
-        case SkadiStatusStates.warning:
+        case skadi.StatusStates.warning:
             status_icon_url = icon_status_warning;
             break;
-        case SkadiStatusStates.error:
+        case skadi.StatusStates.error:
             status_icon_url = icon_status_error;
             break;
     }

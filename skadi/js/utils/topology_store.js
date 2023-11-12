@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class TopologyStore {
+var skadi = skadi || {};
+
+skadi.TopologyStore = class {
 
     constructor(skadi) {
         this.skadi = skadi;

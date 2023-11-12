@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiPackageType {
+var skadi = skadi || {};
+
+skadi.PackageType = class {
   
   constructor(id, url, obj) {
     this.id = id;
@@ -19,7 +21,7 @@ class SkadiPackageType {
 
   async load_l10n() {
     if (this.l10n) {
-      this.l10n_utils = new SkadiL10NUtils("package."+this.id, this.base_url);
+      this.l10n_utils = new skadi.L10NUtils("package."+this.id, this.base_url);
       this.l10n_utils.configure_for_package(this.l10n);
       await this.l10n_utils.initialise();
     }

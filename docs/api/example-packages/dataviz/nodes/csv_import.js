@@ -122,9 +122,6 @@ DataVizExample.CsvImportNode = class {
         }, "(event) => event.detail");
     }
 
-    page_resize(w,h) {
-    }
-
     page_close() {
     }
 

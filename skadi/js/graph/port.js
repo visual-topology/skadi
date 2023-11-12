@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiPort {
+var skadi = skadi || {};
+
+skadi.Port = class {
 
   constructor(design, node, id, port_type, port_name, inNotOut) {
     this.design = design;
@@ -56,7 +58,7 @@ class SkadiPort {
     if (this.node.active && this.inNotOut) {
       this.design.unregister_port(this);
     }
-    Skadi.x3.select("#" + this.id.replace(":", "_")).remove();
+     skadi.x3.select("#" + this.id.replace(":", "_")).remove();
     this.tooltip.remove();
   }
 
@@ -99,7 +101,7 @@ class SkadiPort {
 
     let that = this;
     if (this.node.active && !this.inNotOut) {
-      let drag = Skadi.x3.drag();
+      let drag =  skadi.x3.drag();
       drag
         .on("start_abs", function() {
           that.node.draggingFrom = true;
@@ -125,7 +127,7 @@ class SkadiPort {
             if (that.conn == null) {
               that.conn = {};
               let id = that.design.next_id("link");
-              that.conn = new SkadiLink(that.design, id, that, that.link_type);
+              that.conn = new skadi.Link(that.design, id, that, that.link_type);
               that.conn.draw(cc.x, cc.y);
             } else {
               if (that.conn.update_position) {
@@ -165,11 +167,11 @@ class SkadiPort {
 
       this.shape.call(drag);
     } else {
-      let drag = Skadi.x3.drag();
+      let drag =  skadi.x3.drag();
       this.shape.call(drag);
     }
     let tooltip_text = (this.inNotOut ? "[in] " : "[out] ") + this.label;
-    this.tooltip = new SkadiTooltip(this.grp.node(),this.design.get_svg_tooltip_group().node(),tooltip_text);
+    this.tooltip = new skadi.Tooltip(this.grp.node(),this.design.get_svg_tooltip_group().node(),tooltip_text);
   }
 
   update_position(refocus) {

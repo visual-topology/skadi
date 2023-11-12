@@ -16,8 +16,6 @@ DataVizExample.ChartNode = class {
         this.dataset = null;
         this.data_uploaded = false;
         this.is_open = false;
-        this.width = null;
-        this.height = null;
         this.configuration_update_callback = () => {
             this.redraw();
         }
@@ -99,16 +97,8 @@ DataVizExample.ChartNode = class {
         this.redraw();
     }
 
-    page_resize(width,height) {
-        this.width = width;
-        this.height = height;
-        this.redraw();
-    }
-
     page_close() {
         this.is_open = false;
-        this.width = null;
-        this.height = null;
         this.data_uploaded = false;
     }
 
@@ -125,7 +115,7 @@ DataVizExample.ChartNode = class {
 
     redraw() {
         if (this.is_open) {
-            if (this.dataset && this.valid() && this.width && this.height) {
+            if (this.dataset && this.valid()) {
                 this.draw();
             } else {
                 this.clear();

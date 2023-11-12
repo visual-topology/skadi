@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let skadi_upload_html = `
+var skadi = skadi || {};
+
+skadi.upload_html = `
 <span aria-describedby="edit-metadata-tooltip">
     {{upload.topology}}
 </span>
@@ -35,8 +37,8 @@ let skadi_upload_html = `
     </div>
 </div>`
 
-function skadi_populate_load(design, elt, close_fn) {
-    elt.innerHTML = design.localise(skadi_upload_html);
+skadi.populate_load = function(design, elt, close_fn) {
+    elt.innerHTML = design.localise(skadi.upload_html);
     let input = document.getElementById("skadi_designer_upload_file");
     input.addEventListener("change", async function() {
         let file = input.files[0];
@@ -46,8 +48,8 @@ function skadi_populate_load(design, elt, close_fn) {
     });
     let restore_cb = design.get_topology_store().get_restore_callback();
     if (restore_cb) {
-        Skadi.$("restore_updates_row").style.visibility = "visible";
-        Skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
+         skadi.$("restore_updates_row").style.visibility = "visible";
+         skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
             restore_cb();
         });
     }

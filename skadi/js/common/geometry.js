@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiGeometry {
+var skadi = skadi || {};
+
+skadi.Geometry = class {
 
     constructor() {
     }

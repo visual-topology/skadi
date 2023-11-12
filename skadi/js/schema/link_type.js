@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiLinkType {
+var skadi = skadi || {};
+
+skadi.LinkType = class {
   
   constructor(link_type_id, package_type, schema) {
     let metadata = schema["metadata"] || { "name": "?", "description":"?"};

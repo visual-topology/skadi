@@ -33,13 +33,17 @@ DataVizExample.SelectRowsNode = class {
     set max_value(v) { this.node_service.set_property("max_value",v); }
 
     update_status() {
-        if (this.is_reset_execution) {
-            this.node_service.set_status_info("Reloading...");
+        if (!this.dataset) {
+            this.node_service.set_status_warning("No Input Data");
         } else {
             if (this.valid()) {
                 this.node_service.set_status_info("" + this.column_name);
             } else {
-                this.node_service.set_status_error("invalid");
+                if (this.column_name === "") {
+                    this.node_service.set_status_warning("Select Column(s)");
+                } else {
+                    this.node_service.set_status_error("Invalid Settings");
+                }
             }
         }
     }
@@ -52,6 +56,7 @@ DataVizExample.SelectRowsNode = class {
             this.collect_input_column_values();
         }
         this.refresh_controls();
+        this.update_status();
     }
 
     column_changed() {
@@ -63,8 +68,9 @@ DataVizExample.SelectRowsNode = class {
         if (this.dataset) {
             if (this.input_column_names.includes(this.column_name)) {
                 let aqu = new DataVizExample.AqUtils(this.dataset);
-                let analysis = aqu.analyse(this.column_name);
-                if (analysis.fraction_numeric > 0.5) {
+                let column_type = aqu.get_column_type(this.column_name);
+                let analysis = aqu.analyse(this.column_name, 10);
+                if (column_type == "number") {
                     this.column_isnumeric = true;
                     this.column_iscategorical = false;
                     // clip min/max to the new column min/max
@@ -132,8 +138,11 @@ DataVizExample.SelectRowsNode = class {
 
         this.node_service.page_add_event_handler("column_name","change", v => {
             this.column_name = v;
+            this.min_value = null;
+            this.max_value = null;
             this.column_changed();
             this.refresh_controls();
+            this.update_status();
             this.node_service.request_execution();
         });
 

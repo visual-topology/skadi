@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiCoreNode {
+var skadi = skadi || {};
+
+skadi.CoreNode = class {
 
     constructor(core, node_type, id, x, y, metadata, properties) {
         this.core = core;
@@ -27,7 +29,7 @@ class SkadiCoreNode {
         this.status_content = null;
         this.status_content_rect = null;
 
-        this.execution_state = SkadiApi.EXECUTION_STATE_EXECUTED;
+        this.execution_state = skadi.Api.EXECUTION_STATE_EXECUTED;
 
         this.input_ports = [];
         this.output_ports = [];
@@ -123,9 +125,9 @@ class SkadiCoreNode {
     }
 }
 
-SkadiCoreNode.deserialise = function (core, id, obj) {
+skadi.CoreNode.deserialise = function (core, id, obj) {
     let node_type = core.get_schema().get_node_type(obj.node_type);
-    let node = new SkadiCoreNode(core, node_type, id, obj.x, obj.y, obj.metadata, obj.properties);
+    let node = new skadi.CoreNode(core, node_type, id, obj.x, obj.y, obj.metadata, obj.properties);
     node.create_instance();
     return node;
 }

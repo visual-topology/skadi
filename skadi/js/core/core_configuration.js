@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiCoreConfiguration {
+var skadi = skadi || {};
+
+skadi.CoreConfiguration = class {
 
   constructor(core, package_type, properties) {
     this.core = core;
@@ -27,8 +29,8 @@ class SkadiCoreConfiguration {
 
   create_instance() {
       try {
-          this.configuration_service = new SkadiConfigurationService(this);
-          this.wrapper = new SkadiWrapper(this,this.configuration_service, this.package_type.get_l10n_utils());
+          this.configuration_service = new skadi.ConfigurationService(this);
+          this.wrapper = new skadi.Wrapper(this,this.configuration_service, this.package_type.get_l10n_utils());
           this.configuration_service.set_wrapper(this.wrapper);
           let configuration_factory = this.core.get_configuration_factory();
           let o = null;
@@ -67,9 +69,9 @@ class SkadiCoreConfiguration {
   }
 }
 
-SkadiCoreConfiguration.deserialise = function(core,package_id,obj) {
+skadi.CoreConfiguration.deserialise = function(core,package_id,obj) {
   let package_type = core.get_schema().get_package_type(package_id);
-  let configuration = new SkadiCoreConfiguration(core,package_type,obj.properties);
+  let configuration = new skadi.CoreConfiguration(core,package_type,obj.properties);
   configuration.create_instance();
   return configuration;
 }

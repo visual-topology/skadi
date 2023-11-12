@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiNodeType {
+var skadi = skadi || {};
+
+skadi.NodeType = class {
 
   constructor(nodeTypeId, package_type, schema) {
     this.id = package_type.get_qualified_id(nodeTypeId);
@@ -27,13 +29,13 @@ class SkadiNodeType {
     this.output_ports = {};
 
     for (let key in input_ports) {
-      let pt = new SkadiPortType("input");
+      let pt = new skadi.PortType("input");
       pt.deserialise(input_ports[key]);
       this.input_ports[key] = pt;
     }
 
     for (let key in output_ports) {
-      let pt = new SkadiPortType("output");
+      let pt = new skadi.PortType("output");
       pt.deserialise(output_ports[key]);
       this.output_ports[key] = pt;
     }

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiTooltip {
+var skadi = skadi || {};
+
+skadi.Tooltip = class {
 
     constructor(target,parent,text) {
         this.target = target;

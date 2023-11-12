@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiL10NUtils {
+var skadi = skadi || {};
+
+skadi.L10NUtils = class {
 
     constructor(id, l10n_folder_url) {
         this.id = id;

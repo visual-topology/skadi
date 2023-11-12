@@ -5,7 +5,7 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiNodeExecutionStates {
+skadi.NodeExecutionStates = class {
     static pending = "pending";
     static executing = "executing";
     static executed = "executed";

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
+var skadi = skadi || {};
+
+skadi.adjust_html = `<span aria-describedby="adjust-tooltip">
     {{node.adjust}}
 </span>
 <div class="exo-icon exo-icon-inline exo-icon-help exo-help-tooltip"
@@ -56,14 +58,14 @@ let skadi_adjust_html = `<span aria-describedby="adjust-tooltip">
 </div>
 `
 
-function skadi_populate_adjust(design, node, elt, close_window) {
+skadi.populate_adjust = function(design, node, elt, close_window) {
     let edit_name_id = "edit_node_"+node.get_id()+"_name";
     let edit_description_id = "edit_description_"+node.get_id()+"_description";
     let rotate_id = "rotate_node_"+node.get_id();
     let rotate_left_id = "rotate_left_node_"+node.get_id();
     let rotate_right_id = "rotate_right_node_"+node.get_id();
     
-    elt.innerHTML = design.localise(skadi_adjust_html)
+    elt.innerHTML = design.localise(skadi.adjust_html)
         .replace("$edit_name_id",edit_name_id)
         .replace("$edit_description_id", edit_description_id)
         .replace("$rotate_id",rotate_id)

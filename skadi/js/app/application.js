@@ -5,10 +5,12 @@
      Licensed under the Open Software License version 3.0
 */
 
-skadi_application_statuses = {};
-skadi_application_status_areas = {};
+var skadi = skadi || {};
 
-class SkadiApplication extends SkadiCore {
+skadi.application_statuses = {};
+skadi.application_status_areas = {};
+
+skadi.Application = class extends skadi.Core {
 
     constructor(l10n_utils, schema, element_id, node_factory, configuration_factory) {
         super(l10n_utils, schema, element_id, null, node_factory, configuration_factory);
@@ -35,8 +37,8 @@ class SkadiApplication extends SkadiCore {
         let input = li.append("input").attr("type","checkbox").attr("aria-hidden","true");
         let label = li.append("label").text(configuration.get_package_type().get_metadata().name);
         
-        skadi_application_status_areas[package_id] = label.append("span");
-        skadi_application_status_areas[package_id].attr("class","status_label");
+        skadi.application_status_areas[package_id] = label.append("span");
+        skadi.application_status_areas[package_id].attr("class","status_label");
         
         let div = li.append("div");
 
@@ -56,8 +58,8 @@ class SkadiApplication extends SkadiCore {
         }        
 
         this.div.append("hr");
-        if (package_id in skadi_application_statuses) {
-            let status = skadi_application_statuses[package_id];
+        if (package_id in skadi.application_statuses) {
+            let status = skadi.application_statuses[package_id];
             this.update_status_area(package_id, status.state, status.status_message);
         }
     }
@@ -74,12 +76,12 @@ class SkadiApplication extends SkadiCore {
             input.node().addEventListener("change",this.create_node_openclose_callback(div,node));
         }
 
-        skadi_application_status_areas[node_id] = label.append("span");
-        skadi_application_status_areas[node_id].attr("class","status_label");
+        skadi.application_status_areas[node_id] = label.append("span");
+        skadi.application_status_areas[node_id].attr("class","status_label");
         
         this.div.append("hr");
-        if (node_id in skadi_application_statuses) {
-            let status = skadi_application_statuses[node_id];
+        if (node_id in skadi.application_statuses) {
+            let status = skadi.application_statuses[node_id];
             this.update_status_area(node_id, status.state, status.status_message);
         }
     }
@@ -122,23 +124,23 @@ class SkadiApplication extends SkadiCore {
     }
 
     update_node_status(id, state, status_message) {
-        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
+        skadi.application_statuses[id] = { "state":state, "status_message":status_message };
         this.update_status_area(id, state, status_message);
         super.update_node_status(id, state, status_message);
     }
 
     update_configuration_status(id, state, status_message) {
-        skadi_application_statuses[id] = { "state":state, "status_message":status_message };
+        skadi.application_statuses[id] = { "state":state, "status_message":status_message };
         this.update_status_area(id, state, status_message);
         super.update_configuration_status(id, state, status_message);
     }
 
     update_status_area(id, state, status_message) {
-        if (id in skadi_application_status_areas) {
-            let area = skadi_application_status_areas[id];
+        if (id in skadi.application_status_areas) {
+            let area = skadi.application_status_areas[id];
             area.node().innerHTML = "";
             area.text(status_message);
-            let status_icon = skadi_create_icon_for_status_state(state);
+            let status_icon = skadi.create_icon_for_status_state(state);
             if (status_icon) {
                 area.node().appendChild(status_icon);
             }

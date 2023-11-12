@@ -21,7 +21,7 @@ let palette_html = `<div>
 </div>
 </div>`;
 
-skadi.PaletteDialogue = class extends SkadiFrameDialogue {
+skadi.PaletteDialogue = class extends skadi.FrameDialogue {
 
   constructor(id, design, title, x, y, width, height, closeHandler, resize_handler, scrollable, autoClose, draggable) {
     super(id, design, title, x, y, width, height, closeHandler,
@@ -53,10 +53,10 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
 
   show(elt) {
       elt.innerHTML = palette_html;
-      this.palette_controls = Skadi.$("palette_controls");
-      this.page_button_container = Skadi.$("page_buttons");
-      this.content_elt = Skadi.$("palette_content");
-      this.palette_filter = Skadi.$("palette_filter");
+      this.palette_controls =  skadi.$("palette_controls");
+      this.page_button_container =  skadi.$("page_buttons");
+      this.content_elt =  skadi.$("palette_content");
+      this.palette_filter =  skadi.$("palette_filter");
       this.palette_filter.addEventListener("change", (evt) => {
         this.filter_text = evt.target.value;
         this.refresh_view();
@@ -73,7 +73,7 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
      }
      let sz = entry.get_size();
 
-     let elt_sel = new SkadiX3Selection([this.content_elt]);
+     let elt_sel = new skadi.X3Selection([this.content_elt]);
      let tile = elt_sel.append("div");
      let svg = tile.append("svg")
             .attr("width",sz.width)
@@ -136,7 +136,7 @@ skadi.PaletteDialogue = class extends SkadiFrameDialogue {
                page_btn.setAttribute("class", "palette_page_button");
               page_btn.setAttribute("value", "" + page_nr);
               page_btn.addEventListener("click", this.make_page_callback(page_nr));
-              this.page_buttons[page_nr] = new SkadiX3Selection([page_btn]);
+              this.page_buttons[page_nr] = new skadi.X3Selection([page_btn]);
               this.page_button_container.appendChild(page_btn);
           }
       }

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiLink extends SkadiCoreLink {
+var skadi = skadi || {};
+
+skadi.Link = class extends skadi.CoreLink {
 
   constructor(design, id, fromPort, link_type, toPort) {
     super(design, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort ? toPort.get_node(): null, toPort ? toPort.get_port_name(): null);
@@ -37,7 +39,7 @@ class SkadiLink extends SkadiCoreLink {
     if (this.toPort) {
       this.toPort.remove_link(this);
     }
-    Skadi.x3.select("#" + this.id).remove();
+     skadi.x3.select("#" + this.id).remove();
     this.tooltip.remove();
   }
 
@@ -57,11 +59,11 @@ class SkadiLink extends SkadiCoreLink {
         return;
       }
       let mitems = [];
-      mitems.push(new SkadiTextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
+      mitems.push(new skadi.TextMenuDialogue.MenuItem(this.REMOVE_ACTION, () => {
         this.design.remove(this.get_id());
       }));
-      let evloc = Skadi.x3.get_event_xy(evt);
-      let tm = new SkadiTextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, evloc.x - 50, evloc.y - 50, "Edit Link");
+      let evloc =  skadi.x3.get_event_xy(evt);
+      let tm = new skadi.TextMenuDialogue(this.design, mitems, () => { this.menu_dial = null; }, this, evloc.x - 50, evloc.y - 50, "Edit Link");
       tm.open();
     };
 
@@ -71,7 +73,7 @@ class SkadiLink extends SkadiCoreLink {
     this.update_position(endx, endy);
     this.update_opacity();
 
-    this.tooltip = new SkadiTooltip(this.grp.node(),this.design.get_svg_tooltip_group().node(),this.link_type.get_name() || "");
+    this.tooltip = new skadi.Tooltip(this.grp.node(),this.design.get_svg_tooltip_group().node(),this.link_type.get_name() || "");
   }
 
   set_opacity(opacity) {
@@ -134,8 +136,8 @@ class SkadiLink extends SkadiCoreLink {
     if (this.toPort) {
       theta = this.toPort.get_port_angle();
     }
-    let theta1 = theta - Math.PI / 6;
-    let theta2 = theta + Math.PI / 6;
+    let theta1 = theta - Math.PI / 8;
+    let theta2 = theta + Math.PI / 8;
     let len = 15;
     let x1 = coords.x + len * Math.cos(theta1);
     let y1 = coords.y + len * Math.sin(theta1);
@@ -152,11 +154,11 @@ class SkadiLink extends SkadiCoreLink {
 }
 
 
-SkadiLink.deserialise = function(design, id,obj) {
+skadi.Link.deserialise = function(design, id,obj) {
     let fromPort = design.get_port(obj.from_port);
     let toPort = design.get_port(obj.to_port);
     let linkType = design.get_schema().get_link_type(obj.link_type);
-    return new SkadiLink(design, id, fromPort, linkType, toPort);
+    return new skadi.Link(design, id, fromPort, linkType, toPort);
 }
 
 

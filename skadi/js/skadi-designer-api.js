@@ -176,7 +176,7 @@ skadi.start_designer = async function(element_id, options, schema_urls, executor
     }
 
     let skadi_instance = new skadi.DesignerApi();
-    await skadi_instance.load_l10n(options.l10n_url || skadi_api_home_url+"/l10n");
+    await skadi_instance.load_l10n(options.l10n_url || skadi.api_home_url+"/l10n");
     await skadi_instance.load_schema(schema_urls);
     await skadi_instance.init(element_id || "canvas_container_id",
         canvas_width || skadi.Api.DEFAULT_CANVAS_WIDTH,

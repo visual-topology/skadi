@@ -62,6 +62,7 @@ DataVizExample.JoinRowsNode = class {
             this.join_column_names = JSON.parse(v);
             this.node_service.request_execution();
         });
+        this.refresh_controls();
     }
 
 

@@ -167,7 +167,7 @@ skadi.Node = class extends skadi.CoreNode {
   }
 
   open_adjust_editor(root_elt) {
-    skadi_populate_adjust(this.design, this, root_elt, null);
+    skadi.populate_adjust(this.design, this, root_elt, null);
   }
 
   add_port(key, port_type, is_input) {

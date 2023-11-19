@@ -2003,6 +2003,9 @@ skadi.PackageType = class {
     this.display = obj["display"];
     this.l10n = obj["l10n"];
     this.base_url = url;
+    if (this.base_url.endsWith("schema.json")) {
+        this.base_url = this.base_url.replace("schema.json","");
+    }
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }
@@ -2644,7 +2647,7 @@ skadi.launch_application = function(container_id, title_id, heading_id, options)
   */
 skadi.start_application = async function(element_id, options, schema_urls, executor, node_factory, configuration_factory) {
     let skadi_instance = new skadi.ViewApi();
-    await skadi_instance.load_l10n(options.l10n_url || skadi_api_home_url+"/l10n");
+    await skadi_instance.load_l10n(options.l10n_url || skadi.api_home_url+"/l10n");
     await skadi_instance.load_schema(schema_urls);
     await skadi_instance.init(element_id, node_factory, configuration_factory, executor);
     skadi_instance.open();

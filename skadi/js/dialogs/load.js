@@ -27,14 +27,6 @@ skadi.upload_html = `
             <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
         </div>
     </div>
-    <div class="exo-row" style="visibility:hidden;" id="restore_updates_row">
-        <div class="exo-2-cell">
-            {{restore.label}}:
-        </div>
-        <div class="exo-2-cell">
-            <input type="button" id="restore_updates_btn" value="{{restore}}">
-        </div>
-    </div>
 </div>`
 
 skadi.populate_load = function(design, elt, close_fn) {
@@ -46,11 +38,4 @@ skadi.populate_load = function(design, elt, close_fn) {
         design.metadata.filename = file.name;
         close_fn();
     });
-    let restore_cb = design.get_topology_store().get_restore_callback();
-    if (restore_cb) {
-         skadi.$("restore_updates_row").style.visibility = "visible";
-         skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
-            restore_cb();
-        });
-    }
 }

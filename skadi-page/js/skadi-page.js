@@ -5,11 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-/* skadi-ui/js/skadi-ui.js */
-
 var skadi = skadi || {};
 
-skadi.UI = class {
+skadi.Page = class {
 
     constructor() {
         this.message_handler = null;
@@ -111,7 +109,6 @@ skadi.UI = class {
     }
 }
 
-skadi.ui = new skadi.UI();
+skadi.page = new skadi.Page();
 
-window.addEventListener("message", (event) => skadi.ui.handle_message(event.data));
-
+window.addEventListener("message", (event) => skadi.page.handle_message(event.data));

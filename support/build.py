@@ -190,10 +190,10 @@ print("Copying: skadi-about.html")
 with Output("docs/api/skadi-about.html", comment_paths=False) as of:
     of.add("skadi/html/skadi-about.html")
 
-print("Copying: skadi-ui.js")
+print("Copying: skadi-page.js")
 
-with Output("docs/api/skadi-ui.js") as of:
-    of.add("skadi-ui/js/skadi-ui.js")
+with Output("docs/api/skadi-page.js") as of:
+    of.add("skadi-page/js/skadi-page.js")
 
 print("Copying: l10n")
 
@@ -203,3 +203,8 @@ if os.path.exists(target_l10n):
 source_l10n = os.path.join(repo_dir,"skadi/l10n")
 
 shutil.copytree(source_l10n, target_l10n)
+
+print("Copying: skadi-designer.html")
+
+with Output("docs/api/skadi.svg", comment_paths=False) as of:
+    of.add("skadi/images/skadi.svg")

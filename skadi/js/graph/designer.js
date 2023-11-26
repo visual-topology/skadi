@@ -52,7 +52,6 @@ skadi.Designer = class extends skadi.Core {
 
         this.svg_tooltip_group = this.fixed_svg.append("g").attr("class", "fixed_tooltip_group");
 
-
         this.button_size = 64;
         this.button_margin = 10;
         let button_x = this.button_margin + this.button_size/2;
@@ -623,9 +622,7 @@ skadi.Designer = class extends skadi.Core {
             let configuration = skadi.Configuration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }

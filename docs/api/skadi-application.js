@@ -577,13 +577,10 @@ skadi.TopologyStore = class {
         });
     }
 
-    get_store_callback() {
-        return undefined;
+    get_default_filename() {
+        return "topology.json";
     }
 
-    get_restore_callback() {
-        return undefined;
-    }
 }
 
 /* skadi/js/core/core.js */
@@ -612,7 +609,7 @@ skadi.Core = class {
         this.metadata = {
             "name": "New Topology",
             "description": "",
-            "filename": "topology.json",
+            "filename": this.topology_store ? this.topology_store.get_default_filename() : "",
             "authors": "",
             "version": "0.1"
         };
@@ -902,11 +899,7 @@ skadi.Core = class {
     /* design metadata */
 
     get_metadata() {
-        return this.network.get_metadata();
-    }
-
-    set_metadata(metadata) {
-        this.network.set_metadata(metadata);
+        return this.metadata;
     }
 
     /* provide unique IDs */
@@ -1007,9 +1000,7 @@ skadi.Core = class {
             let configuration = skadi.CoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }
@@ -1297,7 +1288,6 @@ skadi.Network = class {
         this.nodes = {};
         this.links = {};
         this.configurations = {};
-        this.metadata = { "name":"", "description":"" };
     }
 
     clear() {
@@ -1310,10 +1300,6 @@ skadi.Network = class {
             this.nodes[id].remove();
         }
         this.nodes = {};
-    }
-
-    get_metadata() {
-        return this.metadata;
     }
 
     get_downstream_nodes(from_node_id) {
@@ -1356,10 +1342,6 @@ skadi.Network = class {
             start_nodes = next_gen;
         } while(start_nodes.length > 0);
         return nodes;
-    }
-
-    set_metadata(metadata) {
-        this.metadata = metadata;
     }
 
     /* configurations */
@@ -2002,10 +1984,11 @@ skadi.PackageType = class {
     this.metadata = obj["metadata"];
     this.display = obj["display"];
     this.l10n = obj["l10n"];
-    this.base_url = url;
-    if (this.base_url.endsWith("schema.json")) {
-        this.base_url = this.base_url.replace("schema.json","");
+    this.base_url = "";
+    if (!url.startsWith("http")) {
+      this.base_url = window.location.protocol+window.location.host;
     }
+    this.base_url += url;
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }

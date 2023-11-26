@@ -1608,13 +1608,10 @@ skadi.TopologyStore = class {
         });
     }
 
-    get_store_callback() {
-        return undefined;
+    get_default_filename() {
+        return "topology.json";
     }
 
-    get_restore_callback() {
-        return undefined;
-    }
 }
 
 /* skadi/js/core/core.js */
@@ -1643,7 +1640,7 @@ skadi.Core = class {
         this.metadata = {
             "name": "New Topology",
             "description": "",
-            "filename": "topology.json",
+            "filename": this.topology_store ? this.topology_store.get_default_filename() : "",
             "authors": "",
             "version": "0.1"
         };
@@ -1933,11 +1930,7 @@ skadi.Core = class {
     /* design metadata */
 
     get_metadata() {
-        return this.network.get_metadata();
-    }
-
-    set_metadata(metadata) {
-        this.network.set_metadata(metadata);
+        return this.metadata;
     }
 
     /* provide unique IDs */
@@ -2038,9 +2031,7 @@ skadi.Core = class {
             let configuration = skadi.CoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }
@@ -2328,7 +2319,6 @@ skadi.Network = class {
         this.nodes = {};
         this.links = {};
         this.configurations = {};
-        this.metadata = { "name":"", "description":"" };
     }
 
     clear() {
@@ -2341,10 +2331,6 @@ skadi.Network = class {
             this.nodes[id].remove();
         }
         this.nodes = {};
-    }
-
-    get_metadata() {
-        return this.metadata;
     }
 
     get_downstream_nodes(from_node_id) {
@@ -2387,10 +2373,6 @@ skadi.Network = class {
             start_nodes = next_gen;
         } while(start_nodes.length > 0);
         return nodes;
-    }
-
-    set_metadata(metadata) {
-        this.metadata = metadata;
     }
 
     /* configurations */
@@ -2565,35 +2547,25 @@ skadi.download_html = `
             </div>
         </div>
     </div>
-    <div class="exo-row" style="visibility:hidden;" id="store_updates_row">
-        <div class="exo-2-cell">
-            {{store.label}}:
-        </div>
-        <div class="exo-2-cell">
-            <input type="button" id="store_updates_btn" value="{{store}}">
-        </div>
-    </div>
 </div>`
 
 skadi.populate_save = function(design, elt) {
     elt.innerHTML = design.localise(skadi.download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
+    let download_filename = design.metadata.filename;
+    if (download_filename) {
+        download_filename = download_filename.trim();
+    }
+    if (download_filename === "") {
+        download_filename = design.get_topology_store().get_default_filename();
+    }
     design.get_topology_store().get_save_link().then(url => {
         link.innerHTML = "Download";
         link.setAttribute("href", url);
-        const filename = design.metadata.filename || "topology.json";
+        const filename = download_filename;
         link.setAttribute("download", filename);
     });
-
-    let store_cb = design.get_topology_store().get_store_callback();
-    if (store_cb) {
-         skadi.$("store_updates_row").style.visibility = "visible";
-         skadi.$("store_updates_btn").addEventListener("click", (e) =>{
-            store_cb();
-        });
-    }
-
 }
 
 /* skadi/js/dialogs/load.js */
@@ -2620,14 +2592,6 @@ skadi.upload_html = `
             <input class="exo-dark-blue-fg exo-light-blue-bg" type="file" id="skadi_designer_upload_file">
         </div>
     </div>
-    <div class="exo-row" style="visibility:hidden;" id="restore_updates_row">
-        <div class="exo-2-cell">
-            {{restore.label}}:
-        </div>
-        <div class="exo-2-cell">
-            <input type="button" id="restore_updates_btn" value="{{restore}}">
-        </div>
-    </div>
 </div>`
 
 skadi.populate_load = function(design, elt, close_fn) {
@@ -2639,13 +2603,6 @@ skadi.populate_load = function(design, elt, close_fn) {
         design.metadata.filename = file.name;
         close_fn();
     });
-    let restore_cb = design.get_topology_store().get_restore_callback();
-    if (restore_cb) {
-         skadi.$("restore_updates_row").style.visibility = "visible";
-         skadi.$("restore_updates_btn").addEventListener("click", (e) =>{
-            restore_cb();
-        });
-    }
 }
 
 /* skadi/js/dialogs/clear.js */
@@ -3334,7 +3291,6 @@ skadi.Designer = class extends skadi.Core {
 
         this.svg_tooltip_group = this.fixed_svg.append("g").attr("class", "fixed_tooltip_group");
 
-
         this.button_size = 64;
         this.button_margin = 10;
         let button_x = this.button_margin + this.button_size/2;
@@ -3905,9 +3861,7 @@ skadi.Designer = class extends skadi.Core {
             let configuration = skadi.Configuration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }
@@ -5738,10 +5692,11 @@ skadi.PackageType = class {
     this.metadata = obj["metadata"];
     this.display = obj["display"];
     this.l10n = obj["l10n"];
-    this.base_url = url;
-    if (this.base_url.endsWith("schema.json")) {
-        this.base_url = this.base_url.replace("schema.json","");
+    this.base_url = "";
+    if (!url.startsWith("http")) {
+      this.base_url = window.location.protocol+window.location.host;
     }
+    this.base_url += url;
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }

@@ -1,6 +1,6 @@
 {
   "schemas": ["../../docs/api/example-packages/dataviz/schema.json"],
-  "title": "Data Visualisation Example Package",
+  "title": "Skadi - Data Visualisation Example Package",
   "canvas_height": 2000,
   "canvas_width": 4000
 }

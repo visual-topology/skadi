@@ -27,7 +27,7 @@ function plot() {
     }
 }
 
-skadi.ui.set_message_handler((msg) => {
+skadi.page.set_message_handler((msg) => {
     if (msg.dataset) {
         dataset = msg.dataset;
     } else if (msg.spec) {

@@ -13,7 +13,6 @@ skadi.Network = class {
         this.nodes = {};
         this.links = {};
         this.configurations = {};
-        this.metadata = { "name":"", "description":"" };
     }
 
     clear() {
@@ -26,10 +25,6 @@ skadi.Network = class {
             this.nodes[id].remove();
         }
         this.nodes = {};
-    }
-
-    get_metadata() {
-        return this.metadata;
     }
 
     get_downstream_nodes(from_node_id) {
@@ -72,10 +67,6 @@ skadi.Network = class {
             start_nodes = next_gen;
         } while(start_nodes.length > 0);
         return nodes;
-    }
-
-    set_metadata(metadata) {
-        this.metadata = metadata;
     }
 
     /* configurations */

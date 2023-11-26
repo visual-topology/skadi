@@ -23,11 +23,8 @@ skadi.TopologyStore = class {
         });
     }
 
-    get_store_callback() {
-        return undefined;
+    get_default_filename() {
+        return "topology.json";
     }
 
-    get_restore_callback() {
-        return undefined;
-    }
 }

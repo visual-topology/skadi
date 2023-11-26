@@ -29,7 +29,7 @@ skadi.Core = class {
         this.metadata = {
             "name": "New Topology",
             "description": "",
-            "filename": "topology.json",
+            "filename": this.topology_store ? this.topology_store.get_default_filename() : "",
             "authors": "",
             "version": "0.1"
         };
@@ -319,11 +319,7 @@ skadi.Core = class {
     /* design metadata */
 
     get_metadata() {
-        return this.network.get_metadata();
-    }
-
-    set_metadata(metadata) {
-        this.network.set_metadata(metadata);
+        return this.metadata;
     }
 
     /* provide unique IDs */
@@ -424,9 +420,7 @@ skadi.Core = class {
             let configuration = skadi.CoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }

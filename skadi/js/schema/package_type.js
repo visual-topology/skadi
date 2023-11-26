@@ -14,7 +14,11 @@ skadi.PackageType = class {
     this.metadata = obj["metadata"];
     this.display = obj["display"];
     this.l10n = obj["l10n"];
-    this.base_url = url;
+    this.base_url = "";
+    if (!url.startsWith("http")) {
+      this.base_url = window.location.protocol+window.location.host;
+    }
+    this.base_url += url;
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }

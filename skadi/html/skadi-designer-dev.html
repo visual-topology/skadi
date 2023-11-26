@@ -77,11 +77,21 @@
         <script>
             skadi.launch_designer("skadi_container","title","heading",{"l10n_url":"../l10n"});
         </script>
+        <link rel="icon" type="image/svg" href="../images/skadi.svg">
     </head>
 
     <body onload="">
+        <div id="splash_screen" is="exo-modal" display="true"
+             bg-color="light-gray" border-color="dark-purple" style="width:50%; height:50%;">
+             <h1>
+            Skadi
+            </h1>
+            <p>
+                <img src="../images/skadi.svg">
+                Loading...
+            </p>
+        </div>
         <h1 id="heading">
-            Skadi -
         </h1>
         <div id="skadi_container" class="skadi_container">
         </div>

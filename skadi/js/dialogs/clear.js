@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let skadi_clear_html = `
+var skadi = skadi || {};
+
+skadi.clear_html = `
 <span aria-describedby="clear-tooltip">
     {{clear.topology}}?
 </span>
@@ -22,8 +24,8 @@ let skadi_clear_html = `
 </div>
 `
 
-function skadi_populate_clear(design, elt, close_window) {
-    elt.innerHTML = design.localise(skadi_clear_html);
+skadi.populate_clear = function(design, elt, close_window) {
+    elt.innerHTML = design.localise(skadi.clear_html);
     let confirm = document.getElementById("clear_confirm");
     confirm.addEventListener("click", function() {
         design.clear(false);

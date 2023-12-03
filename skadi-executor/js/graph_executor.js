@@ -5,11 +5,17 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiGraphExecutor {
+var skadi = skadi || {};
 
-    constructor(skadi) {
+skadi.GraphExecutor = class {
+
+    constructor() {
+
+    }
+
+    bind(skadi) {
+
         this.skadi = skadi;
-        this.skadi.set_graph_executor(this);
 
         this.nodes = {}; // node-id => node-instance
         this.links = {}; // link-id => GraphLink
@@ -66,6 +72,7 @@ class SkadiGraphExecutor {
             this.add_link(link_id,link.get_from_node().get_id(),link.get_from_port_name(),link.get_to_node().get_id(), link.get_to_port_name());
         });
 
+        this.skadi.set_graph_executor(this);
         this.paused = false;
         this.dispatch();
     }
@@ -79,8 +86,8 @@ class SkadiGraphExecutor {
     }
 
     create_node_service(node) {
-        let service = new SkadiExecutableNodeService(node, this);
-        let wrapper = new SkadiExecutableNodeWrapper(node, service);
+        let service = new skadi.ExecutableNodeService(node, this);
+        let wrapper = new skadi.ExecutableNodeWrapper(node, service);
         service.set_wrapper(wrapper);
         return service;
     }
@@ -131,7 +138,7 @@ class SkadiGraphExecutor {
             return;
         }
         let node = this.nodes[node_id];
-        this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_PENDING);
+        this.skadi.update_execution_state(node_id,skadi.Api.EXECUTION_STATE_PENDING);
         node.get_wrapper().reset_execution();
     }
 
@@ -193,7 +200,7 @@ class SkadiGraphExecutor {
             }
         }
 
-        this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_EXECUTING);
+        this.skadi.update_execution_state(node_id,skadi.Api.EXECUTION_STATE_EXECUTING);
 
         node.get_wrapper().execute(inputs).then(
             (outputs) => this.executed(node_id, outputs),
@@ -208,13 +215,13 @@ class SkadiGraphExecutor {
         }
         delete this.executing_nodes[node_id];
         if (reject_reason) {
-            this.skadi.update_execution_state(node_id,SkadiApi.EXECUTION_STATE_FAILED);
+            this.skadi.update_execution_state(node_id,skadi.Api.EXECUTION_STATE_FAILED);
             console.error("Execution of "+node_id+" failed with reason: "+ reject_reason);
             if (reject_reason.stack) {
                 console.error(reject_reason.stack);
             }
         } else {
-            this.skadi.update_execution_state(node_id, SkadiApi.EXECUTION_STATE_EXECUTED);
+            this.skadi.update_execution_state(node_id, skadi.Api.EXECUTION_STATE_EXECUTED);
             this.node_outputs[node_id] = outputs;
         }
     }
@@ -229,7 +236,7 @@ class SkadiGraphExecutor {
     }
 
     add_link(link_id,from_node_id,from_port,to_node_id,to_port) {
-        let link = new SkadiGraphLink(this,from_node_id,from_port,to_node_id,to_port);
+        let link = new skadi.GraphLink(this,from_node_id,from_port,to_node_id,to_port);
         this.links[link_id] = link;
 
         if (!(from_port in this.out_links[from_node_id])) {

@@ -5,21 +5,27 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiPackageType {
+var skadi = skadi || {};
+
+skadi.PackageType = class {
   
   constructor(id, url, obj) {
     this.id = id;
     this.metadata = obj["metadata"];
     this.display = obj["display"];
     this.l10n = obj["l10n"];
-    this.base_url = url.split("/").slice(0,-1).join("/");
+    this.base_url = "";
+    if (!url.startsWith("http")) {
+      this.base_url = window.location.protocol+window.location.host;
+    }
+    this.base_url += url;
     this.configuration = obj["configuration"];
     this.l10n_utils = null;
   }
 
   async load_l10n() {
     if (this.l10n) {
-      this.l10n_utils = new SkadiL10NUtils("package."+this.id, this.base_url);
+      this.l10n_utils = new skadi.L10NUtils("package."+this.id, this.base_url);
       this.l10n_utils.configure_for_package(this.l10n);
       await this.l10n_utils.initialise();
     }
@@ -57,15 +63,8 @@ class SkadiPackageType {
   }
 
   get_resource_url(url) {
-    if (url.startsWith("http")  || url.startsWith("/")) {
-        return url;
-    }
-    let resource_url = this.base_url;
-    if (resource_url.length>0) {
-      resource_url += "/";
-    }
-    resource_url += url;
-    return resource_url;
+    let resource_url =  new URL(url,this.base_url);
+    return String(resource_url);
   }
 
   get_qualified_id(id) {

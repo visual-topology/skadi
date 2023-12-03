@@ -5,8 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
+var skadi = skadi || {};
 
-class SkadiPalette {
+skadi.Palette = class {
 
   constructor(design, id, closecb) {
     this.design = design;
@@ -15,7 +16,7 @@ class SkadiPalette {
     for (let idx in nodeTypes) {
       let tid = nodeTypes[idx];
       let type = this.design.get_schema().get_node_type(tid);
-      let entry = new SkadiPaletteEntry(this, design, type);
+      let entry = new skadi.PaletteEntry(this, design, type);
       this.allitems.push(entry);
     }
     this.id = id;

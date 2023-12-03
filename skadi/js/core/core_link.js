@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiCoreLink {
+var skadi = skadi || {};
+
+skadi.CoreLink = class {
 
   constructor(core, id, from_node, from_port_name, link_type, to_node, to_port_name) {
     this.core = core;
@@ -46,7 +48,7 @@ class SkadiCoreLink {
   }
 }
 
-SkadiCoreLink.deserialise = function(core, id,obj) {
+skadi.CoreLink.deserialise = function(core, id,obj) {
 
     let from_port = core.get_network().extract_address(obj.from_port);
     let to_port = core.get_network().extract_address(obj.to_port);
@@ -54,7 +56,7 @@ SkadiCoreLink.deserialise = function(core, id,obj) {
     let to_node = core.get_network().get_node(to_port.node);
 
     let linkType = core.get_schema().get_link_type(obj.link_type);
-    return new SkadiCoreLink(core, id, from_node, from_port.port, linkType, to_node, to_port.port);
+    return new skadi.CoreLink(core, id, from_node, from_port.port, linkType, to_node, to_port.port);
 }
 
 

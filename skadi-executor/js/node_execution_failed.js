@@ -5,7 +5,7 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiNodeExecutionFailed extends Error {
+skadi.NodeExecutionFailed = class extends Error {
 
     constructor(node_id, message, from_exn) {
         super(message);

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-function skadi_populate_about(design, elt) {
+var skadi = skadi || {};
+
+skadi.populate_about = function(design, elt) {
 
     function tableize(rowdata,header_row_class) {
         let tbl = document.createElement("table");
@@ -38,7 +40,7 @@ function skadi_populate_about(design, elt) {
     }
     let rowdata_platform = [
         [tn("Name"),tn("Version"),tn("Link")],
-        [tn("Skadi"), tn("${SKADI-VERSION}"), mklink("About", skadi_api_home_url+"/skadi-about.html")]
+        [tn("Skadi"), tn(skadi.VERSION), mklink("About", skadi.api_home_url+"/skadi-about.html")]
     ];
 
     let rowdata_packages = [[tn("Name"),tn("Version"),tn("Link")]];

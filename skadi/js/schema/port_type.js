@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiPortType {
+var skadi = skadi || {};
+
+skadi.PortType = class {
   
   constructor(direction) {
     this.direction = direction;

@@ -1,5 +1,0 @@
-{
-  "schemas": ["../package/schema.json"],
-  "topology": "example-topology.json",
-  "title": "CSV Explorer"
-}

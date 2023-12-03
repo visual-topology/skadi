@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiGraphLink {
+var skadi = skadi || {};
+
+skadi.GraphLink = class {
 
     constructor(executor, from_node_id, from_port, to_node_id, to_port) {
         this.executor = executor;
@@ -19,7 +21,7 @@ class SkadiGraphLink {
     has_value() {
         if (this.from_node_id in this.executor.node_outputs) {
             let outputs = this.executor.node_outputs[this.from_node_id];
-            if (this.from_port in outputs) {
+            if (outputs && this.from_port in outputs) {
                 return true;
             }
         }
@@ -29,7 +31,7 @@ class SkadiGraphLink {
     get_value() {
         if (this.from_node_id in this.executor.node_outputs) {
             let outputs = this.executor.node_outputs[this.from_node_id];
-            if (this.from_port in outputs) {
+            if (outputs && this.from_port in outputs) {
                 return outputs[this.from_port];
             }
         }

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class TopologyStore {
+var skadi = skadi || {};
+
+skadi.TopologyStore = class {
 
     constructor(skadi) {
         this.skadi = skadi;
@@ -21,11 +23,8 @@ class TopologyStore {
         });
     }
 
-    get_store_callback() {
-        return undefined;
+    get_default_filename() {
+        return "topology.json";
     }
 
-    get_restore_callback() {
-        return undefined;
-    }
 }

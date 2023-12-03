@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiCore {
+var skadi = skadi || {};
+
+skadi.Core = class {
 
     constructor(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory) {
         this.l10n_utils = l10n_utils;
@@ -20,15 +22,14 @@ class SkadiCore {
         this.link_event_handlers = {};
         this.design_event_handlers = {};
 
+        this.network = new skadi.Network({});
 
-        this.network = new SkadiNetwork({});
-
-        this.div = Skadi.x3.select("#" + element_id);
+        this.div = skadi.x3.select("#" + element_id);
 
         this.metadata = {
             "name": "New Topology",
             "description": "",
-            "filename": "topology.json",
+            "filename": this.topology_store ? this.topology_store.get_default_filename() : "",
             "authors": "",
             "version": "0.1"
         };
@@ -86,8 +87,8 @@ class SkadiCore {
         if (this.graph_executor) {
             return this.graph_executor.create_node_service(node);
         } else {
-            let service = new SkadiNodeService(node);
-            let wrapper = new SkadiWrapper(node, service, node.get_type().get_package_type().get_l10n_utils());
+            let service = new skadi.NodeService(node);
+            let wrapper = new skadi.Wrapper(node, service, node.get_type().get_package_type().get_l10n_utils());
             service.set_wrapper(wrapper);
             return service;
         }
@@ -161,10 +162,10 @@ class SkadiCore {
     fire_link_event(link_event_type, link) {
         let link_id = link.get_id();
         let link_type = link.get_link_type().get_id();
-        let from_node_id = link.get_from_port().get_node().get_id();
-        let from_port_name = link.get_from_port().get_port_name();
-        let to_node_id = link.get_to_port().get_node().get_id();
-        let to_port_name = link.get_to_port().get_port_name();
+        let from_node_id = link.get_from_node().get_id();
+        let from_port_name = link.get_from_port_name();
+        let to_node_id = link.get_to_node().get_id();
+        let to_port_name = link.get_to_port_name();
         if (link_event_type in this.link_event_handlers) {
             let callbacks = this.link_event_handlers[link_event_type];
             for (let idx = 0; idx < callbacks.length; idx++) {
@@ -201,7 +202,7 @@ class SkadiCore {
         for(let package_id in this.schema.package_types) {
             let package_type = this.schema.package_types[package_id];
             if (package_type.get_configuration_classname()) {
-                let conf = new SkadiConfiguration(this,package_type,{});
+                let conf = new skadi.Configuration(this,package_type,{});
                 conf.create_instance();
                 this.add_configuration(conf);
             }
@@ -211,10 +212,10 @@ class SkadiCore {
     /* node related */
 
     create_node(node_id, node_type, x, y, metadata, suppress_event) {
-        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
-        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
+        x = Math.round(x / skadi.GRID_SNAP) * skadi.GRID_SNAP;
+        y = Math.round(y / skadi.GRID_SNAP) * skadi.GRID_SNAP;
         let id = node_id || this.next_id("nl");
-        let node = new SkadiCoreNode(this, node_type, id, x, y, true, metadata, {});
+        let node = new skadi.CoreNode(this, node_type, id, x, y, true, metadata, {});
         this.add_node(node, suppress_event);
         node.create_instance();
         return id;
@@ -236,10 +237,10 @@ class SkadiCore {
         let node = this.network.get_node(node_id);
         if (node) {
             node.update_execution_state(state);
-            if (state === SkadiApi.EXECUTION_STATE_EXECUTING) {
+            if (state === skadi.Api.EXECUTION_STATE_EXECUTING) {
                 let upstream_node_ids = this.network.get_upstream_nodes(node_id);
                 for (let idx in upstream_node_ids) {
-                    this.network.get_node(upstream_node_ids[idx]).update_execution_state(SkadiApi.EXECUTION_STATE_EXECUTED);
+                    this.network.get_node(upstream_node_ids[idx]).update_execution_state(skadi.Api.EXECUTION_STATE_EXECUTED);
                 }
             }
         }
@@ -249,8 +250,8 @@ class SkadiCore {
         let node_ids = this.network.get_node_list();
         for(let idx in node_ids) {
             let node = this.network.get_node(node_ids[idx]);
-            if (node.execution_state !== SkadiApi.EXECUTION_STATE_FAILED && node.execution_state !== SkadiApi.EXECUTION_STATE_PENDING) {
-                node.update_execution_state(SkadiApi.EXECUTION_STATE_CLEAR);
+            if (node.execution_state !== skadi.Api.EXECUTION_STATE_FAILED && node.execution_state !== skadi.Api.EXECUTION_STATE_PENDING) {
+                node.update_execution_state(skadi.Api.EXECUTION_STATE_CLEAR);
             }
         }
     }
@@ -299,7 +300,7 @@ class SkadiCore {
     create_link(fromPort, toPort, link_type_id, link_id) {
         let id = link_id || this.next_id("ch");
         let link_type = this.schema.get_link_type(link_type_id);
-        let link = new SkadiCoreLink(this, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort.get_node(), toPort.get_port_name());
+        let link = new skadi.CoreLink(this, id, fromPort.get_node(), fromPort.get_port_name(), link_type, toPort.get_node(), toPort.get_port_name());
         this.add_link(link, link_id != undefined);
         return id;
     }
@@ -318,11 +319,7 @@ class SkadiCore {
     /* design metadata */
 
     get_metadata() {
-        return this.network.get_metadata();
-    }
-
-    set_metadata(metadata) {
-        this.network.set_metadata(metadata);
+        return this.metadata;
     }
 
     /* provide unique IDs */
@@ -411,21 +408,19 @@ class SkadiCore {
             this.graph_executor.pause();
         }
         for (let node_id in from_obj.nodes) {
-            let node = SkadiCoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            let node = skadi.CoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
             this.add_node(node, suppress_events);
         }
         for (let link_id in from_obj.links) {
-            let link = SkadiCoreLink.deserialise(this, link_id, from_obj.links[link_id]);
+            let link = skadi.CoreLink.deserialise(this, link_id, from_obj.links[link_id]);
             this.add_link(link, suppress_events);
         }
         let package_properties = from_obj.package_properties || {};
         for (let package_id in package_properties) {
-            let configuration = SkadiCoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
+            let configuration = skadi.CoreConfiguration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }

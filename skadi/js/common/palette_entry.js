@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiPaletteEntry {
+var skadi = skadi || {};
+
+skadi.PaletteEntry = class {
 
   constructor(palette, design, node_type) {
     this.palette = palette;
@@ -31,7 +33,7 @@ class SkadiPaletteEntry {
   }
 
   draw(grp) {
-    this.node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), this.x, this.y, false, this.metadata);
+    this.node = new skadi.Node(this.design, this.node_type, this.design.next_id("nl"), this.x, this.y, false, this.metadata);
     this.node.draw(grp);
     
     this.overlay_grp = this.design.get_skadi_svg_dialogue_group();
@@ -40,7 +42,7 @@ class SkadiPaletteEntry {
         this.overlay_x = evloc.x;
         this.overlay_y = evloc.y;
         let meta = JSON.parse(JSON.stringify(this.metadata));
-        this.overlay_node = new SkadiNode(this.design, this.node_type, this.design.next_id("nl"), 
+        this.overlay_node = new skadi.Node(this.design, this.node_type, this.design.next_id("nl"), 
           this.overlay_x, this.overlay_y, false, this.metadata);
         this.overlay_node.set_display_tooltips(false);
         this.overlay_node.draw(this.overlay_grp);

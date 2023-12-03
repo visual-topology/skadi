@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let skadi_design_metadata_html = `
+var skadi = skadi || {};
+
+skadi.design_metadata_html = `
 <span aria-describedby="edit-metadata-tooltip">
     {{topology.metadata.editor}}
 </span>
@@ -60,8 +62,8 @@ let skadi_design_metadata_html = `
 </div>
 `
 
-function skadi_populate_design_metadata(design, elt, close_window) {
-    elt.innerHTML = design.localise(skadi_design_metadata_html);
+skadi.populate_design_metadata = function(design, elt, close_window) {
+    elt.innerHTML = design.localise(skadi.design_metadata_html);
     let edit_metadata_name = document.getElementById("edit_metadata_name");
     let edit_metadata_description = document.getElementById("edit_metadata_description");
     let edit_metadata_filename = document.getElementById("edit_metadata_filename");

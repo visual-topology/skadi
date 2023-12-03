@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiNodeService {
+var skadi = skadi || {};
+
+skadi.NodeService = class {
 
     constructor(node) {
         this.core = node.core;
@@ -49,21 +51,21 @@ class SkadiNodeService {
 
     set_status_info(status_msg) {
         let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
-        this.core.update_node_status(this.node_id, SkadiStatusStates.info, localised_msg);
+        this.core.update_node_status(this.node_id, skadi.StatusStates.info, localised_msg);
     }
 
     set_status_warning(status_msg) {
         let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
-        this.core.update_node_status(this.node_id, SkadiStatusStates.warning, localised_msg);
+        this.core.update_node_status(this.node_id, skadi.StatusStates.warning, localised_msg);
     }
 
     set_status_error(status_msg) {
         let localised_msg = this.l10n_utils ? this.l10n_utils.localise(status_msg): status_msg;
-        this.core.update_node_status(this.node_id, SkadiStatusStates.error, localised_msg);
+        this.core.update_node_status(this.node_id, skadi.StatusStates.error, localised_msg);
     }
 
     clear_status() {
-        this.core.update_node_status(this.node_id, SkadiStatusStates.clear, "");
+        this.core.update_node_status(this.node_id, skadi.StatusStates.clear, "");
     }
 
     resolve_url(url) {

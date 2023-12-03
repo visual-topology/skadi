@@ -5,15 +5,17 @@
      Licensed under the Open Software License version 3.0
 */
 
-class SkadiApi {
+var skadi = skadi || {};
+
+skadi.Api = class {
 
     constructor() {
         this.schema = null;
         this.instance = null; // designer or application
     }
 
-    async load_l10n(api_base_url) {
-        this.l10n_utils = new SkadiL10NUtils("api",api_base_url+"/l10n");
+    async load_l10n(l10n_base_url) {
+        this.l10n_utils = new skadi.L10NUtils("api", l10n_base_url);
         await this.l10n_utils.initialise();
     }
 
@@ -33,7 +35,7 @@ class SkadiApi {
                 .then(schema_config => schema.loadPackage(url, schema_config));
         }
 
-        this.schema = new SkadiSchema();
+        this.schema = new skadi.Schema();
         let packages = [];
         for (let idx = 0; idx < package_urls.length; idx++) {
             packages.push(await loadPackageFromUrl(package_urls[idx],this.schema));
@@ -46,11 +48,20 @@ class SkadiApi {
         for(let package_id in this.schema.package_types) {
             let package_type = this.schema.package_types[package_id];
             if (package_type.get_configuration_classname()) {
-                let conf = new SkadiConfiguration(this.instance,package_type,{});
+                let conf = this.create_configuration(package_type);
                 conf.create_instance();
                 this.instance.add_configuration(conf);
             }
         }
+    }
+
+    create_configuration(package_type) {
+        return new skadi.CoreConfiguration(this.instance,package_type,{});
+    }
+
+    load(from_obj, supress_events) {
+        this.instance.clear(supress_events);
+        this.instance.deserialise(from_obj ,supress_events);
     }
 
     get_schema() {
@@ -59,10 +70,6 @@ class SkadiApi {
 
     get_l10n_utils() {
         return this.l10n_utils;
-    }
-
-    set_graph_executor(executor) {
-        this.instance.set_graph_executor(executor);
     }
 
     get_network() {
@@ -89,20 +96,41 @@ class SkadiApi {
         return "${SKADI-VERSION}"; // placeholder substituted with actual version by the build.py script
     }
 
+    async handle_load_topology_from() {
+        let url_params = new URLSearchParams(window.location.search);
+        // check for a topology to load
+        let topology_url = url_params.get("load_topology_from");
+        if (topology_url) {
+            let topology_origin = new URL(topology_url,window.location).origin;
+            if (topology_origin != window.location.origin) {
+                console.error("unable to load topology from different origin:"+topology_origin);
+            } else {
+                await fetch(topology_url).then(r => r.text()).then(txt => {
+                    try {
+                        let obj = JSON.parse(txt);
+                        this.load(obj);
+                    } catch (ex) {
+                        console.error("load_topology_from failed:" + ex);
+                    }
+                });
+            }
+        }
+    }
 }
 
-SkadiApi.STATUS_STATE_INFO = "info";
-SkadiApi.STATUS_STATE_WARNING = "warning";
-SkadiApi.STATUS_STATE_ERROR = "error";
-SkadiApi.STATUS_STATE_CLEAR = "";
+skadi.Api.STATUS_STATE_INFO = "info";
+skadi.Api.STATUS_STATE_WARNING = "warning";
+skadi.Api.STATUS_STATE_ERROR = "error";
+skadi.Api.STATUS_STATE_CLEAR = "";
 
-SkadiApi.EXECUTION_STATE_PENDING = "pending";
-SkadiApi.EXECUTION_STATE_EXECUTING = "executing";
-SkadiApi.EXECUTION_STATE_EXECUTED = "executed";
-SkadiApi.EXECUTION_STATE_FAILED = "failed";
-SkadiApi.EXECUTION_STATE_CLEAR = "";
+skadi.Api.EXECUTION_STATE_PENDING = "pending";
+skadi.Api.EXECUTION_STATE_EXECUTING = "executing";
+skadi.Api.EXECUTION_STATE_EXECUTED = "executed";
+skadi.Api.EXECUTION_STATE_FAILED = "failed";
+skadi.Api.EXECUTION_STATE_CLEAR = "";
 
-SkadiApi.DEFAULT_CANVAS_WIDTH = 4000;
-SkadiApi.DEFAULT_CANVAS_HEIGHT = 2000;
+skadi.Api.DEFAULT_CANVAS_WIDTH = 4000;
+skadi.Api.DEFAULT_CANVAS_HEIGHT = 2000;
+skadi.VERSION = "0.0.1"
 
 

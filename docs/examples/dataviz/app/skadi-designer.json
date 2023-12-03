@@ -1,6 +1,0 @@
-{
-  "schemas": ["../package/schema.json"],
-  "title": "Data Visualisation Example Package",
-  "canvas_height": 2000,
-  "canvas_width": 4000
-}

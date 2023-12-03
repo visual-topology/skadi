@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let skadi_download_html = `
+var skadi = skadi || {};
+
+skadi.download_html = `
 <span aria-describedby="edit-metadata-tooltip">
     {{download.topology}}
 </span>
@@ -30,33 +32,23 @@ let skadi_download_html = `
             </div>
         </div>
     </div>
-    <div class="exo-row" style="visibility:hidden;" id="store_updates_row">
-        <div class="exo-2-cell">
-            {{store.label}}:
-        </div>
-        <div class="exo-2-cell">
-            <input type="button" id="store_updates_btn" value="{{store}}">
-        </div>
-    </div>
 </div>`
 
-function skadi_populate_save(design, elt) {
-    elt.innerHTML = design.localise(skadi_download_html);
+skadi.populate_save = function(design, elt) {
+    elt.innerHTML = design.localise(skadi.download_html);
     let link = document.getElementById("skadi_designer_download_file");
     link.appendChild(document.createTextNode("Preparing Download..."));
+    let download_filename = design.metadata.filename;
+    if (download_filename) {
+        download_filename = download_filename.trim();
+    }
+    if (download_filename === "") {
+        download_filename = design.get_topology_store().get_default_filename();
+    }
     design.get_topology_store().get_save_link().then(url => {
         link.innerHTML = "Download";
         link.setAttribute("href", url);
-        const filename = design.metadata.filename || "topology.json";
+        const filename = download_filename;
         link.setAttribute("download", filename);
     });
-
-    let store_cb = design.get_topology_store().get_store_callback();
-    if (store_cb) {
-        Skadi.$("store_updates_row").style.visibility = "visible";
-        Skadi.$("store_updates_btn").addEventListener("click", (e) =>{
-            store_cb();
-        });
-    }
-
 }

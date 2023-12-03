@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiTextButton {
+var skadi = skadi || {};
+
+skadi.TextButton = class {
 
     constructor(height, value, onclick) {
         this.x = 0;

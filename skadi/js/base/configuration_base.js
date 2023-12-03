@@ -5,28 +5,17 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiConfigurationBase {
+var skadi = skadi || {};
+
+skadi.ConfigurationBase = class {
 
     constructor(configuration_service) {
     }
 
-    open(width, height) {
-
+    page_open() {
     }
 
-    resize(width,height) {
-
+    page_close() {
     }
 
-    close() {
-
-    }
-
-    save() {
-
-    }
-
-    load(from_saved_object) {
-
-    }
 }

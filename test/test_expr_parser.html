@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expression Parser Test</title>
+    <script src="../skadi/js/utils/expr_parser.js"></script>
+</head>
+<body>
+  <textarea rows="5" cols="40" id="expr"></textarea>
+  <button id="parse">Parse</button>
+  <pre id="results">
+
+  </pre>
+  <script>
+     let sep = new skadi.ExpressionParser();
+     fetch("test_expr_parser_binary_operators.json").then(r => r.json())
+         .then(o => {
+             for(let op in o["binary_operators"]) {
+                 let precedence = o["binary_operators"][op];
+                 sep.add_binary_operator(op,precedence);
+             }
+         });
+     fetch("./test_expr_parser_unary_operators.json").then(r => r.json())
+         .then(o => {
+             o["unary_operators"].forEach(op => sep.add_unary_operator(op))
+         });
+
+     let i = document.getElementById("expr");
+     let p = document.getElementById("parse");
+     let r = document.getElementById("results");
+     p.addEventListener("click", (evt) => {
+         let o = sep.parse(i.value);
+         r.innerText = JSON.stringify(sep.tokens,null,2)+"\n\n"+JSON.stringify(o,null,2);
+     });
+  </script>
+</body>
+</html>

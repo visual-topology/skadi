@@ -5,16 +5,22 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiNodeBase {
+var skadi = skadi || {};
+
+skadi.NodeBase = class {
 
     constructor(node_service) {
     }
 
-    open(width, height) {
+    page_open() {
 
     }
 
-    resize(width,height) {
+    page_message(msg) {
+
+    }
+
+    page_close() {
 
     }
 
@@ -22,11 +28,12 @@ class SkadiNodeBase {
 
     }
 
-    save() {
+    reset_execution() {
 
     }
 
-    load(from_saved_object) {
+    async execute(inputs) {
 
     }
+
 }

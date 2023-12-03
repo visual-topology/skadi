@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiExecutableNodeWrapper extends SkadiWrapper {
+var skadi = skadi || {};
+
+skadi.ExecutableNodeWrapper = class extends skadi.Wrapper {
 
     constructor(node, services) {
         super(node, services);

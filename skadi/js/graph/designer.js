@@ -5,9 +5,11 @@
      Licensed under the Open Software License version 3.0 
 */
 
-let GRID_SNAP = 20;
+var skadi = skadi || {};
 
-class SkadiDesigner extends SkadiCore {
+skadi.GRID_SNAP = 20;
+
+skadi.Designer = class extends skadi.Core {
 
     constructor(l10n_utils, schema, element_id, width, height, is_acyclic, topology_store, node_factory, configuration_factory) {
         super(l10n_utils, schema, element_id, topology_store, node_factory, configuration_factory);
@@ -19,7 +21,7 @@ class SkadiDesigner extends SkadiCore {
         this.paused = false;
         this.windows = {};
 
-        this.network = new SkadiNetwork({});
+        this.network = new skadi.Network({});
 
         this.transform = [1, 0, 0, 1, 0, 0];
 
@@ -33,7 +35,7 @@ class SkadiDesigner extends SkadiCore {
         this.node_connector_group = this.group.append("g");
         this.btn_group = this.svg.append("g");
 
-        this.fixed_div = Skadi.x3.select("#" + element_id).append("div").attr("width", "100%").attr("height", "100%").attr("class",
+        this.fixed_div =  skadi.x3.select("#" + element_id).append("div").attr("width", "100%").attr("height", "100%").attr("class",
             "design_fixed").style("position", "fixed").style("top", 0).style("left", 0);
 
         this.fixed_svg = this.fixed_div.append("svg").attr("class", "fixed_svg")
@@ -50,37 +52,36 @@ class SkadiDesigner extends SkadiCore {
 
         this.svg_tooltip_group = this.fixed_svg.append("g").attr("class", "fixed_tooltip_group");
 
-
         this.button_size = 64;
         this.button_margin = 10;
         let button_x = this.button_margin + this.button_size/2;
         let button_y = this.button_margin + this.button_size/2;
 
-        this.palette_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.palette_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_palette_purple, () => { this.open_palette(); }, "Open Palette");
         this.palette_btn.set_fill("white");
         this.palette_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.home_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.home_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_home_purple, () => { this.go_home(); }, "Reset View Pan/Zoom");
         this.home_btn.set_fill("white");
         this.home_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.pause_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size, icon_pause,
+        this.pause_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size, icon_pause,
             () => { this.toggle_pause(); }, "Pause/Restart Execution");
         this.pause_btn.set_fill("white");
         this.pause_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.file_upload_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.file_upload_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_file_upload_purple, () => { this.open_load(); }, "Upload Design");
         this.file_upload_btn.set_fill("white");
         this.file_upload_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.file_download_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.file_download_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_file_download_purple, () => {
             this.open_save();
         }, "Download Design");
@@ -89,25 +90,25 @@ class SkadiDesigner extends SkadiCore {
         this.file_download_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.help_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.help_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_help_purple, () => { this.open_about(); }, "");
         this.help_btn.set_fill("white");
         this.help_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.clear_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.clear_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_delete, () => { this.open_clear(); }, "");
         this.clear_btn.set_fill("white");
         this.clear_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.edit_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.edit_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_edit_purple, () => { this.open_edit_design_metadata(); }, "");
         this.edit_btn.set_fill("white");
         this.edit_btn.draw(this.btn_group);
         button_x += this.button_size + this.button_margin;
 
-        this.configuration_btn = new SkadiButton(this,button_x,button_y,this.button_size,this.button_size,
+        this.configuration_btn = new skadi.Button(this,button_x,button_y,this.button_size,this.button_size,
             icon_configuration_purple, () => { this.open_configuration_dialogue(); }, "");
         this.configuration_btn.set_fill("white");
         this.configuration_btn.draw(this.btn_group);
@@ -123,11 +124,11 @@ class SkadiDesigner extends SkadiCore {
 
         this.node_group = this.group.append("g");
 
-        let pos = Skadi.x3.get_node_pos(this.div.node());
+        let pos =  skadi.x3.get_node_pos(this.div.node());
         this.offset_x = pos.x;
         this.offset_y = pos.y;
 
-        this.drag = Skadi.x3.drag();
+        this.drag =  skadi.x3.drag();
 
         this.drag
             .on("start", (x, y) => {
@@ -266,7 +267,7 @@ class SkadiDesigner extends SkadiCore {
         let key = node_id + "_" + command_id;
         if (key in this.windows) {
             let oldw = this.windows[key];
-            if (!(oldw instanceof SkadiFrameDialogue)) {
+            if (!(oldw instanceof skadi.FrameDialogue)) {
                 oldw.close();
             } else {
                 return;
@@ -274,7 +275,7 @@ class SkadiDesigner extends SkadiCore {
         }
         let node = this.network.get_node(node_id);
         let title = node.metadata.name;
-        let ifd = new SkadiFrameDialogue(key, this, title, x, y, width, height, () => {
+        let ifd = new skadi.FrameDialogue(key, this, title, x, y, width, height, () => {
                 delete this.windows[key];
                 if (close_callback) {
                     close_callback();
@@ -303,7 +304,7 @@ class SkadiDesigner extends SkadiCore {
         let key = node_id + "_open";
         if (key in this.windows) {
             let oldw = this.windows[key];
-            if (oldw instanceof SkadiFrameDialogue) {
+            if (oldw instanceof skadi.FrameDialogue) {
                 oldw.close();
             } else {
                 return;
@@ -340,7 +341,7 @@ class SkadiDesigner extends SkadiCore {
 
     open_palette() {
         if (!this.palette_dialogue) {
-            this.palette_dialogue = new SkadiPalette(this, "car0", () => {
+            this.palette_dialogue = new skadi.Palette(this, "car0", () => {
                 this.palette_dialogue = null;
             });
             this.palette_dialogue.open();
@@ -349,10 +350,10 @@ class SkadiDesigner extends SkadiCore {
 
     open_about() {
         if (!this.about_dialogue) {
-           this.about_dialogue = new SkadiFrameDialogue("about0", this, "About", 100, 100, 600, 400, () => {
+           this.about_dialogue = new skadi.FrameDialogue("about0", this, "About", 100, 100, 600, 400, () => {
                 this.about_dialogue = null;
             }, true, null, (elt) => {
-               skadi_populate_about(this, elt);
+               skadi.populate_about(this, elt);
                }, null);
            this.about_dialogue.open();
         }
@@ -360,10 +361,10 @@ class SkadiDesigner extends SkadiCore {
 
     open_save() {
         if (!this.save_dialogue) {
-           this.save_dialogue = new SkadiFrameDialogue("save0", this, "Save", 100, 100, 600, 300, () => {
+           this.save_dialogue = new skadi.FrameDialogue("save0", this, "Save", 100, 100, 600, 300, () => {
                 this.save_dialogue = null;
             }, true, null, (elt) => {
-               skadi_populate_save(this, elt);
+               skadi.populate_save(this, elt);
                }, null);
            this.save_dialogue.open();
         }
@@ -371,10 +372,10 @@ class SkadiDesigner extends SkadiCore {
 
     open_load() {
         if (!this.load_dialogue) {
-           this.load_dialogue = new SkadiFrameDialogue("load0", this, "Load", 100, 100, 600, 300, () => {
+           this.load_dialogue = new skadi.FrameDialogue("load0", this, "Load", 100, 100, 600, 300, () => {
                 this.load_dialogue = null;
             }, true, null, (elt) => {
-               skadi_populate_load(this, elt, () => {
+               skadi.populate_load(this, elt, () => {
                         this.load_dialogue.close();
                     });
                }, null);
@@ -384,10 +385,10 @@ class SkadiDesigner extends SkadiCore {
 
     open_clear() {
         if (!this.clear_dialogue) {
-           this.clear_dialogue = new SkadiFrameDialogue("clear0", this, "Clear Design", 100, 100, 600, 400, () => {
+           this.clear_dialogue = new skadi.FrameDialogue("clear0", this, "Clear Design", 100, 100, 600, 400, () => {
                 this.clear_dialogue = null;
             }, true, null, (elt) => {
-               skadi_populate_clear(this, elt, () => {
+               skadi.populate_clear(this, elt, () => {
                         this.clear_dialogue.close();
                     });
                }, null);
@@ -397,12 +398,12 @@ class SkadiDesigner extends SkadiCore {
 
     open_edit_design_metadata() {
         if (!this.design_metadata_dialogue) {
-           this.design_metadata_dialogue = new SkadiFrameDialogue("design_meta0", this, "Design Metadata", 100, 100, 600, 600,
+           this.design_metadata_dialogue = new skadi.FrameDialogue("design_meta0", this, "Design Metadata", 100, 100, 600, 600,
                 () => {
                     this.design_metadata_dialogue = null;
                 }, true, null,
                (elt) => {
-                    skadi_populate_design_metadata(this, elt, () => {
+                    skadi.populate_design_metadata(this, elt, () => {
                         this.design_metadata_dialogue.close();
                });
            }, null);
@@ -412,12 +413,12 @@ class SkadiDesigner extends SkadiCore {
 
     open_configuration_dialogue() {
         if (!this.configuration_dialogue) {
-           this.configuration_dialogue = new SkadiFrameDialogue("configuration0", this, "Package Configurations", 100, 100, 600, 600,
+           this.configuration_dialogue = new skadi.FrameDialogue("configuration0", this, "Package Configurations", 100, 100, 600, 600,
                 () => {
                     this.configuration_dialogue = null;
                 }, true, null,
                (elt) => {
-                    skadi_populate_configuration(this, elt, () => {
+                    skadi.populate_configuration(this, elt, () => {
                         this.configuration_dialogue.close();
                });
            }, null);
@@ -452,13 +453,13 @@ class SkadiDesigner extends SkadiCore {
                 let close_callback = () => {
                     delete this.windows[id];
                     configuration.close();
-                    skadi_close_configuration();
+                    skadi.close_configuration();
                 }
                 let resize_callback = (w, h) => {
                     configuration.resize(w, h);
                 }
 
-                this.windows[id] = new SkadiFrameDialogue(id, this, title, 100, 100, window_width, window_height,
+                this.windows[id] = new skadi.FrameDialogue(id, this, title, 100, 100, window_width, window_height,
                     close_callback, true, null, open_callback, resize_callback);
                 this.windows[id].open();
             }
@@ -467,18 +468,18 @@ class SkadiDesigner extends SkadiCore {
 
     update_configuration_status(package_id, state, status_message) {
         super.update_configuration_status(package_id, state, status_message);
-        skadi_update_configuration_status(package_id, state, status_message);
+        skadi.update_configuration_status(package_id, state, status_message);
     }
 
 
     /* node related */
 
     create_node(node_id, node_type, x, y, metadata, suppress_event) {
-        x = Math.round(x / GRID_SNAP) * GRID_SNAP;
-        y = Math.round(y / GRID_SNAP) * GRID_SNAP;
+        x = Math.round(x / skadi.GRID_SNAP) * skadi.GRID_SNAP;
+        y = Math.round(y / skadi.GRID_SNAP) * skadi.GRID_SNAP;
         let id = node_id || this.next_id("nl");
 
-        let node = new SkadiNode(this, node_type, id, x, y, true, metadata, {});
+        let node = new skadi.Node(this, node_type, id, x, y, true, metadata, {});
         this.network.add_node(node);
         node.draw();
 
@@ -523,7 +524,7 @@ class SkadiDesigner extends SkadiCore {
     create_link(fromPort, toPort, link_type_id, link_id) {
         let id = link_id || this.next_id("ch");
         let link_type = this.schema.get_link_type(link_type_id);
-        let link = new SkadiLink(this, id, fromPort, link_type, toPort);
+        let link = new skadi.Link(this, id, fromPort, link_type, toPort);
         this.add_link(link, link_id != undefined);
         return id;
     }
@@ -586,7 +587,7 @@ class SkadiDesigner extends SkadiCore {
 
     clear(suppress_event) {
         this.network.get_node_list().forEach(node_id => { this.close_windows_for_node(node_id); });
-        super.clear();
+        super.clear(suppress_event);
     }
 
     remove(id, suppress_event) {
@@ -606,24 +607,22 @@ class SkadiDesigner extends SkadiCore {
             this.graph_executor.pause();
         }
         for (let node_id in from_obj.nodes) {
-            let node = SkadiNode.deserialise(this, node_id, from_obj.nodes[node_id]);
+            let node = skadi.Node.deserialise(this, node_id, from_obj.nodes[node_id]);
             this.network.add_node(node);
             node.draw();
             node.create_instance();
             this.add_node(node, suppress_events);
         }
         for (let link_id in from_obj.links) {
-            let link = SkadiLink.deserialise(this, link_id, from_obj.links[link_id]);
+            let link = skadi.Link.deserialise(this, link_id, from_obj.links[link_id]);
             this.add_link(link, suppress_events);
         }
         let package_properties = from_obj.package_properties || {};
         for (let package_id in package_properties) {
-            let configuration = SkadiConfiguration.deserialise(this, package_id, package_properties[package_id]);
+            let configuration = skadi.Configuration.deserialise(this, package_id, package_properties[package_id]);
             this.add_configuration(configuration);
         }
-        if ("metadata" in from_obj) {
-            this.metadata = from_obj["metadata"];
-        }
+        this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
         }

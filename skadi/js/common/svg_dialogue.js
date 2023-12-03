@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiSvgDialogue {
+var skadi = skadi || {};
+
+skadi.SvgDialogue = class {
 
   constructor(id, design, title, x, y, content_width, content_height, closeHandler, resize_handler, scrollable, autoClose, draggable, drawCallback) {
     this.design = design;
@@ -38,11 +40,11 @@ class SkadiSvgDialogue {
     this.content_offset = 0;
 
     let that = this;
-    this.closebtn = new SkadiButton(this.design, this.width - this.header_sz / 2, this.header_sz / 2, this.header_sz, this.header_sz, icon_close_purple, function () {
+    this.closebtn = new skadi.Button(this.design, this.width - this.header_sz / 2, this.header_sz / 2, this.header_sz, this.header_sz, icon_close_purple, function () {
       that.close();
     });
     if (this.resize_handler) {
-      this.resizebtn = new SkadiButton(this.design, this.x + this.width - this.footer_sz / 2, this.y + this.height - this.footer_sz / 2, this.footer_sz, this.footer_sz, icon_drag_indicator_purple, function () {
+      this.resizebtn = new skadi.Button(this.design, this.x + this.width - this.footer_sz / 2, this.y + this.height - this.footer_sz / 2, this.footer_sz, this.footer_sz, icon_drag_indicator_purple, function () {
       });
     } else {
       this.resizebtn = null;
@@ -187,7 +189,7 @@ class SkadiSvgDialogue {
     this.update();
 
     if (this.draggable) {
-      let drag = Skadi.x3.drag();
+      let drag =  skadi.x3.drag();
       drag
           .on("start", function () {
           })
@@ -209,7 +211,7 @@ class SkadiSvgDialogue {
       this.resizegrp = container.append("g");
       this.resizebtn.draw(this.resizegrp);
 
-      let resize = Skadi.x3.drag();
+      let resize =  skadi.x3.drag();
       resize
         .on("start", function() {
         })

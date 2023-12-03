@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiButton {
+var skadi = skadi || {};
+
+skadi.Button = class {
 
   constructor(design, x,y,width,height,icon_url,onclick,tooltip_text) {
     this.design = design;
@@ -108,7 +110,7 @@ class SkadiButton {
     if (this.tooltip) {
       this.tooltip.update_text(text);
     } else {
-      this.tooltip = new SkadiTooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),text);
+      this.tooltip = new skadi.Tooltip(this.button.node(),this.design.get_svg_tooltip_group().node(),text);
     }
   }
 

@@ -5,7 +5,9 @@
      Licensed under the Open Software License version 3.0 
 */
 
-class SkadiWrapper {
+var skadi = skadi || {};
+
+skadi.Wrapper = class {
 
     constructor(target, services, l10n_utils) {
         this.target = target;
@@ -136,16 +138,6 @@ class SkadiWrapper {
         if (this.instance.page_open) {
             try {
                 this.instance.page_open();
-            } catch(e) {
-                console.error(e);
-            }
-        }
-    }
-
-    resize(width,height) {
-        if (this.instance.page_resize) {
-            try {
-                this.instance.page_resize(width, height);
             } catch(e) {
                 console.error(e);
             }

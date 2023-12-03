@@ -18,28 +18,8 @@
 <body>
 <div class="exo-row">
     <div class="exo-2-cell">
-        <exo-select id="column_name" label="Column Name">
-        </exo-select>
-    </div>
-</div>
-<div class="exo-row" id="value_selector">
-     <div class="exo-2-cell">
-        <exo-select id="column_values" size="10" label="Column Value(s)">
-        </exo-select>
-    </div>
-</div>
-<div class="exo-row" id="range_selector">
-    <div class="exo-2-cell">
-        <exo-number id="min_value" step="any" label="Minimum Value(s)">
-        </exo-number>
-    </div>
-    <div class="exo-2-cell">
-        <exo-number id="max_value" step="any" label="Maximum Value(s)">
-        </exo-number>
-    </div>
-    <div class="exo-2-cell">
-        <exo-button id="reset" step="any" label="Reset Min/Max" text="Reset">
-        </exo-button>
+        <exo-textarea rows="5" cols="40" id="column_expression" label="Filter Expression">
+        </exo-textarea>
     </div>
 </div>
 </body>

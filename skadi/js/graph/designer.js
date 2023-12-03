@@ -587,7 +587,7 @@ skadi.Designer = class extends skadi.Core {
 
     clear(suppress_event) {
         this.network.get_node_list().forEach(node_id => { this.close_windows_for_node(node_id); });
-        super.clear();
+        super.clear(suppress_event);
     }
 
     remove(id, suppress_event) {

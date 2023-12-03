@@ -54,10 +54,12 @@ DataVizExample.CreateColumnNode = class {
             let dataset = inputs["data_in"][0];
             let derive_cols = {};
             let aq = new DataVizExample.AqUtils(dataset);
-            derive_cols[this.column_name] = aq.preprocess_expression(this.column_expression);
-            return {
-                "data_out": dataset.derive(derive_cols)
-            };
+            try {
+                derive_cols[this.column_name] = aq.preprocess_expression(this.column_expression);
+                return { "data_out": dataset.derive(derive_cols) }
+            } catch(e) {
+                this.node_service.set_status_error(e.message);
+            }
         } else {
             return {};
         }

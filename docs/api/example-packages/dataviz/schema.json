@@ -62,7 +62,7 @@
             "page": {
                 "url": "nodes/data_retyper.html",
                 "window_width": 800,
-                "window_height": 800
+                "window_height": 600
             },
             "classname": "DataVizExample.DataRetyperNode",
             "dependencies": ["nodes/data_retyper.js"]
@@ -227,7 +227,7 @@
             "page": {
                 "url": "nodes/table_display.html",
                 "window_width": 800,
-                "window_height": 800
+                "window_height": 600
             },
             "classname": "DataVizExample.TableDisplayNode",
             "dependencies": ["nodes/table_display.js"]
@@ -249,7 +249,7 @@
             },
             "page": {
                 "window_width": 800,
-                "window_height": 800,
+                "window_height": 600,
                 "url": "nodes/scatter_plot.html"
             },
             "classname": "DataVizExample.ScatterPlotNode",
@@ -272,7 +272,7 @@
             },
             "page": {
                 "window_width": 800,
-                "window_height": 800,
+                "window_height": 600,
                 "url": "nodes/bar_chart.html"
             },
             "classname": "DataVizExample.BarChartNode",
@@ -295,7 +295,7 @@
             },
             "page": {
                 "window_width": 800,
-                "window_height": 800,
+                "window_height": 600,
                 "url": "nodes/timeseries_plot.html"
             },
             "classname": "DataVizExample.TimeSeriesPlotNode",

@@ -120,6 +120,7 @@ with Output("docs/api/skadi-designer.js") as of:
     of.add("skadi/js/skadi-api.js")
     of.add("skadi/js/skadi-designer-api.js")
     of.add("skadi/js/utils/l10n_utils.js")
+    of.add("skadi/js/utils/expr_parser.js")
 
 print("Building: skadi-application.js")
 
@@ -149,6 +150,7 @@ with Output("docs/api/skadi-application.js") as of:
     of.add("skadi/js/skadi-api.js")
     of.add("skadi/js/skadi-view-api.js")
     of.add("skadi/js/utils/l10n_utils.js")
+    of.add("skadi/js/utils/expr_parser.js")
 
 print("Building: skadi-designer.css")
 

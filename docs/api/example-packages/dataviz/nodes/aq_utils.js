@@ -11,58 +11,68 @@ DataVizExample.AqUtils = class {
 
     constructor(table) {
         this.table = table;
+        this.operator_map = {
+            "and": "&&",
+            "or": "||"
+        }
     }
 
     preprocess_expression(expr) {
-        let column_names = this.table.columnNames();
-        let tokens = [];
-        let token = "";
-        let escaped = false;
-        let escape_char = "\"";
-        for(let idx=0; idx<expr.length; idx++) {
-            let ch = expr[idx];
-            if (ch === escape_char) {
-                if (!escaped) {
-                    escaped = true;
-                } else {
-                    escaped = false;
-                    token += ch;
-                    tokens.push(token);
-                    token = "";
-                    continue;
+        let parser = new skadi.ExpressionParser();
+        parser.add_binary_operator("and",4);
+        parser.add_binary_operator("or",4);
+        parser.add_binary_operator("+",4);
+        parser.add_binary_operator("-",4);
+        parser.add_binary_operator("*",5);
+        parser.add_binary_operator("/",5);
+        parser.add_binary_operator("<",6);
+        parser.add_binary_operator(">",6);
+        parser.add_binary_operator("<=",6);
+        parser.add_binary_operator(">=",6);
+        parser.add_binary_operator("==",6);
+        let tree = parser.parse(expr);
+        if (tree.error) {
+            throw new Error(tree.error + " at position "+tree.error_pos);
+        }
+        return this.apply_tree(tree);
+    }
+
+    apply_tree(tree) {
+
+        if (tree.literal !== undefined) {
+            return JSON.stringify(tree.literal);
+        }
+        if (tree.name) {
+            return "d."+tree.name;
+        }
+
+        if (tree.function) {
+            let s = tree.function+"(";
+            for(let i=0; i<tree.args.length; i++) {
+                if (i>0) {
+                    s += ",";
                 }
+                s += this.apply_tree(tree.args[i])
             }
-            if (escaped || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
-                || (ch === '_')) {
-                token += ch;
-            } else {
-                if (token.length) {
-                    tokens.push(token);
-                }
-                tokens.push(ch);
-                token = "";
+            s += ")";
+            return s;
+        }
+        if (tree.operator) {
+            let s = "(";
+            let index = 0;
+            if (tree.args.length == 2) {
+                s += this.apply_tree(tree.args[index]);
+                index += 1;
             }
-        }
-        if (token.length) {
-            tokens.push(token);
-        }
-        console.log("tokens:"+JSON.stringify(tokens));
-        let processed_expr = "";
-        for(let idx=0; idx<tokens.length; idx+=1) {
-            let token = tokens[idx];
-            if (column_names.includes(token)) {
-                processed_expr += "d." + token;
-            } else if ((token.length > 2) &&
-                token.startsWith(escape_char) &&
-                token.endsWith(escape_char) &&
-                column_names.includes(token.slice(1,token.length-1))) {
-                processed_expr += "d["+token+"]";
-            } else {
-                processed_expr += token;
+            let op = tree.operator;
+            if (op in this.operator_map) {
+                op = this.operator_map[op];
             }
+            s += " " + op + " ";
+            s += this.apply_tree(tree.args[index]);
+            s += ")";
+            return s;
         }
-        console.log("preprocessed:"+processed_expr);
-        return processed_expr;
     }
 
     get_column_type(column_name) {

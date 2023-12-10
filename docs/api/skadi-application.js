@@ -2533,13 +2533,13 @@ skadi.VERSION = "0.0.1"
 
 
 
-/* skadi/js/skadi-view-api.js */
+/* skadi/js/skadi-application-api.js */
 
 var skadi = skadi || {};
 
 skadi.api_home_url = document.currentScript.src.split("/").slice(0,-1).join("/");
 
-skadi.ViewApi = class extends skadi.Api {
+skadi.ApplicationApi = class extends skadi.Api {
 
     /**
      * Create a skadi application view
@@ -2613,10 +2613,13 @@ skadi.launch_application = function(container_id, title_id, heading_id, options)
                 setTimeout(() => {
                     document.getElementById("splash_screen").setAttribute("display","false");
                 },2000);
+                skadi.open();
             });
         });
     });
 }
+
+
 
  /**
   * Asynchronous function to create a skadi application widget
@@ -2629,11 +2632,10 @@ skadi.launch_application = function(container_id, title_id, heading_id, options)
   * @param {Function} configuration_factory - optional, a function to construct configuration instances given a service object, rather than using classname from the schema
   */
 skadi.start_application = async function(element_id, options, schema_urls, executor, node_factory, configuration_factory) {
-    let skadi_instance = new skadi.ViewApi();
+    let skadi_instance = new skadi.ApplicationApi();
     await skadi_instance.load_l10n(options.l10n_url || skadi.api_home_url+"/l10n");
     await skadi_instance.load_schema(schema_urls);
     await skadi_instance.init(element_id, node_factory, configuration_factory, executor);
-    skadi_instance.open();
     return skadi_instance;
 }
 

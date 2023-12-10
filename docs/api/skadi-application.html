@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title id="title">Skadi - </title>
+        <title id="title"></title>
 
         <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
         <link href="https://visualtopology.github.io/exo/versions/latest/exo.css" rel="stylesheet" type="text/css">
@@ -22,25 +22,14 @@
         <div id="splash_screen" is="exo-modal" display="true"
              bg-color="light-gray" border-color="dark-purple" style="width:50%; height:50%;">
             <h1>
-                Skadi
             </h1>
             <p>
                 Loading...
             </p>
         </div>
         <h1 id="heading">
-            Skadi -
         </h1>
         <div id="skadi_container" class="skadi_container">
         </div>
     </body>
-
-    <script>
-        window.addEventListener("load", (evt) => {
-            setTimeout(() => {
-                document.getElementById("splash_screen").setAttribute("display","false");
-            },2000);
-        });
-    </script>
-
 </html>

@@ -173,7 +173,6 @@ skadi.PaletteDialogue = class extends skadi.FrameDialogue {
             }
         }
         for(let page_nr in this.page_buttons) {
-            console.log(page_nr,this.page_count);
             let page_btn = this.page_buttons[page_nr];
             if (page_nr > this.page_count) {
                 page_btn.style("display","none");

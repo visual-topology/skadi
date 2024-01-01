@@ -26,7 +26,7 @@ skadi.L10NUtils = class {
         if (this.metadata === null) {
             this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
         }
-        let language = window.localStorage.getItem("skadi.settings.l10n."+this.id+".language") || this.metadata.default_language;
+        let language = window.localStorage.getItem("/skadi/settings/l10n."+this.id+".language") || this.metadata.default_language;
         await this.set_language(language); 
     }
 
@@ -39,7 +39,7 @@ skadi.L10NUtils = class {
             let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
             this.bundle = await fetch(bundle_url).then(r => r.json());
         }
-        window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
+        window.localStorage.setItem("/skadi/settings/l10n."+this.id+".language", language);
         this.language = language;
         this.language_update_listeners.forEach((callback) => callback(language));
     }

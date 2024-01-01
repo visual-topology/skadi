@@ -7,16 +7,16 @@
 
 var skadi = skadi || {};
 
-skadi.FrameDialogue = class extends skadi.SvgDialogue {
+skadi.IFrameDialogue = class extends skadi.SvgDialogue {
 
-  constructor(id, design, title, x, y, content_width, content_height, close_handler, can_resize, url, open_callback, resize_callback) {
+  constructor(id, design, title, x, y, content_width, content_height, close_handler, can_resize, url, open_callback, resize_callback, draw_on_canvas) {
     super(id, design, title, x, y, content_width, content_height, close_handler,
         function(width,height,is_final) {
           return this.resize(width,height,is_final);
           }, false, false, true,
         function(grp) {
           this.draw(grp);
-        });
+        }, draw_on_canvas);
     this.design = design;
     this.title = title;
     this.url = url;

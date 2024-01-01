@@ -594,7 +594,9 @@ skadi.Core = class {
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
-        this.id = "design";
+
+        this.autosave_id = undefined;
+
         this.schema = schema;
 
         this.graph_executor = null;
@@ -603,6 +605,7 @@ skadi.Core = class {
         this.design_event_handlers = {};
 
         this.network = new skadi.Network({});
+        this.id = this.next_id("top");
 
         this.div = skadi.x3.select("#" + element_id);
 
@@ -619,6 +622,14 @@ skadi.Core = class {
 
     get_id() {
         return this.id;
+    }
+
+    get_autosave_id() {
+        return this.autosave_id;
+    }
+
+    set_autosave_id(autosave_id) {
+        this.autosave_id = autosave_id;
     }
 
     get_language() {
@@ -812,7 +823,6 @@ skadi.Core = class {
         return this.network.get_node(node_id);
     }
 
-
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
         if (node) {
@@ -835,7 +845,6 @@ skadi.Core = class {
             }
         }
     }
-
 
     update_metadata(node_id, metadata, suppress_event) {
         let node = this.network.get_node(node_id);
@@ -931,6 +940,7 @@ skadi.Core = class {
         if (!suppress_event) {
             this.fire_design_event("clear", null);
         }
+        this.autosave();
     }
 
     remove(id, suppress_event) {
@@ -959,6 +969,7 @@ skadi.Core = class {
                 this.fire_link_event("remove", link);
             }
         }
+        this.autosave();
     }
 
 
@@ -980,12 +991,16 @@ skadi.Core = class {
             let link = this.network.get_link(link_id);
             slinks[link_id] = link.serialise();
         }
-        return {"nodes": snodes, "links": slinks, "metadata": this.metadata};
+        return {"nodes": snodes, "links": slinks, "metadata": this.metadata };
     }
 
-    deserialise(from_obj, suppress_events) {
+    deserialise(from_obj, suppress_events, autosave_id) {
+
         if (this.graph_executor) {
             this.graph_executor.pause();
+        }
+        if (autosave_id) {
+            this.set_autosave_id(autosave_id);
         }
         for (let node_id in from_obj.nodes) {
             let node = skadi.CoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
@@ -1003,6 +1018,16 @@ skadi.Core = class {
         this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
+        }
+    }
+
+    autosave() {
+        let autosave_id = this.get_autosave_id();
+        if (autosave_id) {
+            let folder = new skadi.DirectoryLike("/skadi/storage/",false);
+            let path = folder.add_file(autosave_id);
+            let fl = new skadi.FileLike(path + "/topology.json", "w", false);
+            fl.write(JSON.stringify(this.serialise()));
         }
     }
 }
@@ -1064,7 +1089,6 @@ skadi.CoreNode = class {
             console.error(e);
             return false;
         }
-
 
         return true;
     }
@@ -1215,7 +1239,7 @@ skadi.CoreConfiguration = class {
     this.wrapper = null;
     this.properties = properties;
     this.id = package_type.get_id();
-    this.page = this.package_type.get_configuration().page;
+    this.pages = this.package_type.get_configuration().pages;
   }
 
   get_id() {
@@ -1256,15 +1280,23 @@ skadi.CoreConfiguration = class {
       return this.wrapper.get_instance();
   }
 
-  get_url() {
-      if (this.page && this.page.url) {
-          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
+  get_page_ids() {
+    let page_ids = [];
+    for(let page_id in this.pages) {
+       page_ids.push(page_id);
+    }
+    return page_ids;
+  }
+
+  get_url(page_id) {
+      if (this.pages && this.pages[page_id].url) {
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.pages[page_id].url));
       }
       return null;
   }
 
-  get_page() {
-      return this.page || {};
+  get_page(page_id) {
+      return this.pages[page_id] || {};
   }
 }
 
@@ -1514,22 +1546,6 @@ skadi.NodeService = class {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    page_add_event_handler(element_id, event_type, callback, event_transform) {
-        this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
-    }
-
-    page_set_attributes(element_id, attributes) {
-        this.wrapper.set_attributes(element_id, attributes);
-    }
-
-    page_send_message(message) {
-        this.wrapper.send_message(message);
-    }
-
-    page_set_message_handler(handler) {
-        this.wrapper.set_message_handler(handler);
-    }
-
     get_node_id() {
         return this.node_id;
     }
@@ -1561,6 +1577,52 @@ skadi.NodeService = class {
         return "data:"+mime_type+";base64," + btoa(data);
     }
 
+    get_data(key) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/node/"+this.node_id, is_temporary);
+        let fileinfo = folder.get_file_info(key);
+        if (fileinfo) {
+            let path = fileinfo.path;
+            let metadata = fileinfo.metadata;
+            let mode = metadata.type === "binary" ? "rb" : "b";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            return fl.read();
+        } else {
+            return null;
+        }
+    }
+
+    set_data(key, data) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/node/"+this.node_id, is_temporary);
+        if (data !== null && data !== undefined) {
+            let type = "";
+            if (data instanceof ArrayBuffer) {
+                type = "binary";
+            } else if (data instanceof String) {
+                type = "string";
+            } else {
+                throw new Error("data must be either String or ArrayBuffer")
+            }
+            let path = folder.add_file(key, {"type":type});
+            let mode = type === "binary" ? "wb": "w";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            fl.write(data);
+        } else {
+            folder.remove_file(key);
+        }
+    }
+
     get_configuration() {
         return this.core.get_configuration(this.node_type.get_package_type().get_id()).get_instance();
     }
@@ -1570,6 +1632,111 @@ skadi.NodeService = class {
     }
 }
 
+
+/* skadi/js/services/page_service.js */
+
+var skadi = skadi || {};
+
+skadi.PageService = class {
+
+    constructor(wrapper, target_window, l10n_utils) {
+        this.wrapper = wrapper;
+        this.event_handlers = [];
+        this.page_message_handler = null;
+        this.pending_page_messages = [];
+        this.target_window = target_window;
+        this.l10n_utils = l10n_utils;
+        window.addEventListener("message", (event) => {
+            if (event.source === this.target_window) {
+                this.recv_from_window(event.data);
+            }
+        });
+    }
+
+    add_event_handler(element_id, event_type, callback, target_attribute) {
+        this.event_handlers.push([element_id, event_type, callback, target_attribute]);
+        let msg = {
+            "type": "page_add_event_handler",
+            "element_id": element_id,
+            "event_type": event_type,
+            "target_attribute": target_attribute || "value"
+        };
+        this.send_to_window([msg,null]);
+    }
+
+    handle_event(element_id, event_type, value) {
+        for(let idx=0; idx<this.event_handlers.length; idx++) {
+            let handler_spec = this.event_handlers[idx];
+            if (element_id === handler_spec[0] && event_type === handler_spec[1]) {
+                handler_spec[2](value);
+            }
+        }
+    }
+
+    set_attributes(element_id, attributes) {
+        let msg = {
+            "type": "page_set_attributes",
+            "element_id": element_id
+        }
+        if (this.l10n_utils) {
+            msg.attributes = {};
+            for (let attribute_name in attributes) {
+                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
+            }
+        } else {
+            msg.attributes = attributes;
+        }
+
+        this.send_to_window([msg,null]);
+    }
+
+    send_message(...message_parts) {
+        this.send_to_window([{"type":"page_message"},message_parts]);
+    }
+
+    set_message_handler(handler) {
+        this.page_message_handler = handler;
+        if (this.pending_page_messages.length > 0) {
+            this.pending_page_messages.forEach((m) => this.page_message_handler(...m));
+            this.pending_page_messages = [];
+        }
+    }
+
+    send_to_window(msg) {
+        if (this.target_window) {
+            this.target_window.postMessage(msg,window.location.origin);
+        }
+    }
+
+    recv_from_window(msg) {
+
+        let header = msg[0];
+
+        let type = header.type;
+
+        switch (type) {
+            case "page_message":
+                let message_parts = msg[1];
+                if (this.page_message_handler) {
+                    this.page_message_handler(...message_parts);
+                } else {
+                    this.pending_page_messages.push(message_parts);
+                }
+                break;
+            case "event":
+                this.handle_event(header["element_id"], header["event_type"], header["value"]);
+                break;
+            default:
+                console.error("Unknown message type received from page: " + msg.type);
+        }
+    }
+
+    close() {
+        this.page_message_handler = null;
+        this.event_handlers = [];
+        this.pending_messages = [];
+    }
+}
 
 /* skadi/js/services/wrapper.js */
 
@@ -1582,10 +1749,7 @@ skadi.Wrapper = class {
         this.services = services;
         this.l10n_utils = l10n_utils;
         this.instance = null;
-        this.window = null;
-        this.event_handlers = [];
-        this.message_handler = null;
-        this.pending_messages = [];
+        this.page_services = {};
     }
 
     set_instance(instance) {
@@ -1605,125 +1769,30 @@ skadi.Wrapper = class {
 
     set_property(property_name, property_value) {
         this.target.properties[property_name] = property_value;
+        this.target.core.autosave();
     }
 
-    set_message_handler(handler) {
-        this.message_handler = handler;
-        if (this.pending_messages.length > 0) {
-            this.pending_messages.forEach((m) => this.message_handler(m));
-            this.pending_messages = [];
-        }
-    }
-
-    add_event_handler(element_id, event_type, callback, event_transform) {
-       this.event_handlers.push([element_id, event_type, callback, event_transform]);
-       this.send_add_event_handler(element_id,event_type,event_transform);
-    }
-
-    send_add_event_handler(element_id, event_type, event_transform) {
-        let msg = {
-            "type": "add_event_handler",
-            "element_id": element_id,
-            "event_type": event_type,
-            "event_transform": event_transform
-        };
-        this.send_to_window(msg);
-    }
-
-    handle_event(element_id, event_type, value) {
-        for(let idx=0; idx<this.event_handlers.length; idx++) {
-            let handler_spec = this.event_handlers[idx];
-            if (element_id === handler_spec[0] && event_type === handler_spec[1]) {
-                handler_spec[2](value);
-            }
-        }
-    }
-
-    set_attributes(element_id, attributes) {
-        this.send_set_attributes(element_id, attributes);
-    }
-
-    send_set_attributes(element_id, attributes) {
-        let msg = {
-            "type": "set_attributes",
-            "element_id": element_id
-        }
-        if (this.l10n_utils) {
-            msg.attributes = {};
-            for (let attribute_name in attributes) {
-                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
-            }
-        } else {
-            msg.attributes = attributes;
-        }
-
-        this.send_to_window(msg);
-    }
-
-    send_message(content) {
-        let msg = {
-            "type": "message",
-            "content": content
-        }
-        this.send_to_window(msg);
-    }
-
-    handle_message(content) {
-        if (this.message_handler) {
-            this.message_handler(content);
-        } else {
-            this.pending_messages.push(content);
-        }
-    }
-
-    send_to_window(msg) {
-        if (this.window) {
-            this.window.postMessage(msg,window.location.origin);
-        }
-    }
-
-    recv_from_window(msg) {
-        switch(msg.type) {
-            case "event":
-                this.handle_event(msg["element_id"],msg["event_type"],msg["value"]);
-                break;
-            case "message":
-                this.handle_message(msg["content"]);
-                break;
-        }
-    }
-
-    open(w) {
-        this.window = w;
-        this.pending_messages = [];
-        this.message_handler = null;
-        this.event_handlers = [];
-        window.addEventListener("message", (event) => {
-            if (event.source == this.window) {
-                this.recv_from_window(event.data);
-            }
-        });
+    open(window, page_id) {
+        this.page_services[page_id] = new skadi.PageService(this,window,this.l10n_utils);
         if (this.instance.page_open) {
             try {
-                this.instance.page_open();
+                this.instance.page_open(page_id, this.page_services[page_id]);
             } catch(e) {
                 console.error(e);
             }
         }
     }
 
-    close() {
-        this.window = null;
+    close(page_id) {
         if (this.instance.page_close) {
             try {
-                this.instance.page_close();
+                this.instance.page_close(page_id, this.page_services[page_id]);
             } catch(e) {
                 console.error(e);
             }
         }
-        this.message_handler = null;
-        this.event_handlers = [];
-        this.pending_messages = [];
+        this.page_services[page_id].close();
+        delete this.page_services[page_id];
     }
 
     remove() {
@@ -1763,22 +1832,6 @@ skadi.ConfigurationService = class {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    page_add_event_handler(element_id, event_type, callback, event_transform) {
-        this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
-    }
-
-    page_set_attributes(element_id, attributes) {
-        this.wrapper.set_attributes(element_id, attributes);
-    }
-
-    page_send_message(message) {
-        this.wrapper.send_message(message);
-    }
-
-    page_set_message_handler(handler) {
-        this.wrapper.set_message_handler(handler);
-    }
-
     get_package_id() {
         return this.package_id;
     }
@@ -1809,6 +1862,53 @@ skadi.ConfigurationService = class {
     create_data_uri(data, mime_type) {
         return "data:"+mime_type+";base64," + btoa(data);
     }
+
+    get_data(key) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/package/"+this.package_id, is_temporary);
+        let fileinfo = folder.get_file_info(key);
+        if (fileinfo) {
+            let path = fileinfo.path;
+            let metadata = fileinfo.metadata;
+            let mode = metadata.type === "binary" ? "rb" : "b";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            return fl.read();
+        } else {
+            return null;
+        }
+    }
+
+    set_data(key, data) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/package/"+this.package_id, is_temporary);
+
+        if (data !== null && data !== undefined) {
+            let type = "";
+            if (data instanceof ArrayBuffer) {
+                type = "binary";
+            } else if (data instanceof String) {
+                type = "string";
+            } else {
+                throw new Error("data must be either String or ArrayBuffer")
+            }
+            let path = folder.add_file(key, {"type":type});
+            let mode = type === "string" ? "w": "wb";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            fl.write(data);
+        } else {
+            folder.remove_file(key);
+        }
+    }
 }
 
 
@@ -1828,8 +1928,12 @@ skadi.NodeType = class {
     let display = schema["display"] || { "corners": 4, "icon": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
-    this.page = schema["page"] || {};
-    this.html_url = this.page.url ? this.package_type.get_resource_url(this.page.url) : "";
+    this.pages = schema["pages"] || {};
+    this.html_urls = {};
+    for(let page_id in this.pages) {
+      let page_url = this.pages[page_id].url;
+      this.html_urls[page_id] = page_url ? this.package_type.get_resource_url(page_url) : "";
+    }
 
     this.classname = schema["classname"] || {};
 
@@ -1863,16 +1967,24 @@ skadi.NodeType = class {
     return this.package_type.localise(this.metadata.description);
   }
 
-  get_html_url() {
-    return this.package_type.localise_url(this.html_url);
+  get_html_url(page_id) {
+    return this.package_type.localise_url(this.html_urls[page_id]);
   }
 
   get_schema() {
     return this.schema;
   }
 
-  get_page() {
-    return this.page;
+  get_page_ids() {
+    let page_ids = [];
+    for(let page_id in this.pages) {
+       page_ids.push(page_id);
+    }
+    return page_ids;
+  }
+
+  get_page(page_id) {
+    return this.pages[page_id];
   }
 
   get_classname() {
@@ -2456,9 +2568,9 @@ skadi.Api = class {
         return new skadi.CoreConfiguration(this.instance,package_type,{});
     }
 
-    load(from_obj, supress_events) {
+    load(from_obj, supress_events, autosave_id) {
         this.instance.clear(supress_events);
-        this.instance.deserialise(from_obj ,supress_events);
+        this.instance.deserialise(from_obj ,supress_events, autosave_id);
     }
 
     get_schema() {
@@ -2495,8 +2607,8 @@ skadi.Api = class {
 
     async handle_load_topology_from() {
         let url_params = new URLSearchParams(window.location.search);
-        // check for a topology to load
-        let topology_url = url_params.get("load_topology_from");
+        // check for a topology to load from URL first
+        let topology_url = url_params.get("topology_url");
         if (topology_url) {
             let topology_origin = new URL(topology_url,window.location).origin;
             if (topology_origin != window.location.origin) {
@@ -2507,9 +2619,26 @@ skadi.Api = class {
                         let obj = JSON.parse(txt);
                         this.load(obj);
                     } catch (ex) {
-                        console.error("load_topology_from failed:" + ex);
+                        console.error("load from topology_url failed:" + ex);
                     }
                 });
+            }
+        } else {
+            // load from local storage perhaps...
+            let topology_name = url_params.get("topology");
+
+            if (topology_name) {
+                let f = new skadi.FileLike("/skadi/storage/"+topology_name+"/topology.json","r",false);
+                let contents = f.read();
+                if (contents) {
+                    try {
+                        let obj = JSON.parse(contents);
+                        this.load(obj,false,topology_name);
+                    } catch (ex) {
+                        console.error("load from topology failed:" + ex);
+                    }
+                }
+                this.instance.set_autosave_id(topology_name);
             }
         }
     }
@@ -2667,7 +2796,7 @@ skadi.L10NUtils = class {
         if (this.metadata === null) {
             this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
         }
-        let language = window.localStorage.getItem("skadi.settings.l10n."+this.id+".language") || this.metadata.default_language;
+        let language = window.localStorage.getItem("/skadi/settings/l10n."+this.id+".language") || this.metadata.default_language;
         await this.set_language(language); 
     }
 
@@ -2680,7 +2809,7 @@ skadi.L10NUtils = class {
             let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
             this.bundle = await fetch(bundle_url).then(r => r.json());
         }
-        window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
+        window.localStorage.setItem("/skadi/settings/l10n."+this.id+".language", language);
         this.language = language;
         this.language_update_listeners.forEach((callback) => callback(language));
     }
@@ -3250,4 +3379,182 @@ skadi.ExpressionParser = class {
 
 }
 
+
+/* skadi/js/utils/directory_like.js */
+var skadi = skadi || {};
+
+skadi.DirectoryLike = class {
+
+    constructor(path,is_temporary) {
+        this.key = path;
+        this.is_temporary = is_temporary;
+        this.storage = is_temporary ? sessionStorage : localStorage;
+        this.files = {};
+        this.directories = [];
+        let item = this.storage.getItem(this.key);
+        if (item != null) {
+            let o = JSON.parse(item);
+            this.files = o.files || {};
+            this.directories = o.directories || {};
+        }
+    }
+
+    get_files() {
+        return this.files.keys();
+    }
+
+    get_directories() {
+        return this.directories.keys();
+    }
+
+    add_file(name, metadata) {
+        this.files[name] = metadata;
+        this.update();
+        return this.key + "/" + name;
+    }
+
+    get_file_info(name) {
+        if (name in this.files) {
+            return {
+                "path": this.key + "/" + name,
+                "metadata": this.files[name]
+            };
+        } else {
+            return null;
+        }
+    }
+
+    remove_file(name) {
+        if (name in this.files) {
+            delete this.files[name];
+            this.update();
+        }
+
+        this.storage.removeItem(this.key + "/" + name);
+    }
+
+    add_directory(name, metadata) {
+        this.directories[name] = metadata;
+        this.update();
+        return this.key + "/" + name;
+    }
+
+    get_directory_info(name) {
+        if (name in this.directories) {
+            return {
+                "path": this.key + "/" + name,
+                "metadata": this.directories[name]
+            };
+        } else {
+            return null;
+        }
+    }
+
+    remove_directory(name) {
+        if (name in this.directories) {
+            delete this.directories[name];
+            this.update();
+        }
+
+        let dl = new skadi.DirectoryLike(this.key + "/" + name, this.is_temporary);
+        dl.remove();
+    }
+
+    update() {
+        this.storage.setItem(this.key,JSON.stringify({"files":this.files,"directories":this.directories}));
+    }
+
+    clear() {
+        for(let filename in this.files) {
+            this.storage.removeItem(this.key + "/" + filename);
+        }
+
+        for(let dirname in this.directories) {
+            this.storage.removeItem(this.key + "/" + dirname);
+        }
+
+        this.files = {};
+        this.directories = {};
+        this.update();
+    }
+
+    remove() {
+        this.clear();
+        this.storage.removeItem(this.key);
+    }
+
+}
+
+/* skadi/js/utils/file_like.js */
+var skadi = skadi || {};
+
+skadi.FileLike = class {
+
+    constructor(path,mode,is_temporary) {
+        this.key = path;
+        this.storage = is_temporary ? sessionStorage : localStorage;
+        this.content = undefined;
+        switch(mode) {
+            case "w":
+                this.text = true;
+                this.writable = true;
+                break;
+            case "wb":
+                this.text = true;
+                this.writable = true;
+                break;
+            case "r":
+                this.text = true;
+                this.writable = false;
+                break;
+            case "rb":
+                this.text = false;
+                this.writable = false;
+                break;
+        }
+    }
+
+    read() {
+        if (this.content === undefined) {
+            this.load();
+        }
+        return this.content;
+    }
+
+    write(data) {
+        // data should be ArrayBuffer or string
+        if (!this.writable) {
+            throw new Error("Cannot write to read only file");
+        } else {
+            this.content = data;
+        }
+        this.save();
+    }
+
+    load() {
+        let item = this.storage.getItem(this.key);
+        if (item === null) {
+            this.content = this.text ? "" : new ArrayBuffer(0);
+        } else {
+            if (this.text) {
+                this.content = item;
+            } else {
+                this.content = Uint8Array.from(item, (m) => m.codePointAt(0)).buffer;
+            }
+        }
+    }
+
+    save() {
+       let item = this.content;
+        if (!this.text) {
+            item = btoa(String.fromCodePoint(...this.content));
+        }
+        this.storage.setItem(this.key,item);
+    }
+
+    remove() {
+        this.storage.removeItem(this.key);
+    }
+
+}
 

@@ -14,6 +14,7 @@ DataVizExample.SelectColumnsNode = class {
         this.elt = null;
         this.dataset = null;
         this.input_column_names = [];
+        this.page_service = null;
         this.update_status();
     }
 
@@ -43,24 +44,31 @@ DataVizExample.SelectColumnsNode = class {
     refresh_controls() {
         let options = [["",""]];
         this.input_column_names.forEach(name => options.push([name,name]));
-        const s = JSON.stringify(options);
-        this.node_service.page_set_attributes("column_names",{"options":s,"value":JSON.stringify(this.column_names)});
+        if (this.page_service) {
+            const s = JSON.stringify(options);
+            this.page_service.set_attributes("column_names", {
+                "options": s,
+                "value": JSON.stringify(this.column_names)
+            });
+        }
     }
 
     valid() {
         return (this.column_names.length > 0);
     }
 
-    page_open() {
-        this.node_service.page_set_attributes("column_names",{"value":JSON.stringify(this.column_names)});
-        this.node_service.page_add_event_handler("column_names","change", v => {
+    page_open(page_id, page_service) {
+        this.page_service = page_service;
+        page_service.set_attributes("column_names",{"value":JSON.stringify(this.column_names)});
+        page_service.add_event_handler("column_names","change", v => {
             this.column_names = JSON.parse(v);
             this.update_status();
             this.node_service.request_execution();
         });
     }
 
-    page_close() {
+    page_close(page_id, page_service) {
+        this.page_service = null;
     }
 
     reset_execution() {

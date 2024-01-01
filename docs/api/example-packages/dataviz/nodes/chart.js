@@ -64,12 +64,12 @@ DataVizExample.ChartNode = class {
         }
     }
 
-    bind_column_selector_control(control_name,initial_value) {
-        this.set_selector_options(control_name, []);
+    bind_column_selector_control(control_name, initial_value) {
+        this.set_selector_options(pcontrol_name, []);
         if (initial_value != null) {
-            this.node_service.page_set_attributes(control_name, {"value": initial_value});
+            this.page_service.set_attributes(control_name, {"value": initial_value});
         }
-        this.node_service.page_add_event_handler(control_name, "change", v => {
+        this.page_service.add_event_handler(control_name, "change", v => {
             this.node_service.set_property(control_name, v);
             this.update_status();
             this.redraw();
@@ -79,42 +79,42 @@ DataVizExample.ChartNode = class {
     set_selector_options(sel_id, names) {
         let options = [["",""]];
         names.forEach(name => options.push([name,name]));
-        this.node_service.page_set_attributes(sel_id,{"options": JSON.stringify(options)});
+        this.page_service.set_attributes(sel_id,{"options": JSON.stringify(options)});
     }
 
     bind_label_control(control_name, initial_value) {
-        this.node_service.page_set_attributes(control_name,{"value":initial_value});
-        this.node_service.page_add_event_handler(control_name, "change", new_value => {
+        this.page_service.set_attributes(control_name,{"value":initial_value});
+        this.page_service.add_event_handler(control_name, "change", new_value => {
             this.node_service.set_property(control_name,new_value);
             this.redraw();
         });
     }
 
-    page_open() {
-        this.is_open = true;
+    page_open(page_id, page_service) {
+        this.page_service = page_service;
         this.bind_controls();
         this.refresh_controls();
         this.redraw();
     }
 
-    page_close() {
-        this.is_open = false;
+    page_close(page_id, page_service) {
+        this.page_service = null;
         this.data_uploaded = false;
     }
 
     page_is_open() {
-        return this.is_open;
+        return (this.page_service !== null);
     }
 
     upload() {
-        if (!this.data_uploaded) {
-            this.node_service.page_send_message({"dataset": this.dataset.toCSV()});
+        if (this.page_is_open() && !this.data_uploaded) {
+            this.page_service.send_message({"dataset": this.dataset.toCSV()});
             this.data_uploaded = true;
         }
     }
 
     redraw() {
-        if (this.is_open) {
+        if (this.page_is_open()) {
             if (this.dataset && this.valid()) {
                 this.draw();
             } else {
@@ -124,7 +124,7 @@ DataVizExample.ChartNode = class {
     }
 
     clear() {
-        this.node_service.page_send_message({});
+        this.page_service.send_message({});
     }
 
     reset_execution() {

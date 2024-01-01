@@ -84,19 +84,19 @@ DataVizExample.HistogramPlotNode = class extends DataVizExample.ChartNode {
             "theme": this.node_service.get_configuration().get_theme(),
             "spec": spec
         };
-        this.node_service.page_send_message(msg);
+        this.page_service.send_message(msg);
     }
 
-    page_open() {
-        super.page_open();
-        this.node_service.page_set_attributes("use_custom",{"value":""+this.use_custom_settings});
-        this.node_service.page_add_event_handler("use_custom","change", (v) => {
+    page_open(page_id, page_service) {
+        super.page_open(page_service);
+        page_service.set_attributes("use_custom",{"value":""+this.use_custom_settings});
+        page_service.add_event_handler("use_custom","change", (v) => {
             this.use_custom_settings = v;
             super.redraw();
-        },"(evt) => { return evt.target.checked; }");
+        },"checked");
 
-        this.node_service.page_set_attributes("custom_band_width",{"value":""+this.custom_band_width});
-        this.node_service.page_add_event_handler("custom_band_width", "change", (v) => {
+        page_service.set_attributes("custom_band_width",{"value":""+this.custom_band_width});
+        page_service.add_event_handler("custom_band_width", "change", (v) => {
             this.custom_band_width = Number.parseFloat(v);
             super.redraw();
         });

@@ -110,6 +110,7 @@ with Output("docs/api/skadi-designer.js") as of:
     of.add("skadi/js/base/configuration_base.js")
     of.add("skadi/js/base/node_base.js")
     of.add("skadi/js/services/node_service.js")
+    of.add("skadi/js/services/page_service.js")
     of.add("skadi/js/services/wrapper.js")
     of.add("skadi/js/services/configuration_service.js")
     of.add("skadi/js/schema/node_type.js")
@@ -121,6 +122,8 @@ with Output("docs/api/skadi-designer.js") as of:
     of.add("skadi/js/skadi-designer-api.js")
     of.add("skadi/js/utils/l10n_utils.js")
     of.add("skadi/js/utils/expr_parser.js")
+    of.add("skadi/js/utils/directory_like.js")
+    of.add("skadi/js/utils/file_like.js")
 
 print("Building: skadi-application.js")
 
@@ -139,6 +142,7 @@ with Output("docs/api/skadi-application.js") as of:
     of.add("skadi/js/base/configuration_base.js")
     of.add("skadi/js/base/node_base.js")
     of.add("skadi/js/services/node_service.js")
+    of.add("skadi/js/services/page_service.js")
     of.add("skadi/js/services/wrapper.js")
     of.add("skadi/js/services/configuration_service.js")
     of.add("skadi/js/schema/node_type.js")
@@ -151,6 +155,8 @@ with Output("docs/api/skadi-application.js") as of:
     of.add("skadi/js/skadi-application-api.js")
     of.add("skadi/js/utils/l10n_utils.js")
     of.add("skadi/js/utils/expr_parser.js")
+    of.add("skadi/js/utils/directory_like.js")
+    of.add("skadi/js/utils/file_like.js")
 
 print("Building: skadi-designer.css")
 
@@ -177,6 +183,14 @@ with Output("docs/api/skadi-executor.js") as of:
     of.add("skadi-executor/js/graph_executor.js")
     of.add("skadi-executor/js/node_execution_failed.js")
 
+print("Building: skadi-directory.js")
+
+with Output("docs/api/skadi-directory.js") as of:
+    of.add("skadi/js/skadi-directory-api.js")
+    of.add("skadi/js/utils/directory_like.js")
+    of.add("skadi/js/utils/file_like.js")
+
+
 print("Copying: skadi-designer.html")
 
 with Output("docs/api/skadi-designer.html", comment_paths=False) as of:
@@ -192,10 +206,16 @@ print("Copying: skadi-about.html")
 with Output("docs/api/skadi-about.html", comment_paths=False) as of:
     of.add("skadi/html/skadi-about.html")
 
-print("Copying: skadi-page.js")
+print("Copying: skadi-directory.html")
+
+with Output("docs/api/skadi-directory.html", comment_paths=False) as of:
+    of.add("skadi/html/skadi-directory.html")
+
+print("Building: skadi-page.js")
 
 with Output("docs/api/skadi-page.js") as of:
-    of.add("skadi-page/js/skadi-page.js")
+    of.add("skadi/js/page/page.js")
+
 
 print("Copying: l10n")
 

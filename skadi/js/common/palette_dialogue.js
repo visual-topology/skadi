@@ -21,7 +21,7 @@ let palette_html = `<div>
 </div>
 </div>`;
 
-skadi.PaletteDialogue = class extends skadi.FrameDialogue {
+skadi.PaletteDialogue = class extends skadi.IFrameDialogue {
 
   constructor(id, design, title, x, y, width, height, closeHandler, resize_handler, scrollable, autoClose, draggable) {
     super(id, design, title, x, y, width, height, closeHandler,
@@ -34,7 +34,7 @@ skadi.PaletteDialogue = class extends skadi.FrameDialogue {
             this.current_page = 1;
             this.page_height = height;
             this.refresh_view();
-        });
+        }, false);
 
     this.all_entries = [];
     this.entries = [];

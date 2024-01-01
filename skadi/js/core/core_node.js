@@ -58,7 +58,6 @@ skadi.CoreNode = class {
             return false;
         }
 
-
         return true;
     }
 

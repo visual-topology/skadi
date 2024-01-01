@@ -79,7 +79,7 @@ DataVizExample.ScatterPlotNode = class extends DataVizExample.ChartNode {
             "theme": this.node_service.get_configuration().get_theme(),
             "spec": spec
         }
-        this.node_service.page_send_message(msg);
+        this.page_service.send_message(msg);
     }
 }
 

@@ -14,20 +14,19 @@ DataVizExample.Configuration = class {
         this.update_callbacks = [];
     }
 
-    page_open() {
+    page_open(page_id,page_service) {
         let themes = ["quartz","excel","ggplot2","vox","fivethirtyeight","dark","latimes","urbaninstitute","googlecharts","powerbi","carbonwhite","carbong10","carbong90","carbong100"]
         let attrs = {
             "options":JSON.stringify(themes.map(t => [t,t])),
             "value":this.services.get_property("theme","quartz")};
-        this.services.page_set_attributes("select_theme",attrs);
-        this.services.page_add_event_handler("select_theme","change", (v) => {
+        page_service.set_attributes("select_theme",attrs);
+        page_service.add_event_handler("select_theme","change", (v) => {
             this.services.set_property("theme",v);
-            this.services.page_set_attributes("select_theme",{"value": v});
             this.updated();
         });
     }
 
-    page_close() {
+    page_close(page_id,page_service) {
     }
 
     get_theme() {

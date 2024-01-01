@@ -13,11 +13,9 @@ skadi.Configuration = class extends skadi.CoreConfiguration {
       super(design, package_type, properties);
   }
 
-  open(iframe, w, h) {
+  open(iframe,page_id) {
       this.iframe = iframe;
-      this.iframe.setAttribute("width",""+w-20);
-      this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.open(iframe.contentWindow);
+      this.wrapper.open(iframe.contentWindow,page_id);
   }
 
   resize(w,h) {
@@ -29,7 +27,7 @@ skadi.Configuration = class extends skadi.CoreConfiguration {
 
   close() {
       this.iframe = null;
-      this.wrapper.close();
+      this.wrapper.close("default");
   }
 }
 

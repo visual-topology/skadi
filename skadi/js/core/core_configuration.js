@@ -16,7 +16,7 @@ skadi.CoreConfiguration = class {
     this.wrapper = null;
     this.properties = properties;
     this.id = package_type.get_id();
-    this.page = this.package_type.get_configuration().page;
+    this.pages = this.package_type.get_configuration().pages;
   }
 
   get_id() {
@@ -57,15 +57,23 @@ skadi.CoreConfiguration = class {
       return this.wrapper.get_instance();
   }
 
-  get_url() {
-      if (this.page && this.page.url) {
-          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
+  get_page_ids() {
+    let page_ids = [];
+    for(let page_id in this.pages) {
+       page_ids.push(page_id);
+    }
+    return page_ids;
+  }
+
+  get_url(page_id) {
+      if (this.pages && this.pages[page_id].url) {
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.pages[page_id].url));
       }
       return null;
   }
 
-  get_page() {
-      return this.page || {};
+  get_page(page_id) {
+      return this.pages[page_id] || {};
   }
 }
 

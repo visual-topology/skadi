@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
-    <link href="https://visualtopology.github.io/exo/versions/latest/exo-icons.css" rel="stylesheet" type="text/css">
-    <script src="https://visualtopology.github.io/exo/versions/latest/exo.js" type="text/javascript"></script>
-    <link href="https://visualtopology.github.io/exo/versions/latest/exo.css" rel="stylesheet" type="text/css">
+    <link href="../../../exo/exo-icons.css" rel="stylesheet" type="text/css">
+    <script src="../../../exo/exo.js" type="text/javascript"></script>
+    <link href="../../../exo/exo.css" rel="stylesheet" type="text/css">
     <script src="../../../skadi-page.js" type="text/javascript"></script>
 </head>
 <body>
@@ -33,5 +33,19 @@
             <exo-file tooltip="Select a CSV formatted file from your computer to upload" button-text="Upload file" id="upload" filename="filename.csv"></exo-file>
         </p>
     </div>
+    <script>
+        window.addEventListener("load", evt => {
+           let upload = document.getElementById("upload");
+           upload.addEventListener("exo-file-changed", (evt) => {
+               let files = evt.detail;
+               for(let filename in files) {
+                   let f = files[filename];
+                   f.text().then(text => {
+                       skadi.page.page_send_message({"filename": filename}, text);
+                   });
+               }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -13,7 +13,6 @@ skadi.Node = class extends skadi.CoreNode {
     super(design, node_type, id, x, y, metadata, properties);
     this.design = design;
 
-
     this.r = 45; // radius of node
 
     this.port_distance = this.r * 1.5;
@@ -95,46 +94,54 @@ skadi.Node = class extends skadi.CoreNode {
 
     super.create_instance();
 
-    let window_height = this.node_type.get_page().window_height || 400;
-    let window_width = this.node_type.get_page().window_width || 400;
-    // make sure that when the node's window is opened, closed or resized, the instance will receive the events
-
-    this.register_command_window("open", "{{node.menu.open}}",
-      (elt) => {
-          let html_url = this.node_type.get_html_url();
-          this.iframe = document.createElement("iframe");
-          this.iframe.setAttribute("src",html_url);
-          this.iframe.addEventListener("load", (evt) => {
-            this.wrapper.open(this.iframe.contentWindow);
-          });
-          elt.appendChild(this.iframe);
-      },
-      () => {
-          this.wrapper.close();
-      }, window_width, window_height,
-      (w,h) => {
-          this.iframe.setAttribute("width",""+w-10);
-          this.iframe.setAttribute("height",""+h-10);
-      });
-
-    this.register_command_window_tab("open_in_tab", "{{node.menu.opentab}}",this.node_type.get_html_url(),
-      (w) => {
-        if (w) {
-          let window_width = w.innerWidth;
-          let window_height = w.innerHeight;
-          this.wrapper.open(w, window_width, window_height);
-        }
-      },
-      () => {
-          this.wrapper.close();
-      });
+    this.node_type.get_page_ids().forEach(page_id => {
+        this.register_page_menu_entries(page_id);
+    });
 
     this.register_command_window("adjust","{{node.menu.adjust}}", (root_elt) => {
         this.open_adjust_editor(root_elt);
       }, null, 700, 500);
-      
 
     return true;
+  }
+
+  register_page_menu_entries(page_id) {
+    let page = this.node_type.get_page(page_id);
+    let window_height = page.window_height || 400;
+    let window_width = page.window_width || 400;
+    let menu_label = page.menu_label || "Open...";
+    let menu_tab_label = page.menu_tab_label || "Open...";
+    let html_url = this.node_type.get_html_url(page_id);
+    // make sure that when the node's window is opened, closed or resized, the instance will receive the events
+
+    let iframe = document.createElement("iframe");
+    this.register_command_window(page_id, menu_label,
+        (elt) => {
+          iframe.setAttribute("src", html_url);
+          iframe.addEventListener("load", (evt) => {
+            this.wrapper.open(iframe.contentWindow, page_id);
+          });
+          elt.appendChild(iframe);
+        },
+        () => {
+          this.wrapper.close(page_id);
+        }, window_width, window_height,
+        (w, h) => {
+          iframe.setAttribute("width", "" + w - 10);
+          iframe.setAttribute("height", "" + h - 10);
+        });
+
+    if (menu_tab_label) {
+      this.register_command_window_tab(page_id, menu_tab_label, html_url,
+          (w) => {
+            if (w) {
+              this.wrapper.open(w, page_id);
+            }
+          },
+          () => {
+            this.wrapper.close(page_id);
+          });
+    }
   }
 
   get_wrapper() {

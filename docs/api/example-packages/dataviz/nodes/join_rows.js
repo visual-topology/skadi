@@ -16,6 +16,7 @@ DataVizExample.JoinRowsNode = class {
         this.input_column_names1 = [];
         this.input_column_names2 = [];
         this.common_columns = [];
+        this.page_service = null;
     }
 
     get join_column_names() { return this.node_service.get_property("join_column_names",[]); }
@@ -40,10 +41,13 @@ DataVizExample.JoinRowsNode = class {
                 this.common_columns.push(name);
             }
         });
-        let options = [["",""]];
-        this.common_columns.forEach(name => options.push([name,name]));
-        const s = JSON.stringify(options);
-        this.node_service.page_set_attributes("join_column_names",{"options":s,"value":JSON.stringify(this.join_column_names)});
+
+        if (this.page_service) {
+            let options = [["",""]];
+            this.common_columns.forEach(name => options.push([name,name]));
+            const s = JSON.stringify(options);
+            this.page_service.set_attributes("join_column_names",{"options":s,"value":JSON.stringify(this.join_column_names)});
+        }
     }
 
     valid_join_columns() {
@@ -56,15 +60,19 @@ DataVizExample.JoinRowsNode = class {
         return valid_columns;
     }
 
-    page_open() {
-        this.node_service.page_set_attributes("join_column_names",{"value":JSON.stringify(this.join_column_names)});
-        this.node_service.page_add_event_handler("join_column_names","change", v => {
+    page_open(page_id, page_service) {
+        this.page_service = page_service;
+        page_service.set_attributes("join_column_names",{"value":JSON.stringify(this.join_column_names)});
+        page_service.add_event_handler("join_column_names","change", v => {
             this.join_column_names = JSON.parse(v);
             this.node_service.request_execution();
         });
         this.refresh_controls();
     }
 
+    page_close(page_id, page_service) {
+        this.page_service = null;
+    }
 
     async execute(inputs) {
         this.dataset1 = null;

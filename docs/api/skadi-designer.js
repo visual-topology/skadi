@@ -329,13 +329,15 @@ var skadi = skadi || {};
 
 skadi.SvgDialogue = class {
 
-  constructor(id, design, title, x, y, content_width, content_height, closeHandler, resize_handler, scrollable, autoClose, draggable, drawCallback) {
+  constructor(id, design, title, x, y, content_width, content_height, close_handler, resize_handler, scrollable, auto_close, draggable, draw_callback, draw_on_canvas) {
     this.design = design;
     this.title = title;
 
-    this.closeHandler = closeHandler;
+    this.close_handler = close_handler;
     this.resize_handler = resize_handler;
-    this.drawCallback = drawCallback;
+    this.draw_callback = draw_callback;
+
+    this.draw_on_canvas = draw_on_canvas;
 
     this.id = id;
     this.x = x;
@@ -356,7 +358,6 @@ skadi.SvgDialogue = class {
     this.removeOnClose = true;
     this.draggable = draggable;
 
-
     this.content_offset = 0;
 
     let that = this;
@@ -374,7 +375,7 @@ skadi.SvgDialogue = class {
 
     this.compute_content_size();
 
-    this.autoClose = autoClose;
+    this.auto_close = auto_close;
     this.connector_grp = null;
     this.connector_path = null;
     this.parent_node = null;
@@ -459,7 +460,7 @@ skadi.SvgDialogue = class {
 
   open() {
 
-    let container = this.design.get_skadi_svg_dialogue_group();
+    let container = this.draw_on_canvas ? this.design.get_node_connector_group() : this.design.get_skadi_svg_dialogue_group();
 
     this.grp = container.append("g");
 
@@ -525,7 +526,7 @@ skadi.SvgDialogue = class {
 
     this.closebtn.draw(this.grp);
 
-    this.drawCallback(this.content_grp);
+    this.draw_callback(this.content_grp);
 
     if (this.resizebtn) {
       this.resizegrp = container.append("g");
@@ -549,7 +550,7 @@ skadi.SvgDialogue = class {
 
     this.opened = true;
 
-    if (this.autoClose) {
+    if (this.auto_close) {
       this.grp.node().onmouseleave = function() {
         that.close();
       }
@@ -661,8 +662,8 @@ skadi.SvgDialogue = class {
         this.movement_listener = null;
       }
     }
-    if (this.closeHandler) {
-      this.closeHandler(this.dial);
+    if (this.close_handler) {
+      this.close_handler(this.dial);
     }
   }
 
@@ -699,16 +700,16 @@ skadi.SvgDialogue = class {
 
 var skadi = skadi || {};
 
-skadi.FrameDialogue = class extends skadi.SvgDialogue {
+skadi.IFrameDialogue = class extends skadi.SvgDialogue {
 
-  constructor(id, design, title, x, y, content_width, content_height, close_handler, can_resize, url, open_callback, resize_callback) {
+  constructor(id, design, title, x, y, content_width, content_height, close_handler, can_resize, url, open_callback, resize_callback, draw_on_canvas) {
     super(id, design, title, x, y, content_width, content_height, close_handler,
         function(width,height,is_final) {
           return this.resize(width,height,is_final);
           }, false, false, true,
         function(grp) {
           this.draw(grp);
-        });
+        }, draw_on_canvas);
     this.design = design;
     this.title = title;
     this.url = url;
@@ -762,7 +763,7 @@ let palette_html = `<div>
 </div>
 </div>`;
 
-skadi.PaletteDialogue = class extends skadi.FrameDialogue {
+skadi.PaletteDialogue = class extends skadi.IFrameDialogue {
 
   constructor(id, design, title, x, y, width, height, closeHandler, resize_handler, scrollable, autoClose, draggable) {
     super(id, design, title, x, y, width, height, closeHandler,
@@ -775,7 +776,7 @@ skadi.PaletteDialogue = class extends skadi.FrameDialogue {
             this.current_page = 1;
             this.page_height = height;
             this.refresh_view();
-        });
+        }, false);
 
     this.all_entries = [];
     this.entries = [];
@@ -1624,7 +1625,9 @@ skadi.Core = class {
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
-        this.id = "design";
+
+        this.autosave_id = undefined;
+
         this.schema = schema;
 
         this.graph_executor = null;
@@ -1633,6 +1636,7 @@ skadi.Core = class {
         this.design_event_handlers = {};
 
         this.network = new skadi.Network({});
+        this.id = this.next_id("top");
 
         this.div = skadi.x3.select("#" + element_id);
 
@@ -1649,6 +1653,14 @@ skadi.Core = class {
 
     get_id() {
         return this.id;
+    }
+
+    get_autosave_id() {
+        return this.autosave_id;
+    }
+
+    set_autosave_id(autosave_id) {
+        this.autosave_id = autosave_id;
     }
 
     get_language() {
@@ -1842,7 +1854,6 @@ skadi.Core = class {
         return this.network.get_node(node_id);
     }
 
-
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
         if (node) {
@@ -1865,7 +1876,6 @@ skadi.Core = class {
             }
         }
     }
-
 
     update_metadata(node_id, metadata, suppress_event) {
         let node = this.network.get_node(node_id);
@@ -1961,6 +1971,7 @@ skadi.Core = class {
         if (!suppress_event) {
             this.fire_design_event("clear", null);
         }
+        this.autosave();
     }
 
     remove(id, suppress_event) {
@@ -1989,6 +2000,7 @@ skadi.Core = class {
                 this.fire_link_event("remove", link);
             }
         }
+        this.autosave();
     }
 
 
@@ -2010,12 +2022,16 @@ skadi.Core = class {
             let link = this.network.get_link(link_id);
             slinks[link_id] = link.serialise();
         }
-        return {"nodes": snodes, "links": slinks, "metadata": this.metadata};
+        return {"nodes": snodes, "links": slinks, "metadata": this.metadata };
     }
 
-    deserialise(from_obj, suppress_events) {
+    deserialise(from_obj, suppress_events, autosave_id) {
+
         if (this.graph_executor) {
             this.graph_executor.pause();
+        }
+        if (autosave_id) {
+            this.set_autosave_id(autosave_id);
         }
         for (let node_id in from_obj.nodes) {
             let node = skadi.CoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
@@ -2033,6 +2049,16 @@ skadi.Core = class {
         this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
+        }
+    }
+
+    autosave() {
+        let autosave_id = this.get_autosave_id();
+        if (autosave_id) {
+            let folder = new skadi.DirectoryLike("/skadi/storage/",false);
+            let path = folder.add_file(autosave_id);
+            let fl = new skadi.FileLike(path + "/topology.json", "w", false);
+            fl.write(JSON.stringify(this.serialise()));
         }
     }
 }
@@ -2094,7 +2120,6 @@ skadi.CoreNode = class {
             console.error(e);
             return false;
         }
-
 
         return true;
     }
@@ -2245,7 +2270,7 @@ skadi.CoreConfiguration = class {
     this.wrapper = null;
     this.properties = properties;
     this.id = package_type.get_id();
-    this.page = this.package_type.get_configuration().page;
+    this.pages = this.package_type.get_configuration().pages;
   }
 
   get_id() {
@@ -2286,15 +2311,23 @@ skadi.CoreConfiguration = class {
       return this.wrapper.get_instance();
   }
 
-  get_url() {
-      if (this.page && this.page.url) {
-          return this.package_type.localise_url(this.package_type.get_resource_url(this.page.url));
+  get_page_ids() {
+    let page_ids = [];
+    for(let page_id in this.pages) {
+       page_ids.push(page_id);
+    }
+    return page_ids;
+  }
+
+  get_url(page_id) {
+      if (this.pages && this.pages[page_id].url) {
+          return this.package_type.localise_url(this.package_type.get_resource_url(this.pages[page_id].url));
       }
       return null;
   }
 
-  get_page() {
-      return this.page || {};
+  get_page(page_id) {
+      return this.pages[page_id] || {};
   }
 }
 
@@ -2883,6 +2916,12 @@ skadi.update_configuration_status = function(package_id, state, message) {
     skadi.update_configuration_status_div(package_id);
 }
 
+skadi.open_configuration_callback = function(design, package_id, page_id) {
+    return (ev) => {
+        design.open_configuration(package_id, page_id);
+    }
+}
+
 skadi.populate_configuration = function(design, elt, close_window) {
     let header_div = document.createElement("div");
     header_div.innerHTML = skadi.configuration_header_html;
@@ -2913,7 +2952,7 @@ skadi.populate_configuration = function(design, elt, close_window) {
         let package_type = configuration.get_package_type();
         let l10n_utils = package_type.get_l10n_utils();
         
-        if (!l10n_utils && !configuration.get_url()) {
+        if (!l10n_utils && configuration.get_page_ids().length === 0) {
             continue;
         }
 
@@ -2952,54 +2991,58 @@ skadi.populate_configuration = function(design, elt, close_window) {
 
             elt.appendChild(row);
         }
-        
-        if (configuration.get_url()) {
-            let row = document.createElement("div");
-            row.setAttribute("class","exo-row");
 
-            let cfg_cell = document.createElement("div");
-            cfg_cell.setAttribute("class","exo-2-cell");
-            cfg_cell.appendChild(document.createTextNode("Package Configuration"));
-            row.appendChild(cfg_cell);
+        configuration.get_page_ids().forEach(page_id => {
+            let url = configuration.get_url(page_id);
+            let page = configuration.get_page(page_id);
+            if (url) {
+                let row = document.createElement("div");
+                row.setAttribute("class", "exo-row");
 
-            let btn = document.createElement("input");
-            btn.setAttribute("type","button");
-            btn.setAttribute("value", "Open...");
-            btn.addEventListener("click", (ev) => {
-                design.open_configuration(package_id);
-            });
-            
-            let btn_cell = document.createElement("div");
-            btn_cell.setAttribute("class","exo-2-cell");
-            btn_cell.appendChild(btn);
-            row.appendChild(btn_cell);
+                let cfg_cell = document.createElement("div");
+                cfg_cell.setAttribute("class", "exo-2-cell");
+                cfg_cell.appendChild(document.createTextNode(page.title));
+                row.appendChild(cfg_cell);
 
-            elt.appendChild(row);
+                let btn = document.createElement("input");
+                btn.setAttribute("type", "button");
+                btn.setAttribute("value", page.button_label || "Open...");
+                btn.addEventListener("click", skadi.open_configuration_callback(design,package_id,page_id));
 
-            let status_row = document.createElement("div");
-            status_row.setAttribute("class","exo-row skadi_status");
-            
-            
-            let st_cell = document.createElement("div");
-            st_cell.setAttribute("class","exo-2-cell");
-            st_cell.appendChild(document.createTextNode("Configuration Status"));
-            status_row.appendChild(st_cell);
+                let btn_cell = document.createElement("div");
+                btn_cell.setAttribute("class", "exo-2-cell");
+                btn_cell.appendChild(btn);
+                row.appendChild(btn_cell);
+                elt.appendChild(row);
+            }
+        });
 
-            
-            let status_cell = document.createElement("div");
-            status_cell.setAttribute("class","exo-2-cell");
-            status_cell.setAttribute("style","display:inline-block;");
 
-            status_row.appendChild(status_cell);
+        let status_row = document.createElement("div");
+        status_row.setAttribute("class","exo-row skadi_status");
 
-            skadi.status_divs[package_id] = status_cell;
-            skadi.update_configuration_status_div(package_id);
+        let st_cell = document.createElement("div");
+        st_cell.setAttribute("class","exo-2-cell");
+        st_cell.appendChild(document.createTextNode("Configuration Status"));
+        status_row.appendChild(st_cell);
 
-            elt.appendChild(status_row);
-            
-        }
+        let status_cell = document.createElement("div");
+        status_cell.setAttribute("class","exo-2-cell");
+        status_cell.setAttribute("style","display:inline-block;");
+
+        status_row.appendChild(status_cell);
+
+        skadi.status_divs[package_id] = status_cell;
+        skadi.update_configuration_status_div(package_id);
+
+        elt.appendChild(status_row);
+
     }
+
+
 }
+
+
 
 
 
@@ -3255,7 +3298,6 @@ skadi.Designer = class extends skadi.Core {
         this.height = height;
         this.is_acyclic = is_acyclic;
 
-        this.id = "design";
         this.paused = false;
         this.windows = {};
 
@@ -3505,7 +3547,7 @@ skadi.Designer = class extends skadi.Core {
         let key = node_id + "_" + command_id;
         if (key in this.windows) {
             let oldw = this.windows[key];
-            if (!(oldw instanceof skadi.FrameDialogue)) {
+            if (!(oldw instanceof skadi.IFrameDialogue)) {
                 oldw.close();
             } else {
                 return;
@@ -3513,12 +3555,12 @@ skadi.Designer = class extends skadi.Core {
         }
         let node = this.network.get_node(node_id);
         let title = node.metadata.name;
-        let ifd = new skadi.FrameDialogue(key, this, title, x, y, width, height, () => {
+        let ifd = new skadi.IFrameDialogue(key, this, title, x, y, width, height, () => {
                 delete this.windows[key];
                 if (close_callback) {
                     close_callback();
                 }
-            }, true, null, open_callback, resize_callback);
+            }, true, null, open_callback, resize_callback, true);
         ifd.open();
         ifd.set_parent_node(node);
         this.windows[key] = ifd;
@@ -3542,7 +3584,7 @@ skadi.Designer = class extends skadi.Core {
         let key = node_id + "_open";
         if (key in this.windows) {
             let oldw = this.windows[key];
-            if (oldw instanceof skadi.FrameDialogue) {
+            if (oldw instanceof skadi.IFrameDialogue) {
                 oldw.close();
             } else {
                 return;
@@ -3588,55 +3630,55 @@ skadi.Designer = class extends skadi.Core {
 
     open_about() {
         if (!this.about_dialogue) {
-           this.about_dialogue = new skadi.FrameDialogue("about0", this, "About", 100, 100, 600, 400, () => {
+           this.about_dialogue = new skadi.IFrameDialogue("about0", this, "About", 100, 100, 600, 400, () => {
                 this.about_dialogue = null;
             }, true, null, (elt) => {
                skadi.populate_about(this, elt);
-               }, null);
+               }, null, false);
            this.about_dialogue.open();
         }
     }
 
     open_save() {
         if (!this.save_dialogue) {
-           this.save_dialogue = new skadi.FrameDialogue("save0", this, "Save", 100, 100, 600, 300, () => {
+           this.save_dialogue = new skadi.IFrameDialogue("save0", this, "Save", 100, 100, 600, 300, () => {
                 this.save_dialogue = null;
             }, true, null, (elt) => {
                skadi.populate_save(this, elt);
-               }, null);
+               }, null, false);
            this.save_dialogue.open();
         }
     }
 
     open_load() {
         if (!this.load_dialogue) {
-           this.load_dialogue = new skadi.FrameDialogue("load0", this, "Load", 100, 100, 600, 300, () => {
+           this.load_dialogue = new skadi.IFrameDialogue("load0", this, "Load", 100, 100, 600, 300, () => {
                 this.load_dialogue = null;
             }, true, null, (elt) => {
                skadi.populate_load(this, elt, () => {
                         this.load_dialogue.close();
                     });
-               }, null);
+               }, null, false);
            this.load_dialogue.open();
         }
     }
 
     open_clear() {
         if (!this.clear_dialogue) {
-           this.clear_dialogue = new skadi.FrameDialogue("clear0", this, "Clear Design", 100, 100, 600, 400, () => {
+           this.clear_dialogue = new skadi.IFrameDialogue("clear0", this, "Clear Design", 100, 100, 600, 400, () => {
                 this.clear_dialogue = null;
             }, true, null, (elt) => {
                skadi.populate_clear(this, elt, () => {
                         this.clear_dialogue.close();
                     });
-               }, null);
+               }, null, false);
            this.clear_dialogue.open();
         }
     }
 
     open_edit_design_metadata() {
         if (!this.design_metadata_dialogue) {
-           this.design_metadata_dialogue = new skadi.FrameDialogue("design_meta0", this, "Design Metadata", 100, 100, 600, 600,
+           this.design_metadata_dialogue = new skadi.IFrameDialogue("design_meta0", this, "Design Metadata", 100, 100, 600, 600,
                 () => {
                     this.design_metadata_dialogue = null;
                 }, true, null,
@@ -3644,14 +3686,14 @@ skadi.Designer = class extends skadi.Core {
                     skadi.populate_design_metadata(this, elt, () => {
                         this.design_metadata_dialogue.close();
                });
-           }, null);
+           }, null, false);
            this.design_metadata_dialogue.open();
         }
     }
 
     open_configuration_dialogue() {
         if (!this.configuration_dialogue) {
-           this.configuration_dialogue = new skadi.FrameDialogue("configuration0", this, "Package Configurations", 100, 100, 600, 600,
+           this.configuration_dialogue = new skadi.IFrameDialogue("configuration0", this, "Package Configurations", 100, 100, 600, 600,
                 () => {
                     this.configuration_dialogue = null;
                 }, true, null,
@@ -3659,24 +3701,24 @@ skadi.Designer = class extends skadi.Core {
                     skadi.populate_configuration(this, elt, () => {
                         this.configuration_dialogue.close();
                });
-           }, null);
+           }, null, false);
            this.configuration_dialogue.open();
         }
     }
 
     /* configuration related */
 
-    open_configuration(package_id) {
+    open_configuration(package_id, page_id) {
         let configuration = this.network.configurations[package_id];
         let package_type = configuration.get_package_type();
-        let name = package_type.get_metadata().name;
-        let url = configuration.get_url();
+        let url = configuration.get_url(page_id);
         if (url) {
-            let id = package_id + "_config";
+            let id = package_id + "_config_"+page_id;
             if (!(id in this.windows)) {
-                let title = "Configuration: " + name;
-                let window_height = configuration.get_page().window_height || 400;
-                let window_width = configuration.get_page().window_width || 400;
+                let page = configuration.get_page(page_id);
+                let title = page.title;
+                let window_height = page.window_height || 400;
+                let window_width = page.window_width || 400;
                 let resolved_url = package_type.get_resource_url(url);
                 let open_callback = (elt) => {
                     let iframe = document.createElement("iframe");
@@ -3684,7 +3726,7 @@ skadi.Designer = class extends skadi.Core {
                     iframe.setAttribute("width", "" + window_width - 20);
                     iframe.setAttribute("height", "" + window_height - 20);
                     iframe.addEventListener("load", (evt) => {
-                        configuration.open(iframe, window_width, window_width);
+                        configuration.open(iframe, page_id);
                     });
                     elt.appendChild(iframe);
                 }
@@ -3725,6 +3767,7 @@ skadi.Designer = class extends skadi.Core {
         this.add_node(node, suppress_event);
 
         node.set_display_tooltips(false);
+        this.autosave();
         return id;
     }
 
@@ -3755,6 +3798,7 @@ skadi.Designer = class extends skadi.Core {
         if (!suppress_event) {
             this.fire_node_event("update_position", node);
         }
+        this.autosave();
     }
 
     /* link/port related */
@@ -3764,6 +3808,7 @@ skadi.Designer = class extends skadi.Core {
         let link_type = this.schema.get_link_type(link_type_id);
         let link = new skadi.Link(this, id, fromPort, link_type, toPort);
         this.add_link(link, link_id != undefined);
+        this.autosave();
         return id;
     }
 
@@ -3773,6 +3818,7 @@ skadi.Designer = class extends skadi.Core {
         if (!suppress_event) {
             this.fire_link_event("add", link);
         }
+        this.autosave();
     }
 
     find_port(x, y, link_type_id) {
@@ -3836,13 +3882,17 @@ skadi.Designer = class extends skadi.Core {
 
         }
         super.remove(id, suppress_event);
+        this.autosave();
     }
 
     /* load/save */
 
-    deserialise(from_obj, suppress_events) {
+    deserialise(from_obj, suppress_events, autosave_id) {
         if (this.graph_executor) {
             this.graph_executor.pause();
+        }
+        if (autosave_id) {
+            this.set_autosave_id(autosave_id);
         }
         for (let node_id in from_obj.nodes) {
             let node = skadi.Node.deserialise(this, node_id, from_obj.nodes[node_id]);
@@ -3879,7 +3929,6 @@ skadi.Node = class extends skadi.CoreNode {
   constructor(design, node_type, id, x, y, active, metadata, properties) {
     super(design, node_type, id, x, y, metadata, properties);
     this.design = design;
-
 
     this.r = 45; // radius of node
 
@@ -3962,46 +4011,54 @@ skadi.Node = class extends skadi.CoreNode {
 
     super.create_instance();
 
-    let window_height = this.node_type.get_page().window_height || 400;
-    let window_width = this.node_type.get_page().window_width || 400;
-    // make sure that when the node's window is opened, closed or resized, the instance will receive the events
-
-    this.register_command_window("open", "{{node.menu.open}}",
-      (elt) => {
-          let html_url = this.node_type.get_html_url();
-          this.iframe = document.createElement("iframe");
-          this.iframe.setAttribute("src",html_url);
-          this.iframe.addEventListener("load", (evt) => {
-            this.wrapper.open(this.iframe.contentWindow);
-          });
-          elt.appendChild(this.iframe);
-      },
-      () => {
-          this.wrapper.close();
-      }, window_width, window_height,
-      (w,h) => {
-          this.iframe.setAttribute("width",""+w-10);
-          this.iframe.setAttribute("height",""+h-10);
-      });
-
-    this.register_command_window_tab("open_in_tab", "{{node.menu.opentab}}",this.node_type.get_html_url(),
-      (w) => {
-        if (w) {
-          let window_width = w.innerWidth;
-          let window_height = w.innerHeight;
-          this.wrapper.open(w, window_width, window_height);
-        }
-      },
-      () => {
-          this.wrapper.close();
-      });
+    this.node_type.get_page_ids().forEach(page_id => {
+        this.register_page_menu_entries(page_id);
+    });
 
     this.register_command_window("adjust","{{node.menu.adjust}}", (root_elt) => {
         this.open_adjust_editor(root_elt);
       }, null, 700, 500);
-      
 
     return true;
+  }
+
+  register_page_menu_entries(page_id) {
+    let page = this.node_type.get_page(page_id);
+    let window_height = page.window_height || 400;
+    let window_width = page.window_width || 400;
+    let menu_label = page.menu_label || "Open...";
+    let menu_tab_label = page.menu_tab_label || "Open...";
+    let html_url = this.node_type.get_html_url(page_id);
+    // make sure that when the node's window is opened, closed or resized, the instance will receive the events
+
+    let iframe = document.createElement("iframe");
+    this.register_command_window(page_id, menu_label,
+        (elt) => {
+          iframe.setAttribute("src", html_url);
+          iframe.addEventListener("load", (evt) => {
+            this.wrapper.open(iframe.contentWindow, page_id);
+          });
+          elt.appendChild(iframe);
+        },
+        () => {
+          this.wrapper.close(page_id);
+        }, window_width, window_height,
+        (w, h) => {
+          iframe.setAttribute("width", "" + w - 10);
+          iframe.setAttribute("height", "" + h - 10);
+        });
+
+    if (menu_tab_label) {
+      this.register_command_window_tab(page_id, menu_tab_label, html_url,
+          (w) => {
+            if (w) {
+              this.wrapper.open(w, page_id);
+            }
+          },
+          () => {
+            this.wrapper.close(page_id);
+          });
+    }
   }
 
   get_wrapper() {
@@ -5111,11 +5168,9 @@ skadi.Configuration = class extends skadi.CoreConfiguration {
       super(design, package_type, properties);
   }
 
-  open(iframe, w, h) {
+  open(iframe,page_id) {
       this.iframe = iframe;
-      this.iframe.setAttribute("width",""+w-20);
-      this.iframe.setAttribute("height",""+h-20);
-      this.wrapper.open(iframe.contentWindow);
+      this.wrapper.open(iframe.contentWindow,page_id);
   }
 
   resize(w,h) {
@@ -5127,7 +5182,7 @@ skadi.Configuration = class extends skadi.CoreConfiguration {
 
   close() {
       this.iframe = null;
-      this.wrapper.close();
+      this.wrapper.close("default");
   }
 }
 
@@ -5221,22 +5276,6 @@ skadi.NodeService = class {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    page_add_event_handler(element_id, event_type, callback, event_transform) {
-        this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
-    }
-
-    page_set_attributes(element_id, attributes) {
-        this.wrapper.set_attributes(element_id, attributes);
-    }
-
-    page_send_message(message) {
-        this.wrapper.send_message(message);
-    }
-
-    page_set_message_handler(handler) {
-        this.wrapper.set_message_handler(handler);
-    }
-
     get_node_id() {
         return this.node_id;
     }
@@ -5268,6 +5307,52 @@ skadi.NodeService = class {
         return "data:"+mime_type+";base64," + btoa(data);
     }
 
+    get_data(key) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/node/"+this.node_id, is_temporary);
+        let fileinfo = folder.get_file_info(key);
+        if (fileinfo) {
+            let path = fileinfo.path;
+            let metadata = fileinfo.metadata;
+            let mode = metadata.type === "binary" ? "rb" : "b";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            return fl.read();
+        } else {
+            return null;
+        }
+    }
+
+    set_data(key, data) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/node/"+this.node_id, is_temporary);
+        if (data !== null && data !== undefined) {
+            let type = "";
+            if (data instanceof ArrayBuffer) {
+                type = "binary";
+            } else if (data instanceof String) {
+                type = "string";
+            } else {
+                throw new Error("data must be either String or ArrayBuffer")
+            }
+            let path = folder.add_file(key, {"type":type});
+            let mode = type === "binary" ? "wb": "w";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            fl.write(data);
+        } else {
+            folder.remove_file(key);
+        }
+    }
+
     get_configuration() {
         return this.core.get_configuration(this.node_type.get_package_type().get_id()).get_instance();
     }
@@ -5277,6 +5362,111 @@ skadi.NodeService = class {
     }
 }
 
+
+/* skadi/js/services/page_service.js */
+
+var skadi = skadi || {};
+
+skadi.PageService = class {
+
+    constructor(wrapper, target_window, l10n_utils) {
+        this.wrapper = wrapper;
+        this.event_handlers = [];
+        this.page_message_handler = null;
+        this.pending_page_messages = [];
+        this.target_window = target_window;
+        this.l10n_utils = l10n_utils;
+        window.addEventListener("message", (event) => {
+            if (event.source === this.target_window) {
+                this.recv_from_window(event.data);
+            }
+        });
+    }
+
+    add_event_handler(element_id, event_type, callback, target_attribute) {
+        this.event_handlers.push([element_id, event_type, callback, target_attribute]);
+        let msg = {
+            "type": "page_add_event_handler",
+            "element_id": element_id,
+            "event_type": event_type,
+            "target_attribute": target_attribute || "value"
+        };
+        this.send_to_window([msg,null]);
+    }
+
+    handle_event(element_id, event_type, value) {
+        for(let idx=0; idx<this.event_handlers.length; idx++) {
+            let handler_spec = this.event_handlers[idx];
+            if (element_id === handler_spec[0] && event_type === handler_spec[1]) {
+                handler_spec[2](value);
+            }
+        }
+    }
+
+    set_attributes(element_id, attributes) {
+        let msg = {
+            "type": "page_set_attributes",
+            "element_id": element_id
+        }
+        if (this.l10n_utils) {
+            msg.attributes = {};
+            for (let attribute_name in attributes) {
+                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
+            }
+        } else {
+            msg.attributes = attributes;
+        }
+
+        this.send_to_window([msg,null]);
+    }
+
+    send_message(...message_parts) {
+        this.send_to_window([{"type":"page_message"},message_parts]);
+    }
+
+    set_message_handler(handler) {
+        this.page_message_handler = handler;
+        if (this.pending_page_messages.length > 0) {
+            this.pending_page_messages.forEach((m) => this.page_message_handler(...m));
+            this.pending_page_messages = [];
+        }
+    }
+
+    send_to_window(msg) {
+        if (this.target_window) {
+            this.target_window.postMessage(msg,window.location.origin);
+        }
+    }
+
+    recv_from_window(msg) {
+
+        let header = msg[0];
+
+        let type = header.type;
+
+        switch (type) {
+            case "page_message":
+                let message_parts = msg[1];
+                if (this.page_message_handler) {
+                    this.page_message_handler(...message_parts);
+                } else {
+                    this.pending_page_messages.push(message_parts);
+                }
+                break;
+            case "event":
+                this.handle_event(header["element_id"], header["event_type"], header["value"]);
+                break;
+            default:
+                console.error("Unknown message type received from page: " + msg.type);
+        }
+    }
+
+    close() {
+        this.page_message_handler = null;
+        this.event_handlers = [];
+        this.pending_messages = [];
+    }
+}
 
 /* skadi/js/services/wrapper.js */
 
@@ -5289,10 +5479,7 @@ skadi.Wrapper = class {
         this.services = services;
         this.l10n_utils = l10n_utils;
         this.instance = null;
-        this.window = null;
-        this.event_handlers = [];
-        this.message_handler = null;
-        this.pending_messages = [];
+        this.page_services = {};
     }
 
     set_instance(instance) {
@@ -5312,125 +5499,30 @@ skadi.Wrapper = class {
 
     set_property(property_name, property_value) {
         this.target.properties[property_name] = property_value;
+        this.target.core.autosave();
     }
 
-    set_message_handler(handler) {
-        this.message_handler = handler;
-        if (this.pending_messages.length > 0) {
-            this.pending_messages.forEach((m) => this.message_handler(m));
-            this.pending_messages = [];
-        }
-    }
-
-    add_event_handler(element_id, event_type, callback, event_transform) {
-       this.event_handlers.push([element_id, event_type, callback, event_transform]);
-       this.send_add_event_handler(element_id,event_type,event_transform);
-    }
-
-    send_add_event_handler(element_id, event_type, event_transform) {
-        let msg = {
-            "type": "add_event_handler",
-            "element_id": element_id,
-            "event_type": event_type,
-            "event_transform": event_transform
-        };
-        this.send_to_window(msg);
-    }
-
-    handle_event(element_id, event_type, value) {
-        for(let idx=0; idx<this.event_handlers.length; idx++) {
-            let handler_spec = this.event_handlers[idx];
-            if (element_id === handler_spec[0] && event_type === handler_spec[1]) {
-                handler_spec[2](value);
-            }
-        }
-    }
-
-    set_attributes(element_id, attributes) {
-        this.send_set_attributes(element_id, attributes);
-    }
-
-    send_set_attributes(element_id, attributes) {
-        let msg = {
-            "type": "set_attributes",
-            "element_id": element_id
-        }
-        if (this.l10n_utils) {
-            msg.attributes = {};
-            for (let attribute_name in attributes) {
-                msg.attributes[attribute_name] = this.l10n_utils.localise(attributes[attribute_name]);
-            }
-        } else {
-            msg.attributes = attributes;
-        }
-
-        this.send_to_window(msg);
-    }
-
-    send_message(content) {
-        let msg = {
-            "type": "message",
-            "content": content
-        }
-        this.send_to_window(msg);
-    }
-
-    handle_message(content) {
-        if (this.message_handler) {
-            this.message_handler(content);
-        } else {
-            this.pending_messages.push(content);
-        }
-    }
-
-    send_to_window(msg) {
-        if (this.window) {
-            this.window.postMessage(msg,window.location.origin);
-        }
-    }
-
-    recv_from_window(msg) {
-        switch(msg.type) {
-            case "event":
-                this.handle_event(msg["element_id"],msg["event_type"],msg["value"]);
-                break;
-            case "message":
-                this.handle_message(msg["content"]);
-                break;
-        }
-    }
-
-    open(w) {
-        this.window = w;
-        this.pending_messages = [];
-        this.message_handler = null;
-        this.event_handlers = [];
-        window.addEventListener("message", (event) => {
-            if (event.source == this.window) {
-                this.recv_from_window(event.data);
-            }
-        });
+    open(window, page_id) {
+        this.page_services[page_id] = new skadi.PageService(this,window,this.l10n_utils);
         if (this.instance.page_open) {
             try {
-                this.instance.page_open();
+                this.instance.page_open(page_id, this.page_services[page_id]);
             } catch(e) {
                 console.error(e);
             }
         }
     }
 
-    close() {
-        this.window = null;
+    close(page_id) {
         if (this.instance.page_close) {
             try {
-                this.instance.page_close();
+                this.instance.page_close(page_id, this.page_services[page_id]);
             } catch(e) {
                 console.error(e);
             }
         }
-        this.message_handler = null;
-        this.event_handlers = [];
-        this.pending_messages = [];
+        this.page_services[page_id].close();
+        delete this.page_services[page_id];
     }
 
     remove() {
@@ -5470,22 +5562,6 @@ skadi.ConfigurationService = class {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    page_add_event_handler(element_id, event_type, callback, event_transform) {
-        this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
-    }
-
-    page_set_attributes(element_id, attributes) {
-        this.wrapper.set_attributes(element_id, attributes);
-    }
-
-    page_send_message(message) {
-        this.wrapper.send_message(message);
-    }
-
-    page_set_message_handler(handler) {
-        this.wrapper.set_message_handler(handler);
-    }
-
     get_package_id() {
         return this.package_id;
     }
@@ -5516,6 +5592,53 @@ skadi.ConfigurationService = class {
     create_data_uri(data, mime_type) {
         return "data:"+mime_type+";base64," + btoa(data);
     }
+
+    get_data(key) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/package/"+this.package_id, is_temporary);
+        let fileinfo = folder.get_file_info(key);
+        if (fileinfo) {
+            let path = fileinfo.path;
+            let metadata = fileinfo.metadata;
+            let mode = metadata.type === "binary" ? "rb" : "b";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            return fl.read();
+        } else {
+            return null;
+        }
+    }
+
+    set_data(key, data) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/package/"+this.package_id, is_temporary);
+
+        if (data !== null && data !== undefined) {
+            let type = "";
+            if (data instanceof ArrayBuffer) {
+                type = "binary";
+            } else if (data instanceof String) {
+                type = "string";
+            } else {
+                throw new Error("data must be either String or ArrayBuffer")
+            }
+            let path = folder.add_file(key, {"type":type});
+            let mode = type === "string" ? "w": "wb";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            fl.write(data);
+        } else {
+            folder.remove_file(key);
+        }
+    }
 }
 
 
@@ -5535,8 +5658,12 @@ skadi.NodeType = class {
     let display = schema["display"] || { "corners": 4, "icon": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
-    this.page = schema["page"] || {};
-    this.html_url = this.page.url ? this.package_type.get_resource_url(this.page.url) : "";
+    this.pages = schema["pages"] || {};
+    this.html_urls = {};
+    for(let page_id in this.pages) {
+      let page_url = this.pages[page_id].url;
+      this.html_urls[page_id] = page_url ? this.package_type.get_resource_url(page_url) : "";
+    }
 
     this.classname = schema["classname"] || {};
 
@@ -5570,16 +5697,24 @@ skadi.NodeType = class {
     return this.package_type.localise(this.metadata.description);
   }
 
-  get_html_url() {
-    return this.package_type.localise_url(this.html_url);
+  get_html_url(page_id) {
+    return this.package_type.localise_url(this.html_urls[page_id]);
   }
 
   get_schema() {
     return this.schema;
   }
 
-  get_page() {
-    return this.page;
+  get_page_ids() {
+    let page_ids = [];
+    for(let page_id in this.pages) {
+       page_ids.push(page_id);
+    }
+    return page_ids;
+  }
+
+  get_page(page_id) {
+    return this.pages[page_id];
   }
 
   get_classname() {
@@ -6017,9 +6152,9 @@ skadi.Api = class {
         return new skadi.CoreConfiguration(this.instance,package_type,{});
     }
 
-    load(from_obj, supress_events) {
+    load(from_obj, supress_events, autosave_id) {
         this.instance.clear(supress_events);
-        this.instance.deserialise(from_obj ,supress_events);
+        this.instance.deserialise(from_obj ,supress_events, autosave_id);
     }
 
     get_schema() {
@@ -6056,8 +6191,8 @@ skadi.Api = class {
 
     async handle_load_topology_from() {
         let url_params = new URLSearchParams(window.location.search);
-        // check for a topology to load
-        let topology_url = url_params.get("load_topology_from");
+        // check for a topology to load from URL first
+        let topology_url = url_params.get("topology_url");
         if (topology_url) {
             let topology_origin = new URL(topology_url,window.location).origin;
             if (topology_origin != window.location.origin) {
@@ -6068,9 +6203,26 @@ skadi.Api = class {
                         let obj = JSON.parse(txt);
                         this.load(obj);
                     } catch (ex) {
-                        console.error("load_topology_from failed:" + ex);
+                        console.error("load from topology_url failed:" + ex);
                     }
                 });
+            }
+        } else {
+            // load from local storage perhaps...
+            let topology_name = url_params.get("topology");
+
+            if (topology_name) {
+                let f = new skadi.FileLike("/skadi/storage/"+topology_name+"/topology.json","r",false);
+                let contents = f.read();
+                if (contents) {
+                    try {
+                        let obj = JSON.parse(contents);
+                        this.load(obj,false,topology_name);
+                    } catch (ex) {
+                        console.error("load from topology failed:" + ex);
+                    }
+                }
+                this.instance.set_autosave_id(topology_name);
             }
         }
     }
@@ -6124,7 +6276,7 @@ skadi.DesignerApi = class extends skadi.Api {
         node_factory, configuration_factory, executor) {
         topology_store = topology_store || new skadi.TopologyStore(this);
         this.design = new skadi.Designer(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-            node_factory, configuration_factory);
+            node_factory, configuration_factory, true);
         this.set_instance(this.design);
         super.init();
         if (executor) {
@@ -6234,7 +6386,7 @@ skadi.launch_designer = function(container_id, title_id, heading_id, options) {
                 document.getElementById(heading_id).appendChild(document.createTextNode(load_obj.title));
             }
             let schema_urls = load_obj.schemas.map(schema_url => String(new URL(schema_url,new URL(load_url,window.location))));
-            return skadi.start_designer(container_id, options, schema_urls, new skadi.GraphExecutor())
+            return skadi.start_designer(container_id, options, schema_urls, new skadi.GraphExecutor());
         }).then(skadi => {
             let splash = document.getElementById("splash_screen");
             if (splash) {
@@ -6304,7 +6456,7 @@ skadi.L10NUtils = class {
         if (this.metadata === null) {
             this.metadata = await fetch(this.l10n_folder_url+"/index.json").then(r => r.json(), e => null);
         }
-        let language = window.localStorage.getItem("skadi.settings.l10n."+this.id+".language") || this.metadata.default_language;
+        let language = window.localStorage.getItem("/skadi/settings/l10n."+this.id+".language") || this.metadata.default_language;
         await this.set_language(language); 
     }
 
@@ -6317,7 +6469,7 @@ skadi.L10NUtils = class {
             let bundle_url = this.l10n_folder_url+"/"+this.metadata.languages[language].bundle_url;    
             this.bundle = await fetch(bundle_url).then(r => r.json());
         }
-        window.localStorage.setItem("skadi.settings.l10n."+this.id+".language", language);
+        window.localStorage.setItem("/skadi/settings/l10n."+this.id+".language", language);
         this.language = language;
         this.language_update_listeners.forEach((callback) => callback(language));
     }
@@ -6887,4 +7039,182 @@ skadi.ExpressionParser = class {
 
 }
 
+
+/* skadi/js/utils/directory_like.js */
+var skadi = skadi || {};
+
+skadi.DirectoryLike = class {
+
+    constructor(path,is_temporary) {
+        this.key = path;
+        this.is_temporary = is_temporary;
+        this.storage = is_temporary ? sessionStorage : localStorage;
+        this.files = {};
+        this.directories = [];
+        let item = this.storage.getItem(this.key);
+        if (item != null) {
+            let o = JSON.parse(item);
+            this.files = o.files || {};
+            this.directories = o.directories || {};
+        }
+    }
+
+    get_files() {
+        return this.files.keys();
+    }
+
+    get_directories() {
+        return this.directories.keys();
+    }
+
+    add_file(name, metadata) {
+        this.files[name] = metadata;
+        this.update();
+        return this.key + "/" + name;
+    }
+
+    get_file_info(name) {
+        if (name in this.files) {
+            return {
+                "path": this.key + "/" + name,
+                "metadata": this.files[name]
+            };
+        } else {
+            return null;
+        }
+    }
+
+    remove_file(name) {
+        if (name in this.files) {
+            delete this.files[name];
+            this.update();
+        }
+
+        this.storage.removeItem(this.key + "/" + name);
+    }
+
+    add_directory(name, metadata) {
+        this.directories[name] = metadata;
+        this.update();
+        return this.key + "/" + name;
+    }
+
+    get_directory_info(name) {
+        if (name in this.directories) {
+            return {
+                "path": this.key + "/" + name,
+                "metadata": this.directories[name]
+            };
+        } else {
+            return null;
+        }
+    }
+
+    remove_directory(name) {
+        if (name in this.directories) {
+            delete this.directories[name];
+            this.update();
+        }
+
+        let dl = new skadi.DirectoryLike(this.key + "/" + name, this.is_temporary);
+        dl.remove();
+    }
+
+    update() {
+        this.storage.setItem(this.key,JSON.stringify({"files":this.files,"directories":this.directories}));
+    }
+
+    clear() {
+        for(let filename in this.files) {
+            this.storage.removeItem(this.key + "/" + filename);
+        }
+
+        for(let dirname in this.directories) {
+            this.storage.removeItem(this.key + "/" + dirname);
+        }
+
+        this.files = {};
+        this.directories = {};
+        this.update();
+    }
+
+    remove() {
+        this.clear();
+        this.storage.removeItem(this.key);
+    }
+
+}
+
+/* skadi/js/utils/file_like.js */
+var skadi = skadi || {};
+
+skadi.FileLike = class {
+
+    constructor(path,mode,is_temporary) {
+        this.key = path;
+        this.storage = is_temporary ? sessionStorage : localStorage;
+        this.content = undefined;
+        switch(mode) {
+            case "w":
+                this.text = true;
+                this.writable = true;
+                break;
+            case "wb":
+                this.text = true;
+                this.writable = true;
+                break;
+            case "r":
+                this.text = true;
+                this.writable = false;
+                break;
+            case "rb":
+                this.text = false;
+                this.writable = false;
+                break;
+        }
+    }
+
+    read() {
+        if (this.content === undefined) {
+            this.load();
+        }
+        return this.content;
+    }
+
+    write(data) {
+        // data should be ArrayBuffer or string
+        if (!this.writable) {
+            throw new Error("Cannot write to read only file");
+        } else {
+            this.content = data;
+        }
+        this.save();
+    }
+
+    load() {
+        let item = this.storage.getItem(this.key);
+        if (item === null) {
+            this.content = this.text ? "" : new ArrayBuffer(0);
+        } else {
+            if (this.text) {
+                this.content = item;
+            } else {
+                this.content = Uint8Array.from(item, (m) => m.codePointAt(0)).buffer;
+            }
+        }
+    }
+
+    save() {
+       let item = this.content;
+        if (!this.text) {
+            item = btoa(String.fromCodePoint(...this.content));
+        }
+        this.storage.setItem(this.key,item);
+    }
+
+    remove() {
+        this.storage.removeItem(this.key);
+    }
+
+}
 

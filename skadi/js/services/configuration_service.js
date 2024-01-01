@@ -29,22 +29,6 @@ skadi.ConfigurationService = class {
         this.wrapper.set_property(property_name, property_value);
     }
 
-    page_add_event_handler(element_id, event_type, callback, event_transform) {
-        this.wrapper.add_event_handler(element_id, event_type, callback, event_transform);
-    }
-
-    page_set_attributes(element_id, attributes) {
-        this.wrapper.set_attributes(element_id, attributes);
-    }
-
-    page_send_message(message) {
-        this.wrapper.send_message(message);
-    }
-
-    page_set_message_handler(handler) {
-        this.wrapper.set_message_handler(handler);
-    }
-
     get_package_id() {
         return this.package_id;
     }
@@ -74,5 +58,52 @@ skadi.ConfigurationService = class {
 
     create_data_uri(data, mime_type) {
         return "data:"+mime_type+";base64," + btoa(data);
+    }
+
+    get_data(key) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/package/"+this.package_id, is_temporary);
+        let fileinfo = folder.get_file_info(key);
+        if (fileinfo) {
+            let path = fileinfo.path;
+            let metadata = fileinfo.metadata;
+            let mode = metadata.type === "binary" ? "rb" : "b";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            return fl.read();
+        } else {
+            return null;
+        }
+    }
+
+    set_data(key, data) {
+        let save_id = this.core.get_autosave_id();
+        let is_temporary = false;
+        if (!save_id) {
+            save_id = this.core.get_id();
+            is_temporary = true;
+        }
+        let folder = new skadi.DirectoryLike("/skadi/storage/"+save_id+"/package/"+this.package_id, is_temporary);
+
+        if (data !== null && data !== undefined) {
+            let type = "";
+            if (data instanceof ArrayBuffer) {
+                type = "binary";
+            } else if (data instanceof String) {
+                type = "string";
+            } else {
+                throw new Error("data must be either String or ArrayBuffer")
+            }
+            let path = folder.add_file(key, {"type":type});
+            let mode = type === "string" ? "w": "wb";
+            let fl = new skadi.FileLike(path, mode, is_temporary);
+            fl.write(data);
+        } else {
+            folder.remove_file(key);
+        }
     }
 }

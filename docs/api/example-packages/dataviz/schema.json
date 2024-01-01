@@ -12,8 +12,12 @@
     "executor": "javascript",
     "configuration": {
         "classname": "DataVizExample.Configuration",
-        "page": {
-            "url": "configuration.html"
+        "pages": {
+            "default": {
+                "button_label": "Configure...",
+                "title": "DataViz Configuration",
+                "url": "configuration.html"
+            }
         }
     },
     "dependencies": [ "https://cdn.jsdelivr.net/npm/arquero@latest", "configuration.js","nodes/aq_utils.js", "nodes/chart.js" ],
@@ -32,10 +36,15 @@
                 "corners": 7,
                 "icon": "icons/csv_import.svg"
             },
-            "page": {
-                "url": "nodes/csv_import.html",
-                "window_width": 500,
-                "window_height": 300
+            "pages": {
+                "default": {
+                    "menu_label":"Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "CSV Import",
+                    "url": "nodes/csv_import.html",
+                    "window_width": 500,
+                    "window_height": 300
+                }
             },
             "classname": "DataVizExample.CsvImportNode",
             "dependencies": ["nodes/csv_import.js"]
@@ -59,10 +68,15 @@
                 "corners": 7,
                 "icon": "icons/data_retyper.svg"
             },
-            "page": {
-                "url": "nodes/data_retyper.html",
-                "window_width": 800,
-                "window_height": 600
+            "pages": {
+                "default": {
+                    "menu_label":"Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Retype Columns",
+                    "url": "nodes/data_retyper.html",
+                    "window_width": 800,
+                    "window_height": 600
+                }
             },
             "classname": "DataVizExample.DataRetyperNode",
             "dependencies": ["nodes/data_retyper.js"]
@@ -87,10 +101,15 @@
                 "corners": 7,
                 "icon": "icons/filter_random.svg"
             },
-            "page": {
-                "url": "nodes/sample_rows.html",
-                "window_width": 500,
-                "window_height": 300
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Sample Rows",
+                    "url": "nodes/sample_rows.html",
+                    "window_width": 500,
+                    "window_height": 300
+                }
             },
             "classname": "DataVizExample.SampleRowsNode",
             "dependencies": ["nodes/sample_rows.js"]
@@ -115,10 +134,15 @@
                 "corners": 7,
                 "icon": "icons/select_rows.svg"
             },
-            "page": {
-                "url": "nodes/select_rows.html",
-                "window_width": 600,
-                "window_height": 600
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Select Rows",
+                    "url": "nodes/select_rows.html",
+                    "window_width": 600,
+                    "window_height": 600
+                }
             },
             "classname": "DataVizExample.SelectRowsNode",
             "dependencies": ["nodes/select_rows.js"]
@@ -147,10 +171,15 @@
                 "corners": 7,
                 "icon": "icons/join_rows.svg"
             },
-            "page": {
-                "url": "nodes/join_rows.html",
-                "window_width": 600,
-                "window_height": 600
+             "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Join Rows",
+                    "url": "nodes/join_rows.html",
+                    "window_width": 600,
+                    "window_height": 600
+                }
             },
             "classname": "DataVizExample.JoinRowsNode",
             "dependencies": ["nodes/join_rows.js"]
@@ -175,10 +204,15 @@
                 "corners": 7,
                 "icon": "icons/select_columns.svg"
             },
-            "page": {
-                "url": "nodes/select_columns.html",
-                "window_width": 600,
-                "window_height": 600
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Select Columns",
+                    "url": "nodes/select_columns.html",
+                    "window_width": 600,
+                    "window_height": 600
+                }
             },
             "classname": "DataVizExample.SelectColumnsNode",
             "dependencies": ["nodes/select_columns.js"]
@@ -203,8 +237,13 @@
                 "corners": 7,
                 "icon": "icons/create_column.svg"
             },
-            "page": {
-                "url": "nodes/create_column.html"
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Create Column",
+                    "url": "nodes/create_column.html"
+                }
             },
             "classname": "DataVizExample.CreateColumnNode",
             "dependencies": ["nodes/create_column.js"]
@@ -224,10 +263,15 @@
                 "corners": 7,
                 "icon": "icons/table.svg"
             },
-            "page": {
-                "url": "nodes/table_display.html",
-                "window_width": 800,
-                "window_height": 600
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Table",
+                    "url": "nodes/table_display.html",
+                    "window_width": 800,
+                    "window_height": 600
+                }
             },
             "classname": "DataVizExample.TableDisplayNode",
             "dependencies": ["nodes/table_display.js"]
@@ -247,10 +291,15 @@
                 "corners": 5,
                 "icon": "icons/scatter.svg"
             },
-            "page": {
-                "window_width": 800,
-                "window_height": 600,
-                "url": "nodes/scatter_plot.html"
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Scatter Plot",
+                    "window_width": 800,
+                    "window_height": 600,
+                    "url": "nodes/scatter_plot.html"
+                }
             },
             "classname": "DataVizExample.ScatterPlotNode",
             "dependencies": ["nodes/scatter_plot.js"]
@@ -270,10 +319,15 @@
                 "corners": 5,
                 "icon": "icons/bar.svg"
             },
-            "page": {
-                "window_width": 800,
-                "window_height": 600,
-                "url": "nodes/bar_chart.html"
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Bar Chart",
+                    "window_width": 800,
+                    "window_height": 600,
+                    "url": "nodes/bar_chart.html"
+                }
             },
             "classname": "DataVizExample.BarChartNode",
             "dependencies": ["nodes/bar_chart.js"]
@@ -293,10 +347,15 @@
                 "corners": 5,
                 "icon": "icons/line.svg"
             },
-            "page": {
-                "window_width": 800,
-                "window_height": 600,
-                "url": "nodes/timeseries_plot.html"
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Time Series",
+                    "window_width": 800,
+                    "window_height": 600,
+                    "url": "nodes/timeseries_plot.html"
+                }
             },
             "classname": "DataVizExample.TimeSeriesPlotNode",
             "dependencies": ["nodes/timeseries_plot.js"]
@@ -316,10 +375,15 @@
                 "corners": 5,
                 "icon": "icons/2d_histogram.svg"
             },
-            "page": {
-               "window_width": 800,
-                "window_height": 800,
-                "url": "nodes/2d_histogram_plot.html"
+             "pages": {
+                "default": {
+                    "menu_label":"Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "2D Histogram",
+                    "window_width": 800,
+                    "window_height": 800,
+                    "url": "nodes/2d_histogram_plot.html"
+                }
             },
             "classname": "DataVizExample.Histogram2DPlotNode",
             "dependencies": ["nodes/2d_histogram_plot.js"]
@@ -339,11 +403,16 @@
                 "corners": 5,
                 "icon": "icons/histogram.svg"
             },
-            "page": {
-                "window_width": 800,
-                "window_height": 800,
-                "url": "nodes/histogram_plot.html"
-            },
+            "pages": {
+                "default": {
+                    "menu_label": "Open...",
+                    "menu_tab_label":"Open in new tab...",
+                    "title": "Histogram",
+                    "window_width": 800,
+                    "window_height": 800,
+                    "url": "nodes/histogram_plot.html"
+                }
+             },
             "classname": "DataVizExample.HistogramPlotNode",
             "dependencies": ["nodes/histogram_plot.js"]
         }

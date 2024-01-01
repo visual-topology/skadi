@@ -12,7 +12,7 @@ DataVizExample.TableDisplayNode = class {
     constructor(node_service) {
         this.node_service = node_service;
         this.dataset = null;
-        this.is_open = false;
+        this.page_service = null;
         this.refresh();
     }
 
@@ -43,24 +43,24 @@ DataVizExample.TableDisplayNode = class {
     refresh() {
         if (this.dataset) {
             this.node_service.set_status_info(""+this.dataset.numRows()+" Rows");
-            if (this.is_open) {
-                this.node_service.page_send_message(this.export_table());
+            if (this.page_service) {
+                this.page_service.send_message(this.export_table());
             }
         } else {
-            if (this.is_open) {
-                this.node_service.page_send_message({});
+            if (this.page_service) {
+                this.page_service.send_message({});
             }
             this.node_service.set_status_warning("Waiting for input data");
         }
     }
 
-    page_open() {
-        this.is_open = true;
+    page_open(page_id, page_service) {
+        this.page_service = page_service;
         this.refresh();
     }
 
-    page_close() {
-        this.is_open = false;
+    page_close(page_id, page_service) {
+        this.page_service = null;
     }
 
     reset_execution() {

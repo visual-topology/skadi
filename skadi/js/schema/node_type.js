@@ -19,8 +19,12 @@ skadi.NodeType = class {
     let display = schema["display"] || { "corners": 4, "icon": "" };
     let input_ports = schema["input_ports"] || {};
     let output_ports = schema["output_ports"] || {};
-    this.page = schema["page"] || {};
-    this.html_url = this.page.url ? this.package_type.get_resource_url(this.page.url) : "";
+    this.pages = schema["pages"] || {};
+    this.html_urls = {};
+    for(let page_id in this.pages) {
+      let page_url = this.pages[page_id].url;
+      this.html_urls[page_id] = page_url ? this.package_type.get_resource_url(page_url) : "";
+    }
 
     this.classname = schema["classname"] || {};
 
@@ -54,16 +58,24 @@ skadi.NodeType = class {
     return this.package_type.localise(this.metadata.description);
   }
 
-  get_html_url() {
-    return this.package_type.localise_url(this.html_url);
+  get_html_url(page_id) {
+    return this.package_type.localise_url(this.html_urls[page_id]);
   }
 
   get_schema() {
     return this.schema;
   }
 
-  get_page() {
-    return this.page;
+  get_page_ids() {
+    let page_ids = [];
+    for(let page_id in this.pages) {
+       page_ids.push(page_id);
+    }
+    return page_ids;
+  }
+
+  get_page(page_id) {
+    return this.pages[page_id];
   }
 
   get_classname() {

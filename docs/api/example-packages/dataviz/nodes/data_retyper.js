@@ -14,7 +14,7 @@ DataVizExample.DataRetyperNode = class {
         this.input_column_types = {};
         this.input_dataset = null;
         this.output_dataset = null;
-        this.is_open = false;
+        this.page_service = null;
         this.refresh();
     }
 
@@ -36,11 +36,11 @@ DataVizExample.DataRetyperNode = class {
     }
 
     create_conversion(name, original_type, new_type) {
-        if (new_type == "number") {
+        if (new_type === "number") {
             return this.create_conversion_to_number(name, original_type);
-        } else if (new_type == "string") {
+        } else if (new_type === "string") {
             return this.create_conversion_to_string(name, original_type);
-        } else if (new_type == "date") {
+        } else if (new_type === "date") {
             return this.create_conversion_to_date(name, original_type);
         } else {
             return 'd => d["' + name + '"]';
@@ -65,7 +65,7 @@ DataVizExample.DataRetyperNode = class {
         for(let name in custom_types) {
             let original_type = this.input_column_types[name];
             let new_type = custom_types[name];
-            if (original_type != new_type) {
+            if (original_type !== new_type) {
                 derives[name] = this.create_conversion(name, original_type, new_type);
             }
         }
@@ -94,7 +94,6 @@ DataVizExample.DataRetyperNode = class {
                 column_metadata["analysis"] = analysis;
                 metadata.metadata.columns.push(column_metadata);
             });
-            console.log(JSON.stringify(metadata));
             return metadata;
         } else {
             return {};
@@ -104,22 +103,22 @@ DataVizExample.DataRetyperNode = class {
     refresh() {
         if (this.input_dataset) {
             this.node_service.set_status_info(""+this.input_dataset.numRows()+" Rows");
-            if (this.is_open) {
-                this.node_service.page_send_message(this.export_metadata());
+            if (this.page_service) {
+                this.page_service.send_message(this.export_metadata());
             }
         } else {
-            if (this.is_open) {
-                this.node_service.page_send_message({});
+            if (this.page_service) {
+                this.page_service.send_message({});
             }
             this.node_service.set_status_warning("Waiting for input data");
         }
     }
 
-    page_open() {
-        this.is_open = true;
-        this.node_service.page_set_message_handler((msg) => { this.handle_page_message(msg) });
-        this.node_service.page_set_attributes("date_format",{ "value": this.date_format });
-        this.node_service.page_add_event_handler("date_format", "change", (v) => {
+    page_open(page_id, page_service) {
+        this.page_service = page_service;
+        page_service.set_message_handler((msg) => { this.handle_page_message(msg) });
+        page_service.set_attributes("date_format",{ "value": this.date_format });
+        page_service.add_event_handler("date_format", "change", (v) => {
            this.date_format = v;
            this.node_service.request_execution();
         });
@@ -145,8 +144,8 @@ DataVizExample.DataRetyperNode = class {
         }
     }
 
-    page_close() {
-        this.is_open = false;
+    page_close(page_id, page_service) {
+        this.page_service = null;
     }
 
     reset_execution() {

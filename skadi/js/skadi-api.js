@@ -59,9 +59,9 @@ skadi.Api = class {
         return new skadi.CoreConfiguration(this.instance,package_type,{});
     }
 
-    load(from_obj, supress_events) {
+    load(from_obj, supress_events, autosave_id) {
         this.instance.clear(supress_events);
-        this.instance.deserialise(from_obj ,supress_events);
+        this.instance.deserialise(from_obj ,supress_events, autosave_id);
     }
 
     get_schema() {
@@ -98,8 +98,8 @@ skadi.Api = class {
 
     async handle_load_topology_from() {
         let url_params = new URLSearchParams(window.location.search);
-        // check for a topology to load
-        let topology_url = url_params.get("load_topology_from");
+        // check for a topology to load from URL first
+        let topology_url = url_params.get("topology_url");
         if (topology_url) {
             let topology_origin = new URL(topology_url,window.location).origin;
             if (topology_origin != window.location.origin) {
@@ -110,9 +110,26 @@ skadi.Api = class {
                         let obj = JSON.parse(txt);
                         this.load(obj);
                     } catch (ex) {
-                        console.error("load_topology_from failed:" + ex);
+                        console.error("load from topology_url failed:" + ex);
                     }
                 });
+            }
+        } else {
+            // load from local storage perhaps...
+            let topology_name = url_params.get("topology");
+
+            if (topology_name) {
+                let f = new skadi.FileLike("/skadi/storage/"+topology_name+"/topology.json","r",false);
+                let contents = f.read();
+                if (contents) {
+                    try {
+                        let obj = JSON.parse(contents);
+                        this.load(obj,false,topology_name);
+                    } catch (ex) {
+                        console.error("load from topology failed:" + ex);
+                    }
+                }
+                this.instance.set_autosave_id(topology_name);
             }
         }
     }

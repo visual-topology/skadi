@@ -21,28 +21,32 @@ skadi.Page = class {
     set_message_handler(handler) {
         this.message_handler = handler;
         for(let idx=0; idx<this.pending_messages.length; idx++) {
-            this.message_handler(this.pending_messages[idx]);
+            let msg = this.pending_messages[idx];
+            this.message_handler(...msg);
         }
         this.pending_messages = [];
     }
 
     handle_message(msg) {
-        let type = msg["type"];
-        switch(type) {
-            case "set_attributes":
-                this.set_attributes(msg["element_id"], msg["attributes"]);
-                break;
-            case "add_event_handler":
-                this.add_event_handler(msg["element_id"], msg["event_type"], msg["event_transform"]);
-                break;
-            case "message":
-                let content = msg["content"];
-                if (this.message_handler === null) {
-                    this.pending_messages.push(content);
+        let header = msg[0];
+        let type = header["type"];
+        switch (type) {
+            case "page_message":
+                let message_parts = msg[1];
+                if (this.message_handler) {
+                    this.message_handler(...message_parts);
                 } else {
-                    this.message_handler(content);
+                    this.pending_messages.push(message_parts);
                 }
                 break;
+            case "page_set_attributes":
+                this.set_attributes(header["element_id"], header["attributes"]);
+                break;
+            case "page_add_event_handler":
+                this.add_event_handler(header["element_id"], header["event_type"], header["target_attribute"]);
+                break;
+            default:
+                 console.warn("Unexpected msg received by page");
         }
     }
 
@@ -65,27 +69,17 @@ skadi.Page = class {
         }
     }
 
-    add_event_handler(element_id, event_type, event_transform) {
+    add_event_handler(element_id, event_type, target_attribute) {
         let elt = document.getElementById(element_id);
-        let fn = null;
-        if (event_transform) {
-            this.transform_count += 1;
-            fn = eval(event_transform);
-        }
         if (elt) {
             elt.addEventListener(event_type, (event) => {
-                let value = null;
-                if (fn) {
-                    value = fn(event);
-                } else {
-                    value = event.target.value;
-                }
-                this.send_to_network({
+                let value = event.target[target_attribute];
+                this.send_to_network([{
                    "type": "event",
                    "element_id": element_id,
                    "event_type": event_type,
                    "value": value
-                });
+                },null]);
             })
         } else {
             this.report_missing_element(element_id);
@@ -97,15 +91,11 @@ skadi.Page = class {
     }
 
     send_to_network(msg) {
-        this.parent_window.postMessage(msg,"*");
+        this.parent_window.postMessage(msg,window.location.origin);
     }
 
-    page_send_message(content) {
-        let msg = {
-            "type": "message",
-            "content": content
-        };
-        this.send_to_network(msg);
+    page_send_message(...message_parts) {
+        this.send_to_network([{"type":"page_message"},message_parts]);
     }
 }
 

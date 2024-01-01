@@ -33,7 +33,7 @@ skadi.DesignerApi = class extends skadi.Api {
         node_factory, configuration_factory, executor) {
         topology_store = topology_store || new skadi.TopologyStore(this);
         this.design = new skadi.Designer(this.l10n_utils, this.schema, element_id, canvas_width, canvas_height, is_acyclic, topology_store,
-            node_factory, configuration_factory);
+            node_factory, configuration_factory, true);
         this.set_instance(this.design);
         super.init();
         if (executor) {
@@ -143,7 +143,7 @@ skadi.launch_designer = function(container_id, title_id, heading_id, options) {
                 document.getElementById(heading_id).appendChild(document.createTextNode(load_obj.title));
             }
             let schema_urls = load_obj.schemas.map(schema_url => String(new URL(schema_url,new URL(load_url,window.location))));
-            return skadi.start_designer(container_id, options, schema_urls, new skadi.GraphExecutor())
+            return skadi.start_designer(container_id, options, schema_urls, new skadi.GraphExecutor());
         }).then(skadi => {
             let splash = document.getElementById("splash_screen");
             if (splash) {

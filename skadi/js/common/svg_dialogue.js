@@ -9,13 +9,15 @@ var skadi = skadi || {};
 
 skadi.SvgDialogue = class {
 
-  constructor(id, design, title, x, y, content_width, content_height, closeHandler, resize_handler, scrollable, autoClose, draggable, drawCallback) {
+  constructor(id, design, title, x, y, content_width, content_height, close_handler, resize_handler, scrollable, auto_close, draggable, draw_callback, draw_on_canvas) {
     this.design = design;
     this.title = title;
 
-    this.closeHandler = closeHandler;
+    this.close_handler = close_handler;
     this.resize_handler = resize_handler;
-    this.drawCallback = drawCallback;
+    this.draw_callback = draw_callback;
+
+    this.draw_on_canvas = draw_on_canvas;
 
     this.id = id;
     this.x = x;
@@ -36,7 +38,6 @@ skadi.SvgDialogue = class {
     this.removeOnClose = true;
     this.draggable = draggable;
 
-
     this.content_offset = 0;
 
     let that = this;
@@ -54,7 +55,7 @@ skadi.SvgDialogue = class {
 
     this.compute_content_size();
 
-    this.autoClose = autoClose;
+    this.auto_close = auto_close;
     this.connector_grp = null;
     this.connector_path = null;
     this.parent_node = null;
@@ -139,7 +140,7 @@ skadi.SvgDialogue = class {
 
   open() {
 
-    let container = this.design.get_skadi_svg_dialogue_group();
+    let container = this.draw_on_canvas ? this.design.get_node_connector_group() : this.design.get_skadi_svg_dialogue_group();
 
     this.grp = container.append("g");
 
@@ -205,7 +206,7 @@ skadi.SvgDialogue = class {
 
     this.closebtn.draw(this.grp);
 
-    this.drawCallback(this.content_grp);
+    this.draw_callback(this.content_grp);
 
     if (this.resizebtn) {
       this.resizegrp = container.append("g");
@@ -229,7 +230,7 @@ skadi.SvgDialogue = class {
 
     this.opened = true;
 
-    if (this.autoClose) {
+    if (this.auto_close) {
       this.grp.node().onmouseleave = function() {
         that.close();
       }
@@ -341,8 +342,8 @@ skadi.SvgDialogue = class {
         this.movement_listener = null;
       }
     }
-    if (this.closeHandler) {
-      this.closeHandler(this.dial);
+    if (this.close_handler) {
+      this.close_handler(this.dial);
     }
   }
 

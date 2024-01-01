@@ -25,12 +25,11 @@ DataVizExample.SelectRowsNode = class {
         }
     }
 
-    page_open() {
-        this.node_service.page_set_attributes("column_expression",{"value":this.column_expression});
+    page_open(page_id, page_service) {
+        page_service.set_attributes("column_expression",{"value":this.column_expression});
 
-        this.node_service.page_add_event_handler("column_expression","change", v => {
+        page_service.add_event_handler("column_expression","change", v => {
             this.column_expression = v;
-            this.node_service.page_set_attributes("column_expression",{"value":this.column_expression});
             this.update_status();
             this.node_service.request_execution();
         });

@@ -50,6 +50,12 @@ skadi.update_configuration_status = function(package_id, state, message) {
     skadi.update_configuration_status_div(package_id);
 }
 
+skadi.open_configuration_callback = function(design, package_id, page_id) {
+    return (ev) => {
+        design.open_configuration(package_id, page_id);
+    }
+}
+
 skadi.populate_configuration = function(design, elt, close_window) {
     let header_div = document.createElement("div");
     header_div.innerHTML = skadi.configuration_header_html;
@@ -80,7 +86,7 @@ skadi.populate_configuration = function(design, elt, close_window) {
         let package_type = configuration.get_package_type();
         let l10n_utils = package_type.get_l10n_utils();
         
-        if (!l10n_utils && !configuration.get_url()) {
+        if (!l10n_utils && configuration.get_page_ids().length === 0) {
             continue;
         }
 
@@ -119,52 +125,56 @@ skadi.populate_configuration = function(design, elt, close_window) {
 
             elt.appendChild(row);
         }
-        
-        if (configuration.get_url()) {
-            let row = document.createElement("div");
-            row.setAttribute("class","exo-row");
 
-            let cfg_cell = document.createElement("div");
-            cfg_cell.setAttribute("class","exo-2-cell");
-            cfg_cell.appendChild(document.createTextNode("Package Configuration"));
-            row.appendChild(cfg_cell);
+        configuration.get_page_ids().forEach(page_id => {
+            let url = configuration.get_url(page_id);
+            let page = configuration.get_page(page_id);
+            if (url) {
+                let row = document.createElement("div");
+                row.setAttribute("class", "exo-row");
 
-            let btn = document.createElement("input");
-            btn.setAttribute("type","button");
-            btn.setAttribute("value", "Open...");
-            btn.addEventListener("click", (ev) => {
-                design.open_configuration(package_id);
-            });
-            
-            let btn_cell = document.createElement("div");
-            btn_cell.setAttribute("class","exo-2-cell");
-            btn_cell.appendChild(btn);
-            row.appendChild(btn_cell);
+                let cfg_cell = document.createElement("div");
+                cfg_cell.setAttribute("class", "exo-2-cell");
+                cfg_cell.appendChild(document.createTextNode(page.title));
+                row.appendChild(cfg_cell);
 
-            elt.appendChild(row);
+                let btn = document.createElement("input");
+                btn.setAttribute("type", "button");
+                btn.setAttribute("value", page.button_label || "Open...");
+                btn.addEventListener("click", skadi.open_configuration_callback(design,package_id,page_id));
 
-            let status_row = document.createElement("div");
-            status_row.setAttribute("class","exo-row skadi_status");
-            
-            
-            let st_cell = document.createElement("div");
-            st_cell.setAttribute("class","exo-2-cell");
-            st_cell.appendChild(document.createTextNode("Configuration Status"));
-            status_row.appendChild(st_cell);
+                let btn_cell = document.createElement("div");
+                btn_cell.setAttribute("class", "exo-2-cell");
+                btn_cell.appendChild(btn);
+                row.appendChild(btn_cell);
+                elt.appendChild(row);
+            }
+        });
 
-            
-            let status_cell = document.createElement("div");
-            status_cell.setAttribute("class","exo-2-cell");
-            status_cell.setAttribute("style","display:inline-block;");
 
-            status_row.appendChild(status_cell);
+        let status_row = document.createElement("div");
+        status_row.setAttribute("class","exo-row skadi_status");
 
-            skadi.status_divs[package_id] = status_cell;
-            skadi.update_configuration_status_div(package_id);
+        let st_cell = document.createElement("div");
+        st_cell.setAttribute("class","exo-2-cell");
+        st_cell.appendChild(document.createTextNode("Configuration Status"));
+        status_row.appendChild(st_cell);
 
-            elt.appendChild(status_row);
-            
-        }
+        let status_cell = document.createElement("div");
+        status_cell.setAttribute("class","exo-2-cell");
+        status_cell.setAttribute("style","display:inline-block;");
+
+        status_row.appendChild(status_cell);
+
+        skadi.status_divs[package_id] = status_cell;
+        skadi.update_configuration_status_div(package_id);
+
+        elt.appendChild(status_row);
+
     }
+
+
 }
+
+
 

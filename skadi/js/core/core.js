@@ -14,7 +14,9 @@ skadi.Core = class {
         this.topology_store = topology_store;
         this.node_factory = node_factory;
         this.configuration_factory = configuration_factory;
-        this.id = "design";
+
+        this.autosave_id = undefined;
+
         this.schema = schema;
 
         this.graph_executor = null;
@@ -23,6 +25,7 @@ skadi.Core = class {
         this.design_event_handlers = {};
 
         this.network = new skadi.Network({});
+        this.id = this.next_id("top");
 
         this.div = skadi.x3.select("#" + element_id);
 
@@ -39,6 +42,14 @@ skadi.Core = class {
 
     get_id() {
         return this.id;
+    }
+
+    get_autosave_id() {
+        return this.autosave_id;
+    }
+
+    set_autosave_id(autosave_id) {
+        this.autosave_id = autosave_id;
     }
 
     get_language() {
@@ -232,7 +243,6 @@ skadi.Core = class {
         return this.network.get_node(node_id);
     }
 
-
     update_execution_state(node_id, state) {
         let node = this.network.get_node(node_id);
         if (node) {
@@ -255,7 +265,6 @@ skadi.Core = class {
             }
         }
     }
-
 
     update_metadata(node_id, metadata, suppress_event) {
         let node = this.network.get_node(node_id);
@@ -351,6 +360,7 @@ skadi.Core = class {
         if (!suppress_event) {
             this.fire_design_event("clear", null);
         }
+        this.autosave();
     }
 
     remove(id, suppress_event) {
@@ -379,6 +389,7 @@ skadi.Core = class {
                 this.fire_link_event("remove", link);
             }
         }
+        this.autosave();
     }
 
 
@@ -400,12 +411,16 @@ skadi.Core = class {
             let link = this.network.get_link(link_id);
             slinks[link_id] = link.serialise();
         }
-        return {"nodes": snodes, "links": slinks, "metadata": this.metadata};
+        return {"nodes": snodes, "links": slinks, "metadata": this.metadata };
     }
 
-    deserialise(from_obj, suppress_events) {
+    deserialise(from_obj, suppress_events, autosave_id) {
+
         if (this.graph_executor) {
             this.graph_executor.pause();
+        }
+        if (autosave_id) {
+            this.set_autosave_id(autosave_id);
         }
         for (let node_id in from_obj.nodes) {
             let node = skadi.CoreNode.deserialise(this, node_id, from_obj.nodes[node_id]);
@@ -423,6 +438,16 @@ skadi.Core = class {
         this.metadata = from_obj["metadata"];
         if (this.graph_executor) {
             this.graph_executor.resume();
+        }
+    }
+
+    autosave() {
+        let autosave_id = this.get_autosave_id();
+        if (autosave_id) {
+            let folder = new skadi.DirectoryLike("/skadi/storage/",false);
+            let path = folder.add_file(autosave_id);
+            let fl = new skadi.FileLike(path + "/topology.json", "w", false);
+            fl.write(JSON.stringify(this.serialise()));
         }
     }
 }
